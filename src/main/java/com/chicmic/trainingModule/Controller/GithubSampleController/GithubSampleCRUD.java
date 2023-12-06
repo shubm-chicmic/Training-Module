@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.Controller.GithubSampleController;
 
-import com.chicmic.trainingModule.Dto.ApiResponse;
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.GithubSampleDto;
 import com.chicmic.trainingModule.Entity.GithubSample;
 import com.chicmic.trainingModule.Service.GitSampleServices.GithubSampleService;
@@ -30,7 +30,7 @@ public class GithubSampleCRUD {
     }
 
     @GetMapping("/{githubSampleId}")
-    public ApiResponse get(@PathVariable Long githubSampleId) {
+    public ApiResponse get(@PathVariable String githubSampleId) {
         GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
         return new ApiResponse(HttpStatus.OK.value(), "Session retrieved successfully", githubSample);
     }
@@ -42,7 +42,7 @@ public class GithubSampleCRUD {
     }
 
     @DeleteMapping("/{githubSampleId}")
-    public ApiResponse delete(@PathVariable Long githubSampleId) {
+    public ApiResponse delete(@PathVariable String githubSampleId) {
         Boolean deleted = githubSampleService.deleteGithubSampleById(githubSampleId);
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "GithubSample deleted successfully", null);
@@ -51,7 +51,7 @@ public class GithubSampleCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateGithubSample(@RequestBody GithubSampleDto githubSampleDto, @RequestParam Long githubSampleId) {
+    public ApiResponse updateGithubSample(@RequestBody GithubSampleDto githubSampleDto, @RequestParam String githubSampleId) {
         GithubSampleDto updatedGithubSample = CustomObjectMapper.convert(githubSampleService.updateGithubSample(githubSampleDto, githubSampleId), GithubSampleDto.class);
         return new ApiResponse(HttpStatus.CREATED.value(), "GithubSample updated successfully", updatedGithubSample);
     }

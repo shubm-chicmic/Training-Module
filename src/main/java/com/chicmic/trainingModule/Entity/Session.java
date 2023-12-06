@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -19,13 +20,15 @@ public class Session {
     @Id
     private String _id;
     private String title;
-    private List<Object> teams;
-    private List<Object> trainees;
-    private List<Object> sessionBy;
+    private List<String> teams;
+    private List<String> trainees;
+    private List<String> sessionBy;
     private String location;
-    private List<Object> approver;
+    private List<String> approver;
+    private List<String> approvedBy = new ArrayList<>();
+    private String createdBy;
     private String time;
-    private String status;
+    private int status = 1;
     private boolean isDeleted = false;
     private boolean isApproved = false;
     private String MOM;

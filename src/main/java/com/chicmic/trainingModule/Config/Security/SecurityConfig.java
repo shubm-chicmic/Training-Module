@@ -38,9 +38,10 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
+        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").hasAuthority("ROLE_ADMIN"));
 
         //adding filters
-        http.addFilterBefore(new CustomAuthorizationFilter(jwtProvider,userService), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new CustomAuthorizationFilter(userService), UsernamePasswordAuthenticationFilter.class);
         http.addFilter(filter);
 
         return http.build();

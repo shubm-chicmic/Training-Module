@@ -1,6 +1,8 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
 import com.chicmic.trainingModule.Dto.SessionDto;
+import com.chicmic.trainingModule.Dto.SessionResponseDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Repository.SessionRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.Session;
@@ -9,20 +11,28 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Random;
+
+import static com.mongodb.client.model.Aggregates.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 @Service
 @RequiredArgsConstructor
 public class SessionService {
     private final SessionRepo sessionRepo;
-    @Bean
-    private void clearSession(){
-        sessionRepo.deleteAll();
-    }
+    private final MongoTemplate mongoTemplate;
+//    @Bean
+//    private void clearSession(){
+//        sessionRepo.deleteAll();
+//    }
     public Session createSession(Session session){
         session = sessionRepo.save(session);
         return session;
@@ -32,16 +42,28 @@ public class SessionService {
         System.out.println("pageSize = " + pageSize);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         List<Session> sessions = sessionRepo.findAll(pageable).getContent();
+        System.out.println("Total sessions = " + sessions.size());
         return sessions;
     }
-    public Session getSessionById(Long sessionId){
+    public long countNonDeletedSessions() {
+        // Custom aggregation query to count non-deleted sessions
+        return mongoTemplate.aggregate(
+                newAggregation(
+                        match(Criteria.where("isDeleted").is(false)),
+                        group().count().as("count")
+                ),
+                "session", // Replace 'session' with your collection name
+                CountResult.class // Define a class to hold the result count
+        ).getMappedResults().get(0).getCount();
+    }
+    public Session getSessionById(String sessionId){
         return sessionRepo.findById(sessionId).orElse(null);
     }
 
-    public Boolean deleteSessionById(Long sessionId) {
+    public Boolean deleteSessionById(String sessionId) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
-            session.setDeleted(false);
+            session.setDeleted(true);
             sessionRepo.save(session);
             return true;
         } else {
@@ -49,10 +71,10 @@ public class SessionService {
         }
     }
 
-    public Session updateStatus(Long sessionId, Long status) {
+    public Session updateStatus(String sessionId, int status) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
-            session.setStatus("");
+            session.setStatus(status);
             sessionRepo.save(session);
             return session;
         } else {
@@ -60,7 +82,7 @@ public class SessionService {
         }
     }
 
-    public Session updateSession(SessionDto sessionDto, Long sessionId) {
+    public Session updateSession(SessionDto sessionDto, String sessionId) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
             session = (Session) CustomObjectMapper.updateFields(sessionDto, session);
@@ -71,7 +93,7 @@ public class SessionService {
         }
     }
 
-    public Session postMOM(Long sessionId,String message) {
+    public Session postMOM(String sessionId,String message) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
             session.setMOM(message);
@@ -80,5 +102,13 @@ public class SessionService {
         } else {
             return null;
         }
+    }
+
+    public void approve(Session session, String userId) {
+        session.setApproved(true);
+        List<String> approvedBy = session.getApprovedBy();
+        approvedBy.add(userId);
+        session.setApprovedBy(approvedBy);
+        sessionRepo.save(session);
     }
 }

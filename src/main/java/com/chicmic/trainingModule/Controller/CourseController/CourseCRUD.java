@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Controller.CourseController;
 
 import com.chicmic.trainingModule.Dto.*;
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Service.CourseService.CourseServices;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -30,7 +31,7 @@ public class CourseCRUD {
     }
 
     @GetMapping("/{courseId}")
-    public ApiResponse get(@PathVariable Long courseId) {
+    public ApiResponse get(@PathVariable String courseId) {
         Course course = courseServices.getCourseById(courseId);
         return new ApiResponse(HttpStatus.OK.value(), "Course retrieved successfully", course);
     }
@@ -42,7 +43,7 @@ public class CourseCRUD {
     }
 
     @DeleteMapping("/{courseId}")
-    public ApiResponse delete(@PathVariable Long courseId) {
+    public ApiResponse delete(@PathVariable String courseId) {
         Boolean deleted = courseServices.deleteCourseById(courseId);
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Course deleted successfully", null);
@@ -52,7 +53,7 @@ public class CourseCRUD {
 
 
     @PutMapping
-    public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam Long id) {
+    public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String id) {
         Course updatedCourse = courseServices.updateCourse(courseDto, id);
         return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", updatedCourse);
     }

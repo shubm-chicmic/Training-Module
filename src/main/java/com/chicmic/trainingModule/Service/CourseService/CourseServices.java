@@ -34,11 +34,11 @@ public class CourseServices {
         return courses;
     }
 
-    public Course getCourseById(Long courseId) {
+    public Course getCourseById(String courseId) {
         return courseRepo.findById(courseId).orElse(null);
     }
 
-    public Boolean deleteCourseById(Long courseId) {
+    public Boolean deleteCourseById(String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
             course.setIsDeleted(false);
@@ -48,7 +48,7 @@ public class CourseServices {
             return false;
         }
     }
-    public Course updateCourse(CourseDto courseDto, Long courseId) {
+    public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
             course = (Course) CustomObjectMapper.updateFields(courseDto, course);

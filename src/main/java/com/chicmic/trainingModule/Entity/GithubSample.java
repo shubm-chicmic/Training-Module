@@ -19,9 +19,9 @@ public class GithubSample {
     private String _id;
     private String projectName;
     private String gitSampleUrl;
-    private List<Object> createdBy;
-    private List<Object> approver;
-    private List<Object> Teams;
+    private List<String> createdBy;
+    private List<String> approver;
+    private List<String> Teams;
     private String comment;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;

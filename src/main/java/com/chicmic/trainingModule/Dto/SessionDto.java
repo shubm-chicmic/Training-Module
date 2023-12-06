@@ -13,10 +13,11 @@ import java.util.List;
 @AllArgsConstructor
 public class SessionDto {
     private String title;
-    private List<Object> teams;
-    private List<Object> trainees;
-    private List<Object> sessionBy;
+    private List<String> teams;
+    private List<String> trainees;
+    private List<String> sessionBy;
+    private String createdBy;
     private String location;
-    private List<Object> approver;
+    private List<String> approver;
     private String time;
 }

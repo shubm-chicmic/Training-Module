@@ -34,11 +34,11 @@ public class GithubSampleService {
         return githubSamples;
     }
 
-    public GithubSample getGithubSampleById(Long githubSampleId) {
+    public GithubSample getGithubSampleById(String githubSampleId) {
         return githubSampleRepo.findById(githubSampleId).orElse(null);
     }
 
-    public Boolean deleteGithubSampleById(Long githubSampleId) {
+    public Boolean deleteGithubSampleById(String githubSampleId) {
         GithubSample githubSample = githubSampleRepo.findById(githubSampleId).orElse(null);
         if (githubSample != null) {
             githubSample.setIsDeleted(true);
@@ -49,7 +49,7 @@ public class GithubSampleService {
         }
     }
 
-    public GithubSample updateGithubSample(GithubSampleDto githubSampleDto, Long githubSampleId) {
+    public GithubSample updateGithubSample(GithubSampleDto githubSampleDto, String githubSampleId) {
         GithubSample githubSample = githubSampleRepo.findById(githubSampleId).orElse(null);
         if (githubSample != null) {
             githubSample = (GithubSample) CustomObjectMapper.updateFields(githubSampleDto, githubSample);

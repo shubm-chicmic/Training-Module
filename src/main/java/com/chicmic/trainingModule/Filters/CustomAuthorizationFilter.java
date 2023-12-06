@@ -4,6 +4,7 @@ package com.chicmic.trainingModule.Filters;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Service.UserServiceImpl;
 import com.chicmic.trainingModule.Util.JwtUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -35,94 +36,64 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
+import static org.springframework.util.MimeTypeUtils.sortBySpecificity;
 
 @Slf4j
 @RequiredArgsConstructor
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
-
-    private final JwtUtil jwtUtill;
     private final UserServiceImpl userService;
     @Value("${server.servlet.context-path}")
     private String homePage;
     private RedirectStrategy redirectStrategy=new DefaultRedirectStrategy();
-    public  CustomAuthorizationFilter(UserServiceImpl userService,JwtUtil jwtUtill){
-        this.userService=userService;
-        this.jwtUtill=jwtUtill;
-    }
+
     private static final String X= "You are not authorized to access this route !";
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String servletPath = request.getServletPath();
         log.info("visited url = " + servletPath);
+
         if (servletPath.contains("/v1/training")) {
-            String AuthorizationHeader = request.getHeader("Authorization");
-            String userMetadata = request.getHeader("userMetadata");
-            // find data
-            System.out.println("Authorization header = " + AuthorizationHeader);
+            String authorizationHeader = request.getHeader("Authorization");
+            String userMetadataHeader = request.getHeader("userMeta");
 
-//            Boolean isValidToken = validateToken(AuthorizationHeader);
-            Boolean isValidToken = true;
-            //if authorization header is invalid or null!!!
-            if(!isValidToken){
-                System.out.println("control inside@@@");
-                Map<String,String> error=new HashMap<>();
-                error.put("error","Please provide valid token");
-//                token.put("refresh_token",refresh_token);
-                response.setContentType(APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(),error);
-            }
-            Collection<SimpleGrantedAuthority> authorities=new ArrayList<>();
-//            authorities.add(new SimpleGrantedAuthority("ROLE_"+role.toUpperCase()));
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken=
-                    new UsernamePasswordAuthenticationToken(user.get_id(),null,authorities);
-            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-        }
+            if (authorizationHeader != null && userMetadataHeader != null) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> userMetadataMap = objectMapper.readValue(userMetadataHeader, new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> userMetaData = (Map<String, Object>) userMetadataMap.get("user");
+                Map<String, Object> userData = (Map<String, Object>) userMetaData.get("data");
+                String userId = (String) userData.get("_id");
+                Boolean isValidToken = true;//validateToken(authorizationHeader);
 
-        filterChain.doFilter(request, response);
-    }
+                if (isValidToken) {
+                    // Authentication is successful, proceed to set up authentication
+                    Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                    // Add user roles or authorities if available
+                    authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-    public static String getTokenFromCookies(Cookie[] cookies) {
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("Authorization".equals(cookie.getName())) {
-                    return cookie.getValue();
+                    // Set authentication details
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+                    // Continue filter chain
+                    System.out.println("control reaches here");
+                    filterChain.doFilter(request, response);
+                    return;
                 }
             }
+
+            // If token is invalid or headers are missing, return error response
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Please provide valid token and user metadata");
+            response.setContentType(APPLICATION_JSON_VALUE);
+            new ObjectMapper().writeValue(response.getOutputStream(), error);
+        } else {
+            filterChain.doFilter(request, response);
         }
-        return "";
     }
 
-    private void setPrevUrlCookie(HttpServletResponse response, String servletPath) {
-        Cookie prevUrl = new Cookie("prevURL", servletPath);
-        prevUrl.setHttpOnly(true);
-        prevUrl.setMaxAge(60 * 10);
-        response.addCookie(prevUrl);
-    }
 
-    private UserDetails getUserDetailsFromToken(String token) {
-        String username = jwtUtill.getUsernameFromToken(token);
-        return StringUtils.isEmpty(username) ? null : userService.loadUserByUsername(username);
-    }
 
-    private boolean validateToken(String token, UserDetails userDetails) {
-        return jwtUtill.validateJwtToken(token, userDetails);
-    }
-
-    private void setAuthentication(UserDetails userDetails, HttpServletRequest request, HttpServletResponse response) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-        clearPrevUrlCookie(response);
-    }
-
-    private void clearPrevUrlCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("prevURL", "");
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        response.addCookie(cookie);
-    }
 
     private void handleForbiddenResponse(HttpServletResponse response, String message) throws IOException {
         handleException(response, HttpStatus.FORBIDDEN, message);
