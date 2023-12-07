@@ -19,5 +19,7 @@ public class SessionDto {
     private String createdBy;
     private String location;
     private List<String> approver;
-    private String time;
+    private String dateTime;
+    private Boolean approved = false;
+    private Integer status = 1;
 }

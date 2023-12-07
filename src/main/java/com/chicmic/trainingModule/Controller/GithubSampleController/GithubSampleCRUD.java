@@ -26,19 +26,21 @@ public class GithubSampleCRUD {
         if (pageNumber < 0 || pageSize < 1)
             return new ApiResponse(HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null);
         List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize);
-        return new ApiResponse(HttpStatus.OK.value(), "Sessions retrieved", githubSampleList);
+        return new ApiResponse(HttpStatus.OK.value(), "GithubSample retrieved", githubSampleList);
     }
 
     @GetMapping("/{githubSampleId}")
     public ApiResponse get(@PathVariable String githubSampleId) {
         GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
-        return new ApiResponse(HttpStatus.OK.value(), "Session retrieved successfully", githubSample);
+        return new ApiResponse(HttpStatus.OK.value(), "GithubSample retrieved successfully", githubSample);
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody GithubSampleDto githubSampleDto) {
-        githubSampleDto = CustomObjectMapper.convert(githubSampleService.createGithubSample(CustomObjectMapper.convert(githubSampleDto, GithubSample.class)), GithubSampleDto.class);
-        return new ApiResponse(HttpStatus.CREATED.value(), "GithubSample created successfully", githubSampleDto);
+    public ApiResponse create(@RequestBody
+                              GithubSample githubSample) {
+
+       githubSample = githubSampleService.createGithubSample(githubSample);
+        return new ApiResponse(HttpStatus.CREATED.value(), "GithubSample created successfully", githubSample);
     }
 
     @DeleteMapping("/{githubSampleId}")

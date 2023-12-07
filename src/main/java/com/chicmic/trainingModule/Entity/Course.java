@@ -14,8 +14,10 @@ import java.util.List;
 public class Course {
     @Id
     private String _id;
-    private String guidelines;
+    private String name;
     List<Object> reviewers;
+    private String figmaLink;
+    private String guidelines;
     List<Phase> phases;
     private int status;
     private Boolean isDeleted = false;

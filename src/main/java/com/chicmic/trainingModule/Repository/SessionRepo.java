@@ -7,9 +7,10 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
+import java.util.List;
+
 public interface SessionRepo extends MongoRepository<Session, String> {
     Page<Session> findAllBy(TextCriteria criteria, Pageable pageable);
-    @Query("{'isDeleted' : false}")
-    long countNonDeletedSessions();
+    List<Session> findByTitleContainingAndIsDeletedIsFalse(String title);
 }
 

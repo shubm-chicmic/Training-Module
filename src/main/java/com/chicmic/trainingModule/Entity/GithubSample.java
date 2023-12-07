@@ -18,10 +18,10 @@ public class GithubSample {
     @Id
     private String _id;
     private String projectName;
-    private String gitSampleUrl;
+    private String url;
     private List<String> createdBy;
     private List<String> approver;
-    private List<String> Teams;
+    private List<String> teams;
     private String comment;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;

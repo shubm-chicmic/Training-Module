@@ -5,12 +5,19 @@ import java.time.format.DateTimeFormatter;
 public class DateTimeUtil {
 
     public static String getTimeFromDate(String dateTimeString) {
-        LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        String formattedTime = dateTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
-        return formattedTime.replace("AM", "Am").replace("PM", "Pm");
-    }
+        if (dateTimeString == null) {
+            return "Invalid DateTime";
+        }
 
+        LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        String formattedTime = dateTime.format(DateTimeFormatter.ofPattern("h:mm a"));
+        formattedTime = formattedTime.replaceAll("(?i)AM", "Am").replaceAll("(?i)PM", "Pm");
+        return formattedTime;
+    }
     public static String getDateFromDate(String dateTimeString) {
+        if (dateTimeString == null) {
+            return "Invalid DateTime";
+        }
         LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }

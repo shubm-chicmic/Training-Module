@@ -6,9 +6,9 @@ import java.util.List;
 
 public class GithubSampleDto {
     private String projectName;
-    private String gitSampleUrl;
-    private List<Object> createdBy;
-    private List<Object> approver;
-    private List<Object> Teams;
+    private String url;
+    private List<String> createdBy;
+    private List<String> approver;
+    private List<String> Teams;
     private String comment;
 }

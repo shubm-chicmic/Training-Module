@@ -1,20 +1,16 @@
 package com.chicmic.trainingModule.Entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Document(collection = "session")
 public class Session {
     @Id
@@ -27,10 +23,10 @@ public class Session {
     private List<String> approver;
     private List<String> approvedBy = new ArrayList<>();
     private String createdBy;
-    private String time;
+    private String dateTime;
     private int status = 1;
     private boolean isDeleted = false;
     private boolean isApproved = false;
-    private String MOM;
+    private List<MomMessage> MOM = new ArrayList<>();
 
 }

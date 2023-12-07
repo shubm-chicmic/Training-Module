@@ -62,6 +62,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 Map<String, Object> userMetaData = (Map<String, Object>) userMetadataMap.get("user");
                 Map<String, Object> userData = (Map<String, Object>) userMetaData.get("data");
                 String userId = (String) userData.get("_id");
+                System.out.println("\u001B[33m userId = " + userId+ "\u001B[0m");
                 Boolean isValidToken = true;//validateToken(authorizationHeader);
 
                 if (isValidToken) {

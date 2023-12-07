@@ -65,6 +65,8 @@ public class TrainingModuleApplication {
 		zoneCategoryMap.put(5, "3rd Side Zone");
 		zoneCategoryMap.put(6, "4th Zone");
 		System.out.println("\u001B[31m VAlue =================== " + zoneCategoryMap.get(4) + "\u001B[0m");
+		ExcelPerformOperations.excelPerformOperations("iOS training plan.xlsx");
+
 		SpringApplication.run(TrainingModuleApplication.class, args);
 	}
 	@Bean

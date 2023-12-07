@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,28 +23,35 @@ public class SessionCRUD {
     private final SessionService sessionService;
     private final RestTemplate restTemplate;
 
-    @GetMapping
+    @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
-            @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize
+            @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+            @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
+            @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
+            @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
+            @RequestParam(required = false) String sessionId,
+            HttpServletResponse response
     ) throws JsonProcessingException {
-        pageNumber /= pageSize;
-        Long count = sessionService.getTotalNonDeletedSessions();
-        System.out.println("count = " + count);
-        if (pageNumber < 0 || pageSize < 1) return new ApiResponseWithCount(count,HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null);
-        List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize);
-        List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
-        Collections.reverse(sessionResponseDtoList);
-        return new ApiResponseWithCount(count,HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList);
+        if(sessionId == null || sessionId.isEmpty()) {
+            pageNumber /= pageSize;
+            if (pageNumber < 0 || pageSize < 1)
+                return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
+            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString);
+            Long count = sessionService.countNonDeletedSessions();
 
+            List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
+            Collections.reverse(sessionResponseDtoList);
+            return new ApiResponseWithCount(count, HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList, response);
+        }else {
+            Session session = sessionService.getSessionById(sessionId);
+            if(session == null){
+                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Session not found", null, response);
+            }
+            SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(session);
+            return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response);
+        }
     }
-    @GetMapping("/{sessionId}")
-    public ApiResponse get(@PathVariable String sessionId) {
-        Session session = sessionService.getSessionById(sessionId);
-        SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(session);
-        return new ApiResponse(HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto);
-    }
-
 
     @PostMapping
     public ApiResponse create(@RequestBody SessionDto sessionDto, Principal principal) {
@@ -63,21 +71,49 @@ public class SessionCRUD {
         return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null);
     }
 
-    @PutMapping("/status/{sessionId}")
-    public ApiResponse updateStatus(@PathVariable String sessionId, @RequestBody StatusDto status) {
-        Session session = sessionService.updateStatus(sessionId, status.getStatus());
-        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
-    }
+//    @PutMapping("/status/{sessionId}")
+//    public ApiResponse updateStatus(@PathVariable String sessionId, @RequestBody StatusDto status) {
+//        Session session = sessionService.getSessionById(sessionId);
+//        if(session == null){
+//            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null);
+//        }else if(!session.isApproved()) {
+//            return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Session is not approved", null);
+//        }
+//        session = sessionService.updateStatus(sessionId, status.getStatus());
+//        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
+//    }
 
     @PutMapping
-    public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String _id) {
-        SessionDto updatedSession = CustomObjectMapper.convert(sessionService.updateSession(sessionDto, _id), SessionDto.class);
-        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", updatedSession);
+    public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
+        Session session = sessionService.getSessionById(sessionId);
+        if (session != null) {
+            if (sessionDto.getApproved()) {
+
+                List<String> approver = session.getApprover();
+                if (approver.contains(principal.getName())) {
+                    session =sessionService.approve(session, principal.getName());
+                } else {
+                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this session", null, response);
+
+                }
+            }
+            System.out.println("status = " + sessionDto.getStatus());
+            if(sessionDto.getStatus() != null){
+                if(!session.isApproved()) {
+                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Session is not approved", null, response);
+                }
+                session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
+            }
+            SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
+            return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
+        }else {
+                return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null, response);
+        }
     }
 
     @PostMapping("/postMom/{sessionId}")
-    public ApiResponse postMOM(@PathVariable String sessionId, @RequestBody Mommessage message) {
-        Session session = sessionService.postMOM(sessionId, message.getMessage());
+    public ApiResponse postMOM(@PathVariable String sessionId, @RequestBody Mommessage message, Principal principal) {
+        Session session = sessionService.postMOM(sessionId, message.getMessage(), principal.getName());
 
         return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
     }
