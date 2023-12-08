@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Dto;
+package com.chicmic.trainingModule.Dto.SessionDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SessionApproveId {
-    private String sessionId;
+public class Mommessage {
+    String message;
 }

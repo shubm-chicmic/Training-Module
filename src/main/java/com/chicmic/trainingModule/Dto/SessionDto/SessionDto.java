@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Dto;
+package com.chicmic.trainingModule.Dto.SessionDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +20,6 @@ public class SessionDto {
     private String location;
     private List<String> approver;
     private String dateTime;
-    private Boolean approved = false;
+    private Boolean approved;
     private Integer status = 1;
 }

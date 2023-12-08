@@ -7,7 +7,10 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Document
 @Getter
@@ -19,9 +22,11 @@ public class GithubSample {
     private String _id;
     private String projectName;
     private String url;
-    private List<String> createdBy;
+    private List<String> repoCreatedBy;
     private List<String> approver;
     private List<String> teams;
+    private Set<String> approvedBy = new HashSet<String>();
+    private String createdBy;
     private String comment;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;

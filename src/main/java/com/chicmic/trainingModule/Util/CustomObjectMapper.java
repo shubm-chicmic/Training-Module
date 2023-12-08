@@ -1,8 +1,12 @@
 package com.chicmic.trainingModule.Util;
 
-import com.chicmic.trainingModule.Dto.MomMessageResponseDto;
-import com.chicmic.trainingModule.Dto.SessionResponseDto;
+import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
+import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
+import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
+import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.GithubSample;
 import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -76,7 +80,13 @@ public class CustomObjectMapper {
                     return new MomMessageResponseDto(momMessage.get_id(), name, momMessage.getMessage());
                 })
                 .collect(Collectors.toList());
-
+        List<UserIdAndNameDto> approvedBy = session.getApprovedBy().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+        System.out.println("approvedBy: " + approvedBy);
         return SessionResponseDto.builder()
                 ._id(session.get_id())
                 .MOM(MommessageList)
@@ -92,8 +102,98 @@ public class CustomObjectMapper {
                 .trainees(trainees)
                 .sessionBy(sessionBy)
                 .approver(approver)
+                .approvedBy(approvedBy)
                 .isApproved(session.isApproved())
                 .createdBy(session.getCreatedBy())
+                .build();
+    }
+
+
+    public static List<GithubSampleResponseDto> mapGithubSampleToResponseDto(List<GithubSample> githubSamples) {
+        List<GithubSampleResponseDto> githubSampleResponseDtoList = new ArrayList<>();
+        for (GithubSample githubSample : githubSamples) {
+            githubSampleResponseDtoList.add(mapGithubSampleToResponseDto(githubSample));
+        }
+        return githubSampleResponseDtoList;
+    }
+
+    public static GithubSampleResponseDto mapGithubSampleToResponseDto(GithubSample githubSample) {
+        List<UserIdAndNameDto> teams = githubSample.getTeams().stream()
+                .map(teamId -> {
+                    String name = TrainingModuleApplication.searchTeamById(teamId);
+                    return new UserIdAndNameDto(teamId, name);
+                })
+                .collect(Collectors.toList());
+
+        List<UserIdAndNameDto> createdBy = githubSample.getRepoCreatedBy().stream()
+                .map(createdById -> {
+                    String name = TrainingModuleApplication.searchUserById(createdById);
+                    return new UserIdAndNameDto(createdById, name);
+                })
+                .collect(Collectors.toList());
+
+        List<UserIdAndNameDto> approver = githubSample.getApprover().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+
+        List<UserIdAndNameDto> approvedBy = githubSample.getApprovedBy().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+
+        return GithubSampleResponseDto.builder()
+                ._id(githubSample.get_id())
+                .url(githubSample.getUrl())
+                .isDeleted(githubSample.getIsDeleted())
+                .projectName(githubSample.getProjectName())
+                .comment(githubSample.getComment())
+                .teams(teams)
+                .repoCreatedBy(createdBy)
+                .approver(approver)
+                .approvedBy(approvedBy)
+                .isApproved(githubSample.getIsApproved())
+                .createdBy(githubSample.getCreatedBy())
+                .build();
+    }
+    public static List<CourseResponseDto> mapCourseToResponseDto(List<Course> courses) {
+        List<CourseResponseDto> courseResponseDtoList = new ArrayList<>();
+        for (Course course : courses) {
+            courseResponseDtoList.add(mapCourseToResponseDto(course));
+        }
+        return courseResponseDtoList;
+    }
+
+    public static CourseResponseDto mapCourseToResponseDto(Course course) {
+        List<UserIdAndNameDto> approver = course.getReviewers().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+        List<UserIdAndNameDto> approvedBy = course.getApprovedBy().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+
+        return CourseResponseDto.builder()
+                ._id(course.get_id())
+                .guidelines(course.getGuidelines())
+                .name(course.getName())
+                .figmaLink(course.getFigmaLink())
+                .reviewers(approver)
+                .phases(course.getPhases())
+                .isDeleted(course.getIsDeleted())
+                .status(course.getStatus())
+                .approvedBy(approvedBy)
+                .isApproved(course.getIsApproved())
+                .createdBy(course.getCreatedBy())
                 .build();
     }
 

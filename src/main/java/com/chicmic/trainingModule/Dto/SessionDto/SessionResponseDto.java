@@ -1,7 +1,9 @@
-package com.chicmic.trainingModule.Dto;
+package com.chicmic.trainingModule.Dto.SessionDto;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 @Getter
 @Setter
@@ -18,6 +20,7 @@ public class SessionResponseDto {
     private List<UserIdAndNameDto> trainees;
     private List<UserIdAndNameDto> sessionBy;
     private List<UserIdAndNameDto> approver;
+    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private String location;
     private String locationName;

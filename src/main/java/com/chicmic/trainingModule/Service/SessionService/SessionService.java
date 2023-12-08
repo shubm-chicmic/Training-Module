@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
-import com.chicmic.trainingModule.Dto.SessionDto;
+import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Entity.MomMessage;
 import com.chicmic.trainingModule.Repository.SessionRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Entity.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -16,7 +17,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -34,26 +38,58 @@ public class SessionService {
         session = sessionRepo.save(session);
         return session;
     }
-    public List<Session> getAllSessions(Integer pageNumber, Integer pageSize, String query) {
+    public List<Session> getAllSessions(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
-
-        // Define the pageable object
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-
+        System.out.println("query = " + query);
+        System.out.println("sortDirection = " + sortDirection);
+        System.out.println("sortKey = " + sortKey);
+        Pageable pageable;
+        if(!sortKey.isEmpty()) {
+            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = Sort.by(direction, sortKey);
+            pageable = PageRequest.of(pageNumber, pageSize, sort);
+        }else {
+           pageable = PageRequest.of(pageNumber, pageSize);
+        }
         // Create a query object with criteria for title search and isDeleted filtering
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("title").regex(query, "i")) // Case-insensitive title search
                 .addCriteria(Criteria.where("isDeleted").is(false))
                 .with(pageable);
 
-        // Fetch data based on the query
+        // Fetch data based on the query and apply sorting by title
         List<Session> sessions = mongoTemplate.find(searchQuery, Session.class);
+        if(!sortKey.isEmpty()) {
+            Comparator<Session> sessionComparator = Comparator.comparing(session -> {
+                try {
+                    Field field = Session.class.getDeclaredField(sortKey);
+                    field.setAccessible(true);
+                    Object value = field.get(session);
+                    if (value instanceof String) {
+                        return ((String) value).toLowerCase();
+                    }
+                    return value.toString();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "";
+                }
+            });
 
-        System.out.println("Total sessions = " + sessions.size());
+            if (sortDirection == 1) {
+                sessions.sort(sessionComparator.reversed());
+            } else {
+                sessions.sort(sessionComparator);
+            }
+        }
+
+
+
         return sessions;
     }
-//    public long countNonDeletedSessions() {
+
+
+    //    public long countNonDeletedSessions() {
 //        // Custom aggregation query to count non-deleted sessions
 //        return mongoTemplate.aggregate(
 //                newAggregation(
@@ -123,13 +159,13 @@ public class SessionService {
         }
     }
 
-    public Session approve(Session session, String userId) {
+    public Session approve(Session session, String userId, Boolean approvedValue) {
         System.out.println("userId = " + userId + "sessionId = " + session.get_id());
 
-        List<String> approvedBy = session.getApprovedBy();
+        Set<String> approvedBy = session.getApprovedBy();
         approvedBy.add(userId);
         session.setApprovedBy(approvedBy);
-        session.setApproved(true);
+        session.setApproved(approvedValue);
         session.setStatus(2);
         return sessionRepo.save(session);
     }

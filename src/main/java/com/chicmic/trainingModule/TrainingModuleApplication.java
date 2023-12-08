@@ -1,8 +1,12 @@
 package com.chicmic.trainingModule;
 
+import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +14,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +26,7 @@ import java.util.Map;
 
 @SpringBootApplication
 public class TrainingModuleApplication {
+	private static final String excelFileName = "Unreal Learning schedule.xlsx";
 	public static final Map<String, String> idNameMap = new HashMap<>();
 	public static final Map<String, String> teamIdAndNameMap = new HashMap<>();
 	public static HashMap<Integer, String> zoneCategoryMap = new HashMap<>();
@@ -65,10 +74,11 @@ public class TrainingModuleApplication {
 		zoneCategoryMap.put(5, "3rd Side Zone");
 		zoneCategoryMap.put(6, "4th Zone");
 		System.out.println("\u001B[31m VAlue =================== " + zoneCategoryMap.get(4) + "\u001B[0m");
-		ExcelPerformOperations.excelPerformOperations("iOS training plan.xlsx");
-
 		SpringApplication.run(TrainingModuleApplication.class, args);
+//		ExcelPerformOperations.excelPerformOperations(excelFileName);
+
 	}
+
 	@Bean
 	public static BCryptPasswordEncoder passwordEncoder() {
 		BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();

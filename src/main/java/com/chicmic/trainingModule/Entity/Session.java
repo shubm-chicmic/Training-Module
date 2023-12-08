@@ -5,7 +5,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -21,7 +23,7 @@ public class Session {
     private List<String> sessionBy;
     private String location;
     private List<String> approver;
-    private List<String> approvedBy = new ArrayList<>();
+    private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private String dateTime;
     private int status = 1;

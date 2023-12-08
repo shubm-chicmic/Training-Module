@@ -1,15 +1,16 @@
-package com.chicmic.trainingModule.Dto;
+package com.chicmic.trainingModule.Dto.SessionDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Mommessage {
-    String message;
+public class MomMessageResponseDto {
+    private String _id;
+    private String name;
+    private String message;
 }

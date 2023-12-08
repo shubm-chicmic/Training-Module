@@ -1,11 +1,10 @@
-package com.chicmic.trainingModule.Dto;
+package com.chicmic.trainingModule.Dto.CourseDto;
 
 import com.chicmic.trainingModule.Entity.Phase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
 
 import java.util.List;
 
@@ -18,5 +17,8 @@ public class CourseDto {
     List<Object> reviewers;
     private String figmaLink;
     private String guidelines;
-    List<Phase> phases;
+    private List<Phase> phases;
+    private String createdBy;
+    private Boolean approved = false;
+    private Integer status;
 }

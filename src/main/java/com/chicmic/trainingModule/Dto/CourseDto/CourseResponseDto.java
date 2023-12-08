@@ -1,29 +1,30 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Dto.CourseDto;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Phase;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Document
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class Course {
-    @Id
+@AllArgsConstructor
+@Builder
+public class CourseResponseDto {
     private String _id;
     private String name;
-    List<String> reviewers;
+    List<UserIdAndNameDto> reviewers;
     private String figmaLink;
     private String guidelines;
     List<Phase> phases;
-    private Set<String> approvedBy = new HashSet<>();
+    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private int status;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;
 }
+

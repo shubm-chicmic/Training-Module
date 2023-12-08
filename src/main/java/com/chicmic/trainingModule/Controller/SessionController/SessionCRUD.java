@@ -1,8 +1,10 @@
 package com.chicmic.trainingModule.Controller.SessionController;
 
-import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
+import com.chicmic.trainingModule.Dto.SessionDto.Mommessage;
+import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
+import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -37,7 +39,7 @@ public class SessionCRUD {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString);
+            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey);
             Long count = sessionService.countNonDeletedSessions();
 
             List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
@@ -71,32 +73,20 @@ public class SessionCRUD {
         return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null);
     }
 
-//    @PutMapping("/status/{sessionId}")
-//    public ApiResponse updateStatus(@PathVariable String sessionId, @RequestBody StatusDto status) {
-//        Session session = sessionService.getSessionById(sessionId);
-//        if(session == null){
-//            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null);
-//        }else if(!session.isApproved()) {
-//            return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Session is not approved", null);
-//        }
-//        session = sessionService.updateStatus(sessionId, status.getStatus());
-//        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
-//    }
-
     @PutMapping
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
         if (session != null) {
-            if (sessionDto.getApproved()) {
-
+            if (sessionDto != null && sessionDto.getApproved() != null) {
                 List<String> approver = session.getApprover();
                 if (approver.contains(principal.getName())) {
-                    session =sessionService.approve(session, principal.getName());
+                    session =sessionService.approve(session, principal.getName(), sessionDto.getApproved());
                 } else {
                     return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this session", null, response);
 
                 }
             }
+            sessionDto.setApproved(session.isApproved());
             System.out.println("status = " + sessionDto.getStatus());
             if(sessionDto.getStatus() != null){
                 if(!session.isApproved()) {
