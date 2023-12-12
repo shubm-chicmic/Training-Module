@@ -28,6 +28,7 @@ public class FeedbackCRUD {
         List<Feedback> feedbackList = feedbackService.findFeedbacks();
         return new ApiResponse(200,"List of All feedbacks",feedbackList);
     }
+
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
         Optional<Feedback> feedbackOptional = feedbackService.getFeedbackById(id);
