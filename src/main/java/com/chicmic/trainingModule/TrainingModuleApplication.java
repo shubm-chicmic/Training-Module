@@ -1,12 +1,9 @@
 package com.chicmic.trainingModule;
 
-import com.chicmic.trainingModule.Entity.Course;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Dto.UserDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -15,19 +12,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @SpringBootApplication
 public class TrainingModuleApplication {
 	private static final String excelFileName = "Unreal Learning schedule.xlsx";
-	public static final Map<String, String> idNameMap = new HashMap<>();
+	public static final Map<String, UserDto> idUserMap = new HashMap<>();
 	public static final Map<String, String> teamIdAndNameMap = new HashMap<>();
 	public static HashMap<Integer, String> zoneCategoryMap = new HashMap<>();
 	private static void findUsersAndMap() throws JsonProcessingException {
@@ -39,9 +30,14 @@ public class TrainingModuleApplication {
 		JsonNode dataArray = responseNode.get("data");
 
 		for (JsonNode node : dataArray) {
-			String userId = node.get("_id").asText();
-			String userName = node.get("name").asText();
-			idNameMap.put(userId, userName);
+			UserDto userDto = UserDto.builder()
+					.token(null)
+					._id(node.get("_id").asText())
+					.name(node.get("name").asText())
+					.empCode(node.get("employeeId").asText())
+					.teamId((node.get("teams").asText()))
+					.build();
+			idUserMap.put(userDto.get_id(), userDto);
 		}
 	}
 	private static void findTeamsAndMap() throws JsonProcessingException {
@@ -59,7 +55,11 @@ public class TrainingModuleApplication {
 		}
 	}
 	public static String searchUserById(String userId) {
-		return idNameMap.getOrDefault(userId, "User not found");
+		UserDto userDto = idUserMap.get(userId);
+		if(userId == null || userId.isEmpty() || userDto == null) {
+			return "User not found";
+		}
+		return userDto.getName();
 	}
 	public static String searchTeamById(String id) {
 		return teamIdAndNameMap.getOrDefault(id, "User not found");

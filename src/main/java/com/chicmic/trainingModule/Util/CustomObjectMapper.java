@@ -5,9 +5,7 @@ import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Course;
-import com.chicmic.trainingModule.Entity.GithubSample;
-import com.chicmic.trainingModule.Entity.Session;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -149,23 +147,59 @@ public class CustomObjectMapper {
         return GithubSampleResponseDto.builder()
                 ._id(githubSample.get_id())
                 .url(githubSample.getUrl())
-                .isDeleted(githubSample.getIsDeleted())
+                .deleted(githubSample.getIsDeleted())
                 .projectName(githubSample.getProjectName())
                 .comment(githubSample.getComment())
                 .teams(teams)
                 .repoCreatedBy(createdBy)
                 .approver(approver)
                 .approvedBy(approvedBy)
-                .isApproved(githubSample.getIsApproved())
+                .approved(githubSample.getIsApproved())
                 .createdBy(githubSample.getCreatedBy())
                 .build();
     }
-    public static List<CourseResponseDto> mapCourseToResponseDto(List<Course> courses) {
+    public static List<CourseResponseDto> mapCourseToResponseDto(List<Course> courses, Boolean isPhaseRequired) {
         List<CourseResponseDto> courseResponseDtoList = new ArrayList<>();
-        for (Course course : courses) {
-            courseResponseDtoList.add(mapCourseToResponseDto(course));
+        if(isPhaseRequired) {
+            for (Course course : courses) {
+                courseResponseDtoList.add(mapCourseToResponseDto(course));
+            }
+        }else{
+            for (Course course : courses) {
+                courseResponseDtoList.add(mapCourseToResponseDtoForNoPhase(course));
+            }
         }
         return courseResponseDtoList;
+    }
+    public static String calculateTotalEstimatedTime(List<Phase> phases) {
+        long totalHours = 0;
+        long totalMinutes = 0;
+
+        for (Phase phase : phases) {
+                long phaseHours = 0;
+                long phaseMinutes = 0;
+
+                for (SubTask subTask : phase.getSubtasks()) {
+                    System.out.println("Estimated time : " + subTask.getEstimatedTime());
+                    String[] timeParts = subTask.getEstimatedTime().split(":");
+                    if (timeParts.length == 1) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    } else if (timeParts.length == 2) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                    }
+                }
+
+                totalHours += phaseHours + phaseMinutes / 60;
+                totalMinutes += phaseMinutes % 60;
+
+        }
+
+        // Convert total hours and minutes to proper format
+        totalHours += totalMinutes / 60;
+        totalMinutes %= 60;
+
+        return String.format("%02d:%02d", totalHours, totalMinutes);
     }
 
     public static CourseResponseDto mapCourseToResponseDto(Course course) {
@@ -175,25 +209,73 @@ public class CustomObjectMapper {
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
-        List<UserIdAndNameDto> approvedBy = course.getApprovedBy().stream()
+        List<UserIdAndNameDto> approvedBy = course.getReviewers().stream()
                 .map(approverId -> {
                     String name = TrainingModuleApplication.searchUserById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
+        String totalEstimatedTime = calculateTotalEstimatedTime(course.getPhases());
+        int noOfTopics = 0;
+        for (Phase phase : course.getPhases()) {
+            noOfTopics += phase.getSubtasks().size();
+        }
+        List<List<Phase>> nestedPhases = new ArrayList<>();
 
+        for (Phase phase : course.getPhases()) {
+            List<Phase> sublist = new ArrayList<>();
+            sublist.add(phase);
+            nestedPhases.add(sublist);
+        }
         return CourseResponseDto.builder()
                 ._id(course.get_id())
                 .guidelines(course.getGuidelines())
-                .name(course.getName())
+                .courseName(course.getName())
+                .estimatedTime(totalEstimatedTime)
+                .noOfTopics(noOfTopics)
                 .figmaLink(course.getFigmaLink())
                 .reviewers(approver)
-                .phases(course.getPhases())
-                .isDeleted(course.getIsDeleted())
+                .phases(nestedPhases)
+                .deleted(course.getIsDeleted())
                 .status(course.getStatus())
                 .approvedBy(approvedBy)
-                .isApproved(course.getIsApproved())
+                .approved(course.getIsApproved())
                 .createdBy(course.getCreatedBy())
+                .createdByName(TrainingModuleApplication.searchUserById(course.getCreatedBy()))
+                .build();
+    }
+    public static CourseResponseDto mapCourseToResponseDtoForNoPhase(Course course) {
+        List<UserIdAndNameDto> approver = course.getReviewers().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+        List<UserIdAndNameDto> approvedBy = course.getReviewers().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+        String totalEstimatedTime = calculateTotalEstimatedTime(course.getPhases());
+        int noOfTopics = 0;
+        for (Phase phase : course.getPhases()) {
+            noOfTopics += phase.getSubtasks().size();
+        }
+        return CourseResponseDto.builder()
+                ._id(course.get_id())
+                .guidelines(course.getGuidelines())
+                .courseName(course.getName())
+                .estimatedTime(totalEstimatedTime)
+                .noOfTopics(noOfTopics)
+                .figmaLink(course.getFigmaLink())
+                .reviewers(approver)
+                .deleted(course.getIsDeleted())
+                .status(course.getStatus())
+                .approvedBy(approvedBy)
+                .approved(course.getIsApproved())
+                .createdBy(course.getCreatedBy())
+                .createdByName(TrainingModuleApplication.searchUserById(course.getCreatedBy()))
                 .build();
     }
 

@@ -1,7 +1,9 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.MomMessage;
+import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Repository.CourseRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.Course;
@@ -21,6 +23,7 @@ import java.lang.reflect.Field;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -108,7 +111,24 @@ public class CourseService {
     public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
-            course = (Course) CustomObjectMapper.updateFields(courseDto, course);
+            List<List<Phase>> nestedPhases = courseDto.getPhases();
+            List<Phase> flatPhases = nestedPhases.stream()
+                    .flatMap(List::stream)
+                    .toList();
+            Set<String> reviewerIds = courseDto.getReviewers().stream()
+                    .map(UserIdAndNameDto::get_id)
+                    .collect(Collectors.toSet());
+            course =  Course.builder()
+                    ._id(courseId)
+                    .name(courseDto.getName())
+                    .figmaLink(courseDto.getFigmaLink())
+                    .guidelines(courseDto.getGuidelines())
+                    .reviewers(reviewerIds)
+                    .phases(flatPhases)
+                    .isApproved(course.getIsApproved())
+                    .isDeleted(course.getIsDeleted())
+                    .createdBy(course.getCreatedBy())
+                    .build();
             courseRepo.save(course);
             return course;
         } else {
@@ -122,12 +142,16 @@ public class CourseService {
         AggregationResults<Course> aggregationResults = mongoTemplate.aggregate(aggregation, "course", Course.class);
         return aggregationResults.getMappedResults().size();
     }
-    public Course approve(Course course, String userId, Boolean approvedValue) {
+    public Course approve(Course course, String userId) {
         Set<String> approvedBy = course.getApprovedBy();
         approvedBy.add(userId);
         course.setApprovedBy(approvedBy);
-        course.setIsApproved(approvedValue);
-        course.setStatus(2);
+        if(course.getReviewers().size() == approvedBy.size()) {
+            course.setIsApproved(true);
+            course.setStatus(2);
+        }else {
+            course.setIsApproved(false);
+        }
         return courseRepo.save(course);
     }
 }

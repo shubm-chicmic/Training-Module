@@ -89,6 +89,9 @@ public class SessionCRUD {
             sessionDto.setApproved(session.isApproved());
             System.out.println("status = " + sessionDto.getStatus());
             if(sessionDto.getStatus() != null){
+                if(sessionDto.getStatus() != 1 && sessionDto.getStatus() != 2 && sessionDto.getStatus() != 3) {
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
+                }
                 if(!session.isApproved()) {
                     return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Session is not approved", null, response);
                 }

@@ -13,14 +13,15 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Course {
     @Id
     private String _id;
     private String name;
-    List<String> reviewers;
     private String figmaLink;
     private String guidelines;
     List<Phase> phases;
+    private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private int status;
