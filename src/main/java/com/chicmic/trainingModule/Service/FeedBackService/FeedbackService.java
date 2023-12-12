@@ -6,7 +6,6 @@ import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.mongodb.client.result.DeleteResult;
-import jdk.jshell.execution.Util;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -16,8 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-
-import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FeedbackService {
@@ -68,5 +67,11 @@ public class FeedbackService {
         FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
         return mongoTemplate.findAndModify(query,update,options,Feedback.class);
+    }
+    public Optional<Feedback> getFeedbackById(String id){
+        return feedbackRepo.findById(id);
+    }
+    public List<Feedback> findFeedbacks(){
+        return feedbackRepo.findAll();
     }
 }
