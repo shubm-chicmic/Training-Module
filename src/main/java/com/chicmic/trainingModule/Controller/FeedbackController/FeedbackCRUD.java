@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Controller.FeedbackController;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.FeedBackDto;
 import com.chicmic.trainingModule.Entity.Feedback;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import jakarta.validation.Valid;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -30,7 +31,12 @@ public class FeedbackCRUD {
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal){
-        return new ApiResponse(200,"FeedBack updated successfully",null);
+        System.out.println(principal.getName() + "-----------------");
+        Feedback feedback = feedbackService.updateFeedback(feedBackDto,principal.getName());
+        if(feedback == null)
+            throw new ApiException(HttpStatus.UNAUTHORIZED,"Something Went Wrong");
+
+        return new ApiResponse(200,"FeedBack updated successfully",feedback);
     }
 
     @DeleteMapping("/{id}")

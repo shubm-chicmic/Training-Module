@@ -7,9 +7,11 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.mongodb.client.result.DeleteResult;
 import jdk.jshell.execution.Util;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -49,5 +51,22 @@ public class FeedbackService {
         Query query = new Query(criteria);
         DeleteResult deleteResult = mongoTemplate.remove(query,Feedback.class);
         if(deleteResult.getDeletedCount() == 0) throw new ApiException(HttpStatus.valueOf(401),"Something went wrong!!");
+    }
+    public Feedback updateFeedback(FeedBackDto feedBackDto,String userId){
+        String _id = feedBackDto.get_id();
+        Rating rating = Rating.getRating(feedBackDto);
+
+        Criteria criteria = Criteria.where("id").is(_id).and("createdBy").is(userId);
+        Query query = new Query(criteria);
+        Update update = new Update()
+                .set("updateAt",new Date(System.currentTimeMillis()))
+                .set("message",feedBackDto.getMessage())
+                .set("traineeID",feedBackDto.getTraineeId())
+                .set("feedbackType",feedBackDto.getFeedBackTypeId())
+                .set("rating",rating);
+
+        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
+
+        return mongoTemplate.findAndModify(query,update,options,Feedback.class);
     }
 }
