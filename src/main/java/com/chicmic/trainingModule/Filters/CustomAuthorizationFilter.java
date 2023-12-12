@@ -44,7 +44,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private final UserServiceImpl userService;
     @Value("${server.servlet.context-path}")
     private String homePage;
-    private RedirectStrategy redirectStrategy=new DefaultRedirectStrategy();
+    private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     private static final String X= "You are not authorized to access this route !";
     @Override
@@ -52,7 +52,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         String servletPath = request.getServletPath();
         log.info("visited url = " + servletPath);
 
-        if (servletPath.contains("/v1/training")) {
+        if (servletPath.contains("/v1/training")||servletPath.contains("/api/feedback")) {
             String authorizationHeader = request.getHeader("Authorization");
             String userMetadataHeader = request.getHeader("userMeta");
 
@@ -89,6 +89,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
             response.setContentType(APPLICATION_JSON_VALUE);
             new ObjectMapper().writeValue(response.getOutputStream(), error);
         } else {
+            System.out.println("Control reaches here!!---");
             filterChain.doFilter(request, response);
         }
     }
