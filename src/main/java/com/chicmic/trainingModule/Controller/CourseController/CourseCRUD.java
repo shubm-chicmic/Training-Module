@@ -4,9 +4,10 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
-import com.chicmic.trainingModule.Dto.SessionDto.Mommessage;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,7 +19,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.Collectors;
 
+//vector<int>1234
 @RestController
 @RequestMapping("/v1/training/course")
 @AllArgsConstructor
@@ -43,7 +46,7 @@ public class CourseCRUD {
             List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey);
             Long count = courseService.countNonDeletedCourses();
 
-            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList);
+            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, false);
             Collections.reverse(courseResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         } else {
@@ -58,10 +61,26 @@ public class CourseCRUD {
 
     @PostMapping
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
-        System.out.println("courseDto = " + courseDto);
-        courseDto.setCreatedBy(principal.getName());
-        courseDto = CustomObjectMapper.convert(courseService.createCourse(CustomObjectMapper.convert(courseDto, Course.class)), CourseDto.class);
-        return new ApiResponse(HttpStatus.CREATED.value(), "Course created successfully", courseDto);
+        System.out.println("\u001B[33m courseDto previos = " + courseDto);
+        List<List<Phase>> nestedPhases = courseDto.getPhases();
+        List<Phase> flatPhases = nestedPhases.stream()
+                .flatMap(List::stream)
+                .toList();
+        Set<String> reviewerIds = courseDto.getReviewers().stream()
+                .map(UserIdAndNameDto::get_id)
+                .collect(Collectors.toSet());
+        Course course = Course.builder()
+                .createdBy(principal.getName())
+                .name(courseDto.getName())
+                .figmaLink(courseDto.getFigmaLink())
+                .guidelines(courseDto.getGuidelines())
+                .reviewers(reviewerIds)
+                .phases(flatPhases)
+                .isDeleted(false)
+                .isApproved(false)
+                .build();
+        course = courseService.createCourse(course);
+        return new ApiResponse(HttpStatus.CREATED.value(), "Course created successfully", course);
     }
 
     @DeleteMapping("/{courseId}")
@@ -78,10 +97,10 @@ public class CourseCRUD {
     public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
         if (course != null) {
-            if (courseDto != null && courseDto.getApproved() != null) {
-                List<String> approver = course.getReviewers();
+            if (courseDto != null && courseDto.getApproved() == true) {
+                Set<String> approver = course.getReviewers();
                 if (approver.contains(principal.getName())) {
-                    course =courseService.approve(course, principal.getName(), courseDto.getApproved());
+                    course = courseService.approve(course, principal.getName());
                 } else {
                     return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this course", null, response);
 
@@ -90,6 +109,9 @@ public class CourseCRUD {
             courseDto.setApproved(course.getIsApproved());
             System.out.println("status = " + courseDto.getStatus());
             if(courseDto.getStatus() != null){
+                if(courseDto.getStatus() != 1 && courseDto.getStatus() != 2 && courseDto.getStatus() != 3) {
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
+                }
                 if(!course.getIsApproved()) {
                     return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Course is not approved", null, response);
                 }

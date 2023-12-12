@@ -1,7 +1,6 @@
 package com.chicmic.trainingModule.Filters;
 
 
-import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Service.UserServiceImpl;
 import com.chicmic.trainingModule.Util.JwtUtil;
 import com.fasterxml.jackson.core.type.TypeReference;

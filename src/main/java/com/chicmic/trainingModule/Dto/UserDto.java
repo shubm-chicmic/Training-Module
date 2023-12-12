@@ -1,18 +1,16 @@
 package com.chicmic.trainingModule.Dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserDto {
-    Long _id;
-    String token;
-    String email;
-    String name;
-    String team;
+    private String _id;
+    private String token;
+    private String name;
+    private String teamId;
+    private String empCode;
 }

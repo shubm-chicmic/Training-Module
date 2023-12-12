@@ -9,6 +9,14 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Phase {
-    private String name;
-    private List<Task> tasks;
+    private String mainTask;
+    private List<SubTask> subtasks;
+
+    @Override
+    public String toString() {
+        return "Phase{" +
+                "mainTask='" + mainTask + '\'' +
+                ", subtasks=" + subtasks +
+                '}';
+    }
 }

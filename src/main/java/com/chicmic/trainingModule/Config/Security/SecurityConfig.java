@@ -40,7 +40,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").hasAuthority("ROLE_ADMIN"));
         http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico").permitAll());
+        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
 
         //adding filters
         http.addFilterBefore(new CustomAuthorizationFilter(userService), UsernamePasswordAuthenticationFilter.class);

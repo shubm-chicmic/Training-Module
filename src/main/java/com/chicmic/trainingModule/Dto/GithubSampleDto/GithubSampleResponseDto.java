@@ -19,6 +19,6 @@ public class GithubSampleResponseDto {
     private List<UserIdAndNameDto> approvedBy;
     private String comment;
     private String createdBy;
-    private Boolean isDeleted = false;
-    private Boolean isApproved = false;
+    private Boolean deleted = false;
+    private Boolean approved = false;
 }
