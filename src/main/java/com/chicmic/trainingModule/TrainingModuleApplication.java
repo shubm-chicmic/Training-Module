@@ -34,8 +34,8 @@ public class TrainingModuleApplication {
 					.token(null)
 					._id(node.get("_id").asText())
 					.name(node.get("name").asText())
-					.empCode(node.get("team").asText())
-					.teamId((node.get("team").asText()))
+					.empCode(node.get("employeeId").asText())
+					.teamId((node.get("teams").asText()))
 					.build();
 			idUserMap.put(userDto.get_id(), userDto);
 		}
