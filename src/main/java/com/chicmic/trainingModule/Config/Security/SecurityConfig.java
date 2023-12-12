@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -38,9 +39,13 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").hasAuthority("ROLE_ADMIN"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.PUT,"/v1/training/**").hasAuthority("TL"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/**").hasAuthority("TL"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.DELETE,"/v1/training/**").hasAuthority("TL"));
+
         http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
+//        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
+        http.authorizeHttpRequests(requests->requests.anyRequest().authenticated());
 
         //adding filters
         http.addFilterBefore(new CustomAuthorizationFilter(userService), UsernamePasswordAuthenticationFilter.class);

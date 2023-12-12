@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Entity;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 @Getter
 @Setter
@@ -9,6 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class SubTask {
+    private String _id = String.valueOf(new ObjectId());
     private String subTask;
     private String estimatedTime;
     private String link;

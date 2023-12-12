@@ -29,10 +29,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 import static org.springframework.util.MimeTypeUtils.sortBySpecificity;
@@ -62,13 +59,22 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 Map<String, Object> userData = (Map<String, Object>) userMetaData.get("data");
                 String userId = (String) userData.get("_id");
                 System.out.println("\u001B[33m userId = " + userId+ "\u001B[0m");
+                String userRole = null;
+                List<Map<String, Object>> userRoleDataList = (List<Map<String, Object>>) userData.get("roleData");
+                if (userRoleDataList != null && !userRoleDataList.isEmpty()) {
+                    for (Map<String, Object> userRoleData : userRoleDataList) {
+                        userRole = (String) userRoleData.get("role");
+                        System.out.println("\u001B[33m User Role = " + userRole + "\u001B[0m");
+                    }
+                }
+
                 Boolean isValidToken = true;//validateToken(authorizationHeader);
 
                 if (isValidToken) {
                     // Authentication is successful, proceed to set up authentication
                     Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
                     // Add user roles or authorities if available
-                    authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    authorities.add(new SimpleGrantedAuthority( userRole.toUpperCase()));
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(userId, null, authorities);
 

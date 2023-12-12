@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.StatusConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,6 +38,7 @@ public class CourseCRUD {
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
             @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
             @RequestParam(required = false) String courseId,
+            @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             HttpServletResponse response
     ) throws JsonProcessingException {
         if(courseId == null || courseId.isEmpty()) {
@@ -46,7 +48,7 @@ public class CourseCRUD {
             List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey);
             Long count = courseService.countNonDeletedCourses();
 
-            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, false);
+            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             Collections.reverse(courseResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         } else {
@@ -109,7 +111,7 @@ public class CourseCRUD {
             courseDto.setApproved(course.getIsApproved());
             System.out.println("status = " + courseDto.getStatus());
             if(courseDto.getStatus() != null){
-                if(courseDto.getStatus() != 1 && courseDto.getStatus() != 2 && courseDto.getStatus() != 3) {
+                if(courseDto.getStatus() != StatusConstants.PENDING && courseDto.getStatus() != StatusConstants.UPCOMING && courseDto.getStatus() != StatusConstants.COMPLETED) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
                 }
                 if(!course.getIsApproved()) {

@@ -24,7 +24,7 @@ public class Course {
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
-    private int status;
+    private int status = StatusConstants.PENDING;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;
 }

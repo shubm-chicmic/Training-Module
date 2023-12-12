@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
+import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.TrainingModuleApplication;
@@ -13,8 +14,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CustomObjectMapper {
@@ -171,16 +174,26 @@ public class CustomObjectMapper {
         }
         return courseResponseDtoList;
     }
-    public static String calculateTotalEstimatedTime(List<Phase> phases) {
+    public static <T> String calculateTotalEstimatedTime(List<T> tasks) {
+
         long totalHours = 0;
         long totalMinutes = 0;
 
-        for (Phase phase : phases) {
+        for (T task : tasks) {
                 long phaseHours = 0;
                 long phaseMinutes = 0;
-
-                for (SubTask subTask : phase.getSubtasks()) {
-                    System.out.println("Estimated time : " + subTask.getEstimatedTime());
+            List<SubTask> subtasks = null;
+            try {
+                subtasks = (List<SubTask>) task.getClass().getMethod("getSubtasks").invoke(task);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+            for (SubTask subTask :subtasks) {
+//                    System.out.println("Estimated time : " + subTask.getEstimatedTime());
                     String[] timeParts = subTask.getEstimatedTime().split(":");
                     if (timeParts.length == 1) {
                         phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
@@ -278,7 +291,48 @@ public class CustomObjectMapper {
                 .createdByName(TrainingModuleApplication.searchUserById(course.getCreatedBy()))
                 .build();
     }
+    public static List<TestResponseDto> mapTestToResponseDto(List<Test> tests, Boolean isMilestoneRequired) {
+        List<TestResponseDto> testResponseDtoList = new ArrayList<>();
+        for (Test test : tests) {
+                testResponseDtoList.add(mapTestToResponseDto(test));
+        }
+        return testResponseDtoList;
+    }
 
+    public static TestResponseDto mapTestToResponseDto(Test test) {
+        List<UserIdAndNameDto> approver = test.getReviewers().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+        List<UserIdAndNameDto> approvedBy = test.getReviewers().stream()
+                .map(approverId -> {
+                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    return new UserIdAndNameDto(approverId, name);
+                })
+                .collect(Collectors.toList());
+        String totalEstimatedTime = calculateTotalEstimatedTime(test.getMilestones());
+        int noOfTopics = 0;
+        for (List<Milestone> milestone : test.getMilestones()) {
+            noOfTopics += milestone.get(0).getSubtasks().size();
+        }
+        return TestResponseDto.builder()
+                ._id(test.get_id())
+                .testName(test.getTestName())
+                .estimatedTime(totalEstimatedTime)
+                .noOfTopics(noOfTopics)
+                .reviewers(approver)
+                .milestones(test.getMilestones())
+                .deleted(test.getDeleted())
+                .approvedBy(approvedBy)
+                .approved(test.getApproved())
+                .createdBy(test.getCreatedBy())
+                .createdByName(TrainingModuleApplication.searchUserById(test.getCreatedBy()))
+                .status(test.getStatus())
+                .createdByName(TrainingModuleApplication.searchUserById(test.getCreatedBy()))
+                .build();
+    }
 
 }
 

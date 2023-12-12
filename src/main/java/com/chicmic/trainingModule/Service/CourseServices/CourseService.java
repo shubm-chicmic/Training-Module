@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.MomMessage;
 import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.StatusConstants;
 import com.chicmic.trainingModule.Repository.CourseRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.Course;
@@ -148,7 +149,7 @@ public class CourseService {
         course.setApprovedBy(approvedBy);
         if(course.getReviewers().size() == approvedBy.size()) {
             course.setIsApproved(true);
-            course.setStatus(2);
+            course.setStatus(StatusConstants.UPCOMING);
         }else {
             course.setIsApproved(false);
         }
