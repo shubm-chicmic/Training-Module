@@ -40,6 +40,11 @@ public class FeedbackCRUD {
         feedback.setFeedbackType(FeedbackUtil.FEEDBACK_TYPE_CATEGORY[pos]);
         return new ApiResponse(200,"Feedback fetched successfully",feedback);
     }
+    @GetMapping("/emp/{id}")
+    public ApiResponse getAllFeedbacksOfEmployeeById(@PathVariable String id){
+        List<Feedback> feedbackList = feedbackService.getAllFeedbacksOfEmployeeById(id);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",feedbackList);
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

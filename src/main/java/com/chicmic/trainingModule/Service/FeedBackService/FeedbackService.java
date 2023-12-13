@@ -34,10 +34,10 @@ public class FeedbackService {
         Date currentDate = new Date(System.currentTimeMillis());
 
         Feedback feedback = Feedback.builder()
-                .traineeID(feedBackDto.getTraineeId())
+                .traineeID(feedBackDto.getTrainee())
                 .rating(rating)
-                .feedbackType(feedBackDto.getFeedBackTypeId())
-                .message(feedBackDto.getMessage())
+                .feedbackType(feedBackDto.getFeedbackType())
+                .comment(feedBackDto.getComment())
                 .createdAt(currentDate)
                 .updateAt(currentDate)
                 .createdBy(userId)
@@ -59,9 +59,9 @@ public class FeedbackService {
         Query query = new Query(criteria);
         Update update = new Update()
                 .set("updateAt",new Date(System.currentTimeMillis()))
-                .set("message",feedBackDto.getMessage())
-                .set("traineeID",feedBackDto.getTraineeId())
-                .set("feedbackType",feedBackDto.getFeedBackTypeId())
+                .set("comment",feedBackDto.getComment())
+                .set("traineeID",feedBackDto.getTrainee())
+                .set("feedbackType",feedBackDto.getFeedbackType())
                 .set("rating",rating);
 
         FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
@@ -73,5 +73,8 @@ public class FeedbackService {
     }
     public List<Feedback> findFeedbacks(){
         return feedbackRepo.findAll();
+    }
+    public List<Feedback> getAllFeedbacksOfEmployeeById(String traineeId){
+        return feedbackRepo.findAllByTraineeID(traineeId);
     }
 }

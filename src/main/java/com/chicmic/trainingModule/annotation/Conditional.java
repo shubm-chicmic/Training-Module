@@ -12,11 +12,13 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = {ConditionalValidator.class})
 public @interface Conditional {
 
-    String message() default "This field is required.";
+    String message() default "Field is required.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 
-    String selected();
-    String[] required();
+    String conditionalProperty();
+
     String[] values();
+
+    String[] requiredProperties();
 }

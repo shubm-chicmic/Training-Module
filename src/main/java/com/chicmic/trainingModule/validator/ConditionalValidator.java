@@ -15,49 +15,52 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 @Slf4j
 public class ConditionalValidator implements ConstraintValidator<Conditional, Object> {
 
-    private String selected;
-    private String[] required;
+//    private static final Logger log = LoggerFactory.getLogger(ConditionalValidator.class);
+
+    private String conditionalProperty;
+    private String[] requiredProperties;
     private String message;
     private String[] values;
 
     @Override
-    public void initialize(Conditional requiredIfChecked) {
-        selected = requiredIfChecked.selected();
-        required = requiredIfChecked.required();
-        message = requiredIfChecked.message();
-        values = requiredIfChecked.values();
+    public void initialize(Conditional constraint) {
+        conditionalProperty = constraint.conditionalProperty();
+        requiredProperties = constraint.requiredProperties();
+        message = constraint.message();
+        values = constraint.values();
     }
 
     @Override
-    public boolean isValid(Object objectToValidate, ConstraintValidatorContext context) {
-        Boolean valid = true;
-        //BeanUtils.getPropertyDescriptor()
+    public boolean isValid(Object object, ConstraintValidatorContext context) {
         try {
-            Object actualValue = BeanUtils.getProperty(objectToValidate, selected);
-            if (Arrays.asList(values).contains(actualValue)) {
-                for (String propName : required) {
-                    Object requiredValue = BeanUtils.getProperty(objectToValidate, propName);
-                    valid = requiredValue != null && !isEmpty(requiredValue);
-                    System.out.println( propName + "value:  " + requiredValue);
-                    if (!valid) {
-                        context.disableDefaultConstraintViolation();
-                        context.buildConstraintViolationWithTemplate(String.format("%s field is required.",propName)).addPropertyNode(propName).addConstraintViolation();
-                    }
-                }
+            Object conditionalPropertyValue = BeanUtils.getProperty(object, conditionalProperty);
+            if (doConditionalValidation(conditionalPropertyValue)) {
+                return validateRequiredProperties(object, context);
             }
-        } catch (IllegalAccessException e) {
-            log.error("Accessor method is not available for class : {}, exception : {}", objectToValidate.getClass().getName(), e);
-            e.printStackTrace();
-            return false;
-        } catch (NoSuchMethodException e) {
-            log.error("Field or method is not present on class : {}, exception : {}", objectToValidate.getClass().getName(), e);
-            e.printStackTrace();
-            return false;
-        } catch (InvocationTargetException e) {
-            log.error("An exception occurred while accessing class : {}, exception : {}", objectToValidate.getClass().getName(), e);
-            e.printStackTrace();
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
             return false;
         }
-        return valid;
+        return true;
+    }
+
+    private boolean validateRequiredProperties(Object object, ConstraintValidatorContext context) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        boolean isValid = true;
+        for (String property : requiredProperties) {
+            Object requiredValue = BeanUtils.getProperty(object, property);
+            boolean isPresent = requiredValue != null && !isEmpty(requiredValue);
+            if (!isPresent) {
+                isValid = false;
+                context.disableDefaultConstraintViolation();
+                context
+                        .buildConstraintViolationWithTemplate(String.format("%s field is required.",property))
+                        .addPropertyNode(property)
+                        .addConstraintViolation();
+            }
+        }
+        return isValid;
+    }
+
+    private boolean doConditionalValidation(Object actualValue) {
+        return Arrays.asList(values).contains(actualValue);
     }
 }

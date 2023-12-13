@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 public interface Rating {
     public static Rating getRating(FeedBackDto feedBackDto){
-        String feedBack_type = feedBackDto.getFeedBackTypeId();
+        String feedBack_type = feedBackDto.getFeedbackType();
         switch (feedBack_type){
             case "1" :
                 return new Rating_COURSE(feedBackDto.getCourseId(),feedBackDto.getPhaseId(),feedBackDto.getTheoreticalRating(), feedBackDto.getTechnicalRating(), feedBackDto.getCommunicationRating());

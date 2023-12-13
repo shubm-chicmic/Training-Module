@@ -19,7 +19,7 @@ public class Feedback {
     private String traineeID;
     private String feedbackType;
     private Rating rating;
-    private String message;
+    private String comment;
     private Date createdAt;
     private Date updateAt;
     private String createdBy;

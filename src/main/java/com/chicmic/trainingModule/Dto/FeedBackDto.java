@@ -9,19 +9,19 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-@Conditional(selected = "feedBackTypeId", values = {"1"}, required = {"courseId","phaseId","theoreticalRating","technicalRating","communicationRating"})
-@Conditional(selected = "feedBackTypeId", values = {"2"}, required = {"testId","milestoneId","theoreticalRating","codingRating","communicationRating"})
-@Conditional(selected = "feedBackTypeId", values = {"3"}, required = {"communicationRating","technicalRating","presentationRating"})
-@Conditional(selected = "feedBackTypeId", values = {"4"}, required = {"teamSpiritRating","attitudeRating"})
+@Conditional(conditionalProperty = "feedbackType", values = {"1"}, requiredProperties = {"courseId","phaseId","theoreticalRating","technicalRating","communicationRating"},message = "type-1 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"2"}, requiredProperties = {"testId","milestoneId","theoreticalRating","codingRating","communicationRating"},message = "type-2 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"3"}, requiredProperties = {"communicationRating","technicalRating","presentationRating"},message = "type-3 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"4"}, requiredProperties = {"teamSpiritRating","attitudeRating"},message = "type-4 error")
 public class FeedBackDto {
     private String _id;
 
     @NotBlank(message = "Trainee field is required.")
-    private String traineeId;
+    private String trainee;
 
     @Pattern(regexp = "^[1-4]$",message = "FeebackType should be lie b/w 1 to 4")
     @NotBlank(message = "FeedbackType field is required.")
-    private String feedBackTypeId;
+    private String feedbackType;
 
     private String courseId;
 
@@ -60,6 +60,6 @@ public class FeedBackDto {
     @Max(value = 5,message = "Rating should be less than or equal to 5")
     private Float teamSpiritRating;
 
-    @NotBlank(message = "Message field is required.")
-    private String message;
+    @NotBlank(message = "Comment field is required.")
+    private String comment;
 }
