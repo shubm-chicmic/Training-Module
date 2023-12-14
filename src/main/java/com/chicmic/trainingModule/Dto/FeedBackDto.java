@@ -9,8 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-@Conditional(conditionalProperty = "feedbackType", values = {"1"}, requiredProperties = {"courseId","phaseId","theoreticalRating","technicalRating","communicationRating"},message = "type-1 error")
-@Conditional(conditionalProperty = "feedbackType", values = {"2"}, requiredProperties = {"testId","milestoneId","theoreticalRating","codingRating","communicationRating"},message = "type-2 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"1"}, requiredProperties = {"course","phase","theoreticalRating","technicalRating","communicationRating"},message = "type-1 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"2"}, requiredProperties = {"test","milestone","theoreticalRating","codingRating","communicationRating"},message = "type-2 error")
 @Conditional(conditionalProperty = "feedbackType", values = {"3"}, requiredProperties = {"communicationRating","technicalRating","presentationRating"},message = "type-3 error")
 @Conditional(conditionalProperty = "feedbackType", values = {"4"}, requiredProperties = {"teamSpiritRating","attitudeRating"},message = "type-4 error")
 public class FeedBackDto {
@@ -19,18 +19,18 @@ public class FeedBackDto {
     @NotBlank(message = "Trainee field is required.")
     private String trainee;
 
-    @Pattern(regexp = "^[1-4]$",message = "FeebackType should be lie b/w 1 to 4")
+    @Pattern(regexp = "^[1-4]$",message = "FeedbackType should be lie b/w 1 to 4")
     @NotBlank(message = "FeedbackType field is required.")
     private String feedbackType;
 
-    private String courseId;
+    private String course;
 
 
-    private String phaseId;
+    private String phase;
 
-    private String testId;
+    private String test;
 
-    private String milestoneId;
+    private String milestone;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")

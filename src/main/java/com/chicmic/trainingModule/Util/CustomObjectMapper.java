@@ -53,34 +53,34 @@ public class CustomObjectMapper {
 
         List<UserIdAndNameDto> trainees = session.getTrainees().stream()
                 .map(traineeId -> {
-                    String name = TrainingModuleApplication.searchUserById(traineeId);
+                    String name = TrainingModuleApplication.searchNameById(traineeId);
                     return new UserIdAndNameDto(traineeId, name);
                 })
                 .collect(Collectors.toList());
 
         List<UserIdAndNameDto> sessionBy = session.getSessionBy().stream()
                 .map(sessionById -> {
-                    String name = TrainingModuleApplication.searchUserById(sessionById);
+                    String name = TrainingModuleApplication.searchNameById(sessionById);
                     return new UserIdAndNameDto(sessionById, name);
                 })
                 .collect(Collectors.toList());
 
         List<UserIdAndNameDto> approver = session.getApprover().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
 
         List<MomMessageResponseDto> MommessageList = session.getMOM().stream()
                 .map(momMessage -> {
-                    String name = TrainingModuleApplication.searchUserById(momMessage.get_id());
+                    String name = TrainingModuleApplication.searchNameById(momMessage.get_id());
                     return new MomMessageResponseDto(momMessage.get_id(), name, momMessage.getMessage());
                 })
                 .collect(Collectors.toList());
         List<UserIdAndNameDto> approvedBy = session.getApprovedBy().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
@@ -125,21 +125,21 @@ public class CustomObjectMapper {
 
         List<UserIdAndNameDto> createdBy = githubSample.getRepoCreatedBy().stream()
                 .map(createdById -> {
-                    String name = TrainingModuleApplication.searchUserById(createdById);
+                    String name = TrainingModuleApplication.searchNameById(createdById);
                     return new UserIdAndNameDto(createdById, name);
                 })
                 .collect(Collectors.toList());
 
         List<UserIdAndNameDto> approver = githubSample.getApprover().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
 
         List<UserIdAndNameDto> approvedBy = githubSample.getApprovedBy().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
@@ -205,13 +205,13 @@ public class CustomObjectMapper {
     public static CourseResponseDto mapCourseToResponseDto(Course course) {
         List<UserIdAndNameDto> approver = course.getReviewers().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
         List<UserIdAndNameDto> approvedBy = course.getReviewers().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
@@ -241,19 +241,19 @@ public class CustomObjectMapper {
                 .approvedBy(approvedBy)
                 .approved(course.getIsApproved())
                 .createdBy(course.getCreatedBy())
-                .createdByName(TrainingModuleApplication.searchUserById(course.getCreatedBy()))
+                .createdByName(TrainingModuleApplication.searchNameById(course.getCreatedBy()))
                 .build();
     }
     public static CourseResponseDto mapCourseToResponseDtoForNoPhase(Course course) {
         List<UserIdAndNameDto> approver = course.getReviewers().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
         List<UserIdAndNameDto> approvedBy = course.getReviewers().stream()
                 .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
+                    String name = TrainingModuleApplication.searchNameById(approverId);
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
@@ -275,7 +275,7 @@ public class CustomObjectMapper {
                 .approvedBy(approvedBy)
                 .approved(course.getIsApproved())
                 .createdBy(course.getCreatedBy())
-                .createdByName(TrainingModuleApplication.searchUserById(course.getCreatedBy()))
+                .createdByName(TrainingModuleApplication.searchNameById(course.getCreatedBy()))
                 .build();
     }
 

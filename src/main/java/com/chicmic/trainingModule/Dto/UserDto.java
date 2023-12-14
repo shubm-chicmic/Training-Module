@@ -12,5 +12,6 @@ public class UserDto {
     private String token;
     private String name;
     private String teamId;
+    private String teamName;
     private String empCode;
 }

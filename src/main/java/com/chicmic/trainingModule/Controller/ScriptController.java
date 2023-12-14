@@ -22,7 +22,7 @@ public class ScriptController {
     @GetMapping
     public void findExcelFilesAndCreateCourse() {
         try {
-            Path rootDir = Paths.get("/home/chicmic/IdeaProjects/trainingModule/TrainingModuleExcelSearch"); // Change this to your project root directory
+            Path rootDir = Paths.get("C:\\chicmic projects\\projects\\Training-Module\\TrainingModuleExcelSearch"); // Change this to your project root directory
 
             Files.walk(rootDir)
                     .filter(Files::isRegularFile)

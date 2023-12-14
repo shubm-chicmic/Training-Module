@@ -23,4 +23,5 @@ public class Feedback {
     private Date createdAt;
     private Date updateAt;
     private String createdBy;
+    private Float overallRating;
 }
