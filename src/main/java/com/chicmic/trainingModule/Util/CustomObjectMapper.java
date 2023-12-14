@@ -17,6 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -174,40 +175,32 @@ public class CustomObjectMapper {
         }
         return courseResponseDtoList;
     }
-    public static <T> String calculateTotalEstimatedTime(List<T> tasks) {
+    public static  String calculateTotalEstimatedTime(List<Phase> phases) {
 
         long totalHours = 0;
         long totalMinutes = 0;
-
-        for (T task : tasks) {
+        for (Phase phase : phases) {
                 long phaseHours = 0;
                 long phaseMinutes = 0;
-            List<SubTask> subtasks = null;
-            try {
-                subtasks = (List<SubTask>) task.getClass().getMethod("getSubtasks").invoke(task);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
-            for (SubTask subTask :subtasks) {
-//                    System.out.println("Estimated time : " + subTask.getEstimatedTime());
-                    String[] timeParts = subTask.getEstimatedTime().split(":");
-                    if (timeParts.length == 1) {
-                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-                    } else if (timeParts.length == 2) {
-                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+
+                for (Task task : phase.getTasks()) {
+                    for (SubTask subTask : task.getSubtasks()) {
+
+//                        System.out.println("Estimated time : " + subTask.getEstimatedTime());
+                        String[] timeParts = subTask.getEstimatedTime().split(":");
+                        if (timeParts.length == 1) {
+                            phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        } else if (timeParts.length == 2) {
+                            phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                            phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                        }
                     }
                 }
 
                 totalHours += phaseHours + phaseMinutes / 60;
                 totalMinutes += phaseMinutes % 60;
 
-        }
-
+            }
         // Convert total hours and minutes to proper format
         totalHours += totalMinutes / 60;
         totalMinutes %= 60;
@@ -216,29 +209,32 @@ public class CustomObjectMapper {
     }
 
     public static CourseResponseDto mapCourseToResponseDto(Course course) {
-        List<UserIdAndNameDto> approver = course.getReviewers().stream()
-                .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
-                    return new UserIdAndNameDto(approverId, name);
-                })
-                .collect(Collectors.toList());
-        List<UserIdAndNameDto> approvedBy = course.getReviewers().stream()
-                .map(approverId -> {
-                    String name = TrainingModuleApplication.searchUserById(approverId);
-                    return new UserIdAndNameDto(approverId, name);
-                })
-                .collect(Collectors.toList());
+        List<UserIdAndNameDto> approver = Optional.ofNullable(course.getReviewers())
+                .map(approverIds -> approverIds.stream()
+                        .map(approverId -> {
+                            String name = TrainingModuleApplication.searchUserById(approverId);
+                            return new UserIdAndNameDto(approverId, name);
+                        })
+                        .collect(Collectors.toList())
+                )
+                .orElse(null);
+
+        List<UserIdAndNameDto> approvedBy = Optional.ofNullable(course.getApprovedBy())
+                .map(approvedByIds -> approvedByIds.stream()
+                        .map(approverId -> {
+                            String name = TrainingModuleApplication.searchUserById(approverId);
+                            return new UserIdAndNameDto(approverId, name);
+                        })
+                        .collect(Collectors.toList())
+                )
+                .orElse(null);
+
         String totalEstimatedTime = calculateTotalEstimatedTime(course.getPhases());
         int noOfTopics = 0;
         for (Phase phase : course.getPhases()) {
-            noOfTopics += phase.getSubtasks().size();
-        }
-        List<List<Phase>> nestedPhases = new ArrayList<>();
-
-        for (Phase phase : course.getPhases()) {
-            List<Phase> sublist = new ArrayList<>();
-            sublist.add(phase);
-            nestedPhases.add(sublist);
+            for(Task task : phase.getTasks()) {
+                noOfTopics += task.getSubtasks().size();
+            }
         }
         return CourseResponseDto.builder()
                 ._id(course.get_id())
@@ -248,7 +244,8 @@ public class CustomObjectMapper {
                 .noOfTopics(noOfTopics)
                 .figmaLink(course.getFigmaLink())
                 .reviewers(approver)
-                .phases(nestedPhases)
+                .totalPhases(course.getPhases().size())
+                .phases(course.getPhases())
                 .deleted(course.getIsDeleted())
                 .status(course.getStatus())
                 .approvedBy(approvedBy)
@@ -264,7 +261,7 @@ public class CustomObjectMapper {
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
-        List<UserIdAndNameDto> approvedBy = course.getReviewers().stream()
+        List<UserIdAndNameDto> approvedBy = course.getApprovedBy().stream()
                 .map(approverId -> {
                     String name = TrainingModuleApplication.searchUserById(approverId);
                     return new UserIdAndNameDto(approverId, name);
@@ -273,7 +270,9 @@ public class CustomObjectMapper {
         String totalEstimatedTime = calculateTotalEstimatedTime(course.getPhases());
         int noOfTopics = 0;
         for (Phase phase : course.getPhases()) {
-            noOfTopics += phase.getSubtasks().size();
+            for(Task task : phase.getTasks()) {
+                noOfTopics += task.getSubtasks().size();
+            }
         }
         return CourseResponseDto.builder()
                 ._id(course.get_id())
@@ -283,6 +282,7 @@ public class CustomObjectMapper {
                 .noOfTopics(noOfTopics)
                 .figmaLink(course.getFigmaLink())
                 .reviewers(approver)
+                .totalPhases(course.getPhases().size())
                 .deleted(course.getIsDeleted())
                 .status(course.getStatus())
                 .approvedBy(approvedBy)
@@ -312,7 +312,7 @@ public class CustomObjectMapper {
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
-        String totalEstimatedTime = calculateTotalEstimatedTime(test.getMilestones());
+        String totalEstimatedTime = calculateTotalEstimatedTime(null);
         int noOfTopics = 0;
         for (List<Milestone> milestone : test.getMilestones()) {
             noOfTopics += milestone.get(0).getSubtasks().size();

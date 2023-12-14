@@ -1,7 +1,7 @@
 package com.chicmic.trainingModule.Dto.CourseDto;
 
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -17,13 +17,12 @@ import java.util.Set;
 public class CourseDto {
     @JsonProperty("courseName")
     private String name;
-    Set<UserIdAndNameDto> reviewers;
+    Set<String> reviewers;
     private String figmaLink;
     private String guidelines;
-    @JsonProperty("phases")
-    private List<List<Phase>> phases;
+    private List<List<Task>> phases;
     private Boolean approved = false;
-    private Integer status;
+    private Integer status = StatusConstants.PENDING;
 
     @Override
     public String toString() {

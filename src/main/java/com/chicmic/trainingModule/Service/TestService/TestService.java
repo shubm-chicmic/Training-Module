@@ -51,8 +51,8 @@ public class TestService {
         }
 
         Query searchQuery = new Query()
-                .addCriteria(Criteria.where("name").regex(query, "i"))
-                .addCriteria(Criteria.where("isDeleted").is(false))
+                .addCriteria(Criteria.where("testName").regex(query, "i"))
+                .addCriteria(Criteria.where("deleted").is(false))
                 .with(pageable);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);

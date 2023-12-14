@@ -1,8 +1,9 @@
 package com.chicmic.trainingModule;
+
 import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.SubTask;
-
+import com.chicmic.trainingModule.Entity.Task;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -16,6 +17,7 @@ import java.util.*;
 public class ExcelPerformOperations {
     public static Course excelPerformOperations(String excelFilePath) {
         List<Phase> phaseList = new ArrayList<>();
+        boolean firstRowSkipped = false;
         try {
             File excelFile = new File(excelFilePath);
             FileInputStream fis = new FileInputStream(excelFile);
@@ -23,48 +25,47 @@ public class ExcelPerformOperations {
             Sheet sheet = workbook.getSheetAt(0);
 
             String phaseName = "";
-            String mainTopic = "";
+            String mainTask = "";
 
             Phase phase = null;
-//            Task task = null;
 
-            Iterator<Row> rowIterator = sheet.iterator();
-            rowIterator.next(); // Skip the first row
-//            rowIterator.next(); // Skip the second row
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
+            for (Row row : sheet) {
+                if (!firstRowSkipped) {
+                    firstRowSkipped = true;
+                    continue;
+                }
                 Cell phaseCell = row.getCell(0);
-                Cell mainTopicCell = row.getCell(1);
-                Cell subTopicCell = row.getCell(2);
+                Cell mainTaskCell = row.getCell(1);
+                Cell subTaskCell = row.getCell(2);
                 Cell hoursCell = row.getCell(3);
                 Cell referenceCell = row.getCell(4);
 
                 if (phaseCell != null && !phaseCell.getStringCellValue().isEmpty()) {
                     phaseName = phaseCell.getStringCellValue();
-//                    phase = new Phase();
-//                    phase.setName(phaseName);
-//                    phase.setTasks(new ArrayList<>());
-//                    phaseList.add(phase);
-//                    mainTopic = "";
-//                    task = null; // Reset task when starting a new phase
-                }
-
-                if (mainTopicCell != null && !mainTopicCell.getStringCellValue().isEmpty()) {
-                    mainTopic = mainTopicCell.getStringCellValue();
                     phase = new Phase();
-                    phase.setMainTask(mainTopic);
-                    phase.setSubtasks(new ArrayList<>());
+                    phase.setTasks(new ArrayList<>());
                     phaseList.add(phase);
                 }
 
-                if (subTopicCell != null && hoursCell != null && referenceCell != null &&
-                        !subTopicCell.getStringCellValue().isEmpty() && hoursCell.getCellType() == CellType.NUMERIC) {
+                if (mainTaskCell != null && !mainTaskCell.getStringCellValue().isEmpty()) {
+                    mainTask = mainTaskCell.getStringCellValue();
+                    Task task = new Task();
+
+                    task.setMainTask(mainTask);
+                    task.setSubtasks(new ArrayList<>());
+                    if (phase != null) {
+                        phase.getTasks().add(task);
+                    }
+                }
+
+                if (subTaskCell != null && hoursCell != null && referenceCell != null &&
+                        !subTaskCell.getStringCellValue().isEmpty() && hoursCell.getCellType() == CellType.NUMERIC) {
                     SubTask subTask = new SubTask();
-                    subTask.setSubTask(subTopicCell.getStringCellValue());
+                    subTask.setSubTask(subTaskCell.getStringCellValue());
                     subTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()));
                     subTask.setLink(referenceCell.getStringCellValue());
-                    if (phase != null) {
-                        phase.getSubtasks().add(subTask);
+                    if (phase != null && phase.getTasks().size() > 0) {
+                        phase.getTasks().get(phase.getTasks().size() - 1).getSubtasks().add(subTask);
                     }
                 }
             }
@@ -75,20 +76,7 @@ public class ExcelPerformOperations {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        for (Phase phase : phaseList) {
-//            System.out.println("Phase: " + phase.getName());
-//            List<Task> tasks = phase.getTasks();
-//            for (Task task : tasks) {
-//                System.out.println("  Task: " + task.getName());
-//                List<SubTask> subTasks = task.getSubTasks();
-//                for (SubTask subTask : subTasks) {
-//                    System.out.println("    SubTask: " + subTask.getTaskName());
-//                    System.out.println("    Hours: " + subTask.getTime());
-//                    System.out.println("    Reference Link: " + subTask.getUrl());
-//                }
-//            }
-//            System.out.println("---------------------------------------------");
-//        }
+
         String fileNameWithoutExtension = Paths.get(excelFilePath).getFileName().toString().replaceFirst("[.][^.]+$", "");
         System.out.println("file name = " + fileNameWithoutExtension);
         Course course = new Course();
@@ -99,15 +87,19 @@ public class ExcelPerformOperations {
         course.setIsDeleted(false);
         course.setIsApproved(false);
         course.setPhases(phaseList);
+        course.setReviewers(new HashSet<>(Set.of(
+                "61fba5d5f4f70d6c0b3eff40",
+                "61fba5d5f4f70d6c0b3eff3d"
+        )));
         course.setCreatedBy("61fba5d5f4f70d6c0b3eff40");
         course.setApprovedBy(new HashSet<>());
-        course.setReviewers(new HashSet<>(Collections.singleton("61fba5d5f4f70d6c0b3eff40")));
+
         return course;
     }
+
     private static String convertToTimeFormat(double time) {
         int hours = (int) time;
         int minutes = (int) ((time - hours) * 60);
-
         return String.format(Locale.ENGLISH, "%02d:%02d", hours, minutes);
     }
 }

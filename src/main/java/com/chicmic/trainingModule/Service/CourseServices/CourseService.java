@@ -2,12 +2,9 @@ package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.MomMessage;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Repository.CourseRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.chicmic.trainingModule.Entity.Course;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -112,27 +110,37 @@ public class CourseService {
     public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
-            List<List<Phase>> nestedPhases = courseDto.getPhases();
-            List<Phase> flatPhases = nestedPhases.stream()
-                    .flatMap(List::stream)
-                    .toList();
-            Set<String> reviewerIds = courseDto.getReviewers().stream()
-                    .map(UserIdAndNameDto::get_id)
-                    .collect(Collectors.toSet());
-            course =  Course.builder()
-                    ._id(courseId)
-                    .name(courseDto.getName())
-                    .figmaLink(courseDto.getFigmaLink())
-                    .guidelines(courseDto.getGuidelines())
-                    .reviewers(reviewerIds)
-                    .phases(flatPhases)
-                    .isApproved(course.getIsApproved())
-                    .isDeleted(course.getIsDeleted())
-                    .createdBy(course.getCreatedBy())
-                    .build();
+            List<Phase> phases = new ArrayList<>();
+            if (courseDto.getPhases() != null) {
+                for (List<Task> tasks : courseDto.getPhases()) {
+                    Phase phase = Phase.builder()
+                            .tasks(tasks)
+                            .build();
+                    phases.add(phase);
+                }
+            }
+
+
+            // Only update properties from the DTO if they are not null
+            if (courseDto.getName() != null) {
+                course.setName(courseDto.getName());
+            }
+            if (courseDto.getFigmaLink() != null) {
+                course.setFigmaLink(courseDto.getFigmaLink());
+            }
+            if (courseDto.getGuidelines() != null) {
+                course.setGuidelines(courseDto.getGuidelines());
+            }
+            if (courseDto.getReviewers() != null) {
+                course.setReviewers(courseDto.getReviewers());
+            }
+            if (!phases.isEmpty()) {
+                course.setPhases(phases);
+            }
+            // Saving the updated course
             courseRepo.save(course);
             return course;
-        } else {
+        }else {
             return null;
         }
     }

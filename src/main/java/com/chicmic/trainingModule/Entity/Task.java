@@ -2,15 +2,17 @@ package com.chicmic.trainingModule.Entity;
 
 import lombok.*;
 import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
 
 import java.util.List;
+
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class Phase {
+public class Task {
     private String _id = String.valueOf(new ObjectId());
-    private List<Task> tasks;
+    private String mainTask;
+    private List<SubTask> subtasks;
+
 }

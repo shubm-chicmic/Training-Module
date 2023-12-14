@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,7 +41,7 @@ public class CourseCRUD {
             @RequestParam(required = false) String courseId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             HttpServletResponse response
-    ) throws JsonProcessingException {
+    )  {
         if(courseId == null || courseId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
@@ -64,20 +65,20 @@ public class CourseCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
-        List<List<Phase>> nestedPhases = courseDto.getPhases();
-        List<Phase> flatPhases = nestedPhases.stream()
-                .flatMap(List::stream)
-                .toList();
-        Set<String> reviewerIds = courseDto.getReviewers().stream()
-                .map(UserIdAndNameDto::get_id)
-                .collect(Collectors.toSet());
+        List<Phase> phases = new ArrayList<>();
+        for (List<Task> tasks : courseDto.getPhases()) {
+            Phase phase = Phase.builder()
+                    .tasks(tasks)
+                    .build();
+            phases.add(phase);
+        }
         Course course = Course.builder()
                 .createdBy(principal.getName())
                 .name(courseDto.getName())
                 .figmaLink(courseDto.getFigmaLink())
                 .guidelines(courseDto.getGuidelines())
-                .reviewers(reviewerIds)
-                .phases(flatPhases)
+                .reviewers(courseDto.getReviewers())
+                .phases(phases)
                 .isDeleted(false)
                 .isApproved(false)
                 .build();
