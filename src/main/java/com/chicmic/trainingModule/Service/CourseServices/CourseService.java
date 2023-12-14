@@ -37,6 +37,38 @@ public class CourseService {
         course = courseRepo.save(course);
         return course;
     }
+    public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
+        Query searchQuery = new Query()
+                .addCriteria(Criteria.where("name").regex(query, "i"))
+                .addCriteria(Criteria.where("isDeleted").is(false));
+
+        List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
+
+        if (!sortKey.isEmpty()) {
+            Comparator<Course> courseComparator = Comparator.comparing(course -> {
+                try {
+                    Field field = Course.class.getDeclaredField(sortKey);
+                    field.setAccessible(true);
+                    Object value = field.get(course);
+                    if (value instanceof String) {
+                        return ((String) value).toLowerCase();
+                    }
+                    return value.toString();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "";
+                }
+            });
+
+            if (sortDirection == 1) {
+                courses.sort(courseComparator.reversed());
+            } else {
+                courses.sort(courseComparator);
+            }
+        }
+
+        return courses;
+    }
 
     public List<Course> getAllCourses(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
         Pageable pageable;
@@ -96,17 +128,6 @@ public class CourseService {
         }
     }
 
-    public Course updateStatus(String courseId, int status) {
-        Course course = courseRepo.findById(courseId).orElse(null);
-        if (course != null) {
-            course.setStatus(status);
-            courseRepo.save(course);
-            return course;
-        } else {
-            return null;
-        }
-    }
-
     public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
@@ -119,8 +140,6 @@ public class CourseService {
                     phases.add(phase);
                 }
             }
-
-
             // Only update properties from the DTO if they are not null
             if (courseDto.getName() != null) {
                 course.setName(courseDto.getName());
@@ -157,7 +176,6 @@ public class CourseService {
         course.setApprovedBy(approvedBy);
         if(course.getReviewers().size() == approvedBy.size()) {
             course.setIsApproved(true);
-            course.setStatus(StatusConstants.UPCOMING);
         }else {
             course.setIsApproved(false);
         }

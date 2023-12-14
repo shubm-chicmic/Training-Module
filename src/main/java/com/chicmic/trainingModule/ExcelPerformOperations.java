@@ -83,7 +83,6 @@ public class ExcelPerformOperations {
         course.setName(fileNameWithoutExtension);
         course.setFigmaLink("https://www.figma.com/file/");
         course.setGuidelines("");
-        course.setStatus(1);
         course.setIsDeleted(false);
         course.setIsApproved(false);
         course.setPhases(phaseList);

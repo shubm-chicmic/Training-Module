@@ -22,11 +22,10 @@ import java.util.Set;
 @TrimAll
 public class TestDto {
     private String testName;
-    private List<UserIdAndNameDto> teams;
+    private List<String> teams;
     private List<List<Milestone>> milestones;
-    private Set<UserIdAndNameDto> reviewers = new HashSet<>();
+    private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private Integer status = StatusConstants.PENDING;
-    private String createdBy;
     private Boolean approved = false;
 }

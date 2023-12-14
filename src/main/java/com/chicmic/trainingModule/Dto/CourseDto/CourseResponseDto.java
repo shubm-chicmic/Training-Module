@@ -26,7 +26,6 @@ public class CourseResponseDto {
     private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private String createdByName;
-    private int status;
     private Boolean deleted = false;
     private Boolean approved = false;
 }

@@ -112,13 +112,11 @@ public class TestService {
     public Test updateTest(TestDto testDto, String testId) {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
-            Set<String> reviewerIds = testDto.getReviewers().stream()
-                    .map(UserIdAndNameDto::get_id)
-                    .collect(Collectors.toSet());
+
             test = Test.builder()
                     ._id(testId)
                     .testName(testDto.getTestName())
-                    .reviewers(reviewerIds)
+                    .reviewers(testDto.getReviewers())
                     .milestones(testDto.getMilestones())
                     .approved(test.getApproved())
                     .deleted(test.getDeleted())

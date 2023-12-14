@@ -40,8 +40,17 @@ public class CourseCRUD {
             @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
             @RequestParam(required = false) String courseId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
+            @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
             HttpServletResponse response
     )  {
+        System.out.println("dropdown key = " + isDropdown);
+        if (isDropdown) {
+            List<Course> courseList = courseService.getAllCourses(searchString, sortDirection, sortKey);
+            Long count = courseService.countNonDeletedCourses();
+            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
+            Collections.reverse(courseResponseDtoList);
+            return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
+        }
         if(courseId == null || courseId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
@@ -110,16 +119,7 @@ public class CourseCRUD {
                 }
             }
             courseDto.setApproved(course.getIsApproved());
-            System.out.println("status = " + courseDto.getStatus());
-            if(courseDto.getStatus() != null){
-                if(courseDto.getStatus() != StatusConstants.PENDING && courseDto.getStatus() != StatusConstants.UPCOMING && courseDto.getStatus() != StatusConstants.COMPLETED) {
-                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
-                }
-                if(!course.getIsApproved()) {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Course is not approved", null, response);
-                }
-                course = courseService.updateStatus(courseId, courseDto.getStatus());
-            }
+
             CourseResponseDto courseResponseDto = CustomObjectMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);
         }else {

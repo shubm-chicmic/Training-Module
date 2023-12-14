@@ -22,8 +22,6 @@ public class CourseDto {
     private String guidelines;
     private List<List<Task>> phases;
     private Boolean approved = false;
-    private Integer status = StatusConstants.PENDING;
-
     @Override
     public String toString() {
         return "CourseDto{" +
@@ -33,7 +31,7 @@ public class CourseDto {
                 ", guidelines='" + guidelines + '\'' +
                 ", phaseList=" + phases +
                 ", approved=" + approved +
-                ", status=" + status +
+
                 '}';
     }
 }

@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Milestone;
+import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Service.TestService.TestService;
@@ -62,17 +63,18 @@ public class TestCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
-        Set<String> reviewerIds = testDto.getReviewers().stream()
-                .map(UserIdAndNameDto::get_id)
-                .collect(Collectors.toSet());
-        List<String> teamsIds = testDto.getReviewers().stream()
-                .map(UserIdAndNameDto::get_id)
-                .collect(Collectors.toList());
+        List<Milestone> phases = new ArrayList<>();
+//        for (List<Task> tasks : courseDto.getPhases()) {
+//            Phase phase = Phase.builder()
+//                    .tasks(tasks)
+//                    .build();
+//            phases.add(phase);
+//        }
         Test test = Test.builder()
                 .createdBy(principal.getName())
                 .testName(testDto.getTestName())
-                .teams(teamsIds)
-                .reviewers(reviewerIds)
+                .teams(testDto.getTeams())
+                .reviewers(testDto.getReviewers())
                 .milestones(testDto.getMilestones())
                 .status(testDto.getStatus())
                 .deleted(false)
