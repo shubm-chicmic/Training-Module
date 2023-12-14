@@ -26,7 +26,7 @@ public class Session {
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private String dateTime;
-    private int status = 1;
+    private int status = StatusConstants.PENDING;
     private boolean isDeleted = false;
     private boolean isApproved = false;
     private List<MomMessage> MOM = new ArrayList<>();

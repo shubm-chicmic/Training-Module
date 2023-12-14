@@ -7,11 +7,12 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class Milestone {
+public class Task {
     private String _id = String.valueOf(new ObjectId());
     private String mainTask;
     private List<SubTask> subtasks;
+
 }

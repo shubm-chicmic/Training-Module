@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Service.SessionService;
 
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Entity.MomMessage;
+import com.chicmic.trainingModule.Entity.StatusConstants;
 import com.chicmic.trainingModule.Repository.SessionRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.Session;
@@ -166,7 +167,7 @@ public class SessionService {
         approvedBy.add(userId);
         session.setApprovedBy(approvedBy);
         session.setApproved(approvedValue);
-        session.setStatus(2);
+        session.setStatus(StatusConstants.UPCOMING);
         return sessionRepo.save(session);
     }
 }

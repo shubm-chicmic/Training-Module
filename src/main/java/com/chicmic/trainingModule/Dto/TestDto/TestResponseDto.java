@@ -1,31 +1,32 @@
-package com.chicmic.trainingModule.Dto.CourseDto;
+package com.chicmic.trainingModule.Dto.TestDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Milestone;
 import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.Task;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CourseResponseDto {
+public class TestResponseDto {
     private String _id;
-    private String courseName;
+    private String testName;
     private String estimatedTime;
     private int noOfTopics;
+    private List<UserIdAndNameDto> teams;
+    private List<Milestone> milestones;
     private List<UserIdAndNameDto> reviewers;
-    private String figmaLink;
-    private String guidelines;
-    private int totalPhases;
-    private List<Phase> phases;
-    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
+    private List<UserIdAndNameDto> approvedBy;
     private String createdBy;
     private String createdByName;
+    private int status;
     private Boolean deleted = false;
     private Boolean approved = false;
 }

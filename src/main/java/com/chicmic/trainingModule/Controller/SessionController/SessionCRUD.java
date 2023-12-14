@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Dto.SessionDto.Mommessage;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Entity.Session;
+import com.chicmic.trainingModule.Entity.StatusConstants;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -89,7 +90,7 @@ public class SessionCRUD {
             sessionDto.setApproved(session.isApproved());
             System.out.println("status = " + sessionDto.getStatus());
             if(sessionDto.getStatus() != null){
-                if(sessionDto.getStatus() != 1 && sessionDto.getStatus() != 2 && sessionDto.getStatus() != 3) {
+                if(sessionDto.getStatus() != StatusConstants.PENDING && sessionDto.getStatus() != StatusConstants.UPCOMING && sessionDto.getStatus() != StatusConstants.COMPLETED) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
                 }
                 if(!session.isApproved()) {

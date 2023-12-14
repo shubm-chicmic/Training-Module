@@ -14,4 +14,5 @@ public class UserDto {
     private String teamId;
     private String teamName;
     private String empCode;
+    private String employeeFullName;
 }
