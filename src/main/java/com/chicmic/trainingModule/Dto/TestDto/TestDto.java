@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Milestone;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.TestTask;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -23,9 +24,8 @@ import java.util.Set;
 public class TestDto {
     private String testName;
     private List<String> teams;
-    private List<List<Milestone>> milestones;
+    private List<List<TestTask>> milestones;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
-    private Integer status = StatusConstants.PENDING;
     private Boolean approved = false;
 }

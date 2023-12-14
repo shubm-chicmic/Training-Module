@@ -19,7 +19,7 @@ public class Course {
     private String name;
     private String figmaLink;
     private String guidelines;
-    List<Phase> phases;
+    private List<Phase> phases;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
@@ -27,6 +27,6 @@ public class Course {
     private Boolean isApproved = false;
 
     public Course() {
-        Phase.phaseCount = 0;
+        Phase.count = 0;
     }
 }

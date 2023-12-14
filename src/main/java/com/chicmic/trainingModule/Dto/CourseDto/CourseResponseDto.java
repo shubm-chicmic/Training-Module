@@ -2,7 +2,6 @@ package com.chicmic.trainingModule.Dto.CourseDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.Task;
 import lombok.*;
 
 import java.util.ArrayList;

@@ -10,9 +10,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Task {
+public class CourseTask {
     private String _id = String.valueOf(new ObjectId());
     private String mainTask;
-    private List<SubTask> subtasks;
+    private List<CourseSubTask> subtasks;
 
 }

@@ -1,10 +1,8 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Repository.CourseRepo;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +16,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -37,6 +31,9 @@ public class CourseService {
         course = courseRepo.save(course);
         return course;
     }
+//    public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
+//         return
+//    }
     public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("name").regex(query, "i"))
@@ -133,9 +130,9 @@ public class CourseService {
         if (course != null) {
             List<Phase> phases = new ArrayList<>();
             if (courseDto.getPhases() != null) {
-                for (List<Task> tasks : courseDto.getPhases()) {
+                for (List<CourseTask> courseTasks : courseDto.getPhases()) {
                     Phase phase = Phase.builder()
-                            .tasks(tasks)
+                            .tasks(courseTasks)
                             .build();
                     phases.add(phase);
                 }

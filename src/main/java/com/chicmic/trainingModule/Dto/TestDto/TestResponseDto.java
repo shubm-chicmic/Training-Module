@@ -19,6 +19,7 @@ public class TestResponseDto {
     private String _id;
     private String testName;
     private String estimatedTime;
+    private int noOfMilestones;
     private int noOfTopics;
     private List<UserIdAndNameDto> teams;
     private List<Milestone> milestones;
@@ -26,7 +27,6 @@ public class TestResponseDto {
     private List<UserIdAndNameDto> approvedBy;
     private String createdBy;
     private String createdByName;
-    private int status;
     private Boolean deleted = false;
     private Boolean approved = false;
 }

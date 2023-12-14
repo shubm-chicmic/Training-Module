@@ -12,19 +12,20 @@ import java.util.Set;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class Test {
     @Id
     private String _id;
     private String testName;
     private List<String> teams;
-    private List<List<Milestone>> milestones;
+    private List<Milestone> milestones;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
-    private int status = StatusConstants.PENDING;
     private Boolean deleted = false;
     private Boolean approved = false;
+    public Test() {
+        Milestone.count = 0;
+    }
 
 }

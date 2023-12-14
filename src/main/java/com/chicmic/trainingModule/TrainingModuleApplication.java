@@ -77,7 +77,7 @@ public class TrainingModuleApplication {
 //			traineeIdAndUserMap.put(userDto.get_id(), userDto);
 //		}
 	}
-	public static String searchUserById(String userId) {
+	public static String searchNameById(String userId) {
 		UserDto userDto = idUserMap.get(userId);
 		if(userId == null || userId.isEmpty() || userDto == null) {
 			return "User not found";

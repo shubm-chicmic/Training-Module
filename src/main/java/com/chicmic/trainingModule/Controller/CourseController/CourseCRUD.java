@@ -5,14 +5,11 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.StatusConstants;
-import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Entity.CourseTask;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 //vector<int>1234
 @RestController
@@ -75,9 +71,9 @@ public class CourseCRUD {
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase> phases = new ArrayList<>();
-        for (List<Task> tasks : courseDto.getPhases()) {
+        for (List<CourseTask> courseTasks : courseDto.getPhases()) {
             Phase phase = Phase.builder()
-                    .tasks(tasks)
+                    .tasks(courseTasks)
                     .build();
             phases.add(phase);
         }

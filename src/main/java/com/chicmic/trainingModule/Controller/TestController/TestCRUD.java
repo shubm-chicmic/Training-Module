@@ -2,26 +2,21 @@ package com.chicmic.trainingModule.Controller.TestController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
-
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Milestone;
-import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Service.TestService.TestService;
+import com.chicmic.trainingModule.Entity.TestTask;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
 import java.security.Principal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/training/test")
@@ -38,8 +33,18 @@ public class TestCRUD {
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
             @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
             @RequestParam(required = false) String testId,
+            @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
+            @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
             HttpServletResponse response
-    ) throws JsonProcessingException {
+    )  {
+        System.out.println("dropdown key = " + isDropdown);
+        if (isDropdown) {
+            List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey);
+            Long count = testService.countNonDeletedTests();
+            List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
+            Collections.reverse(testResponseDtoList);
+            return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
+        }
         if(testId == null || testId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
@@ -47,7 +52,7 @@ public class TestCRUD {
             List<Test> testList = testService.getAllTests(pageNumber, pageSize, searchString, sortDirection, sortKey);
             Long count = testService.countNonDeletedTests();
 
-            List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, false);
+            List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         } else {
@@ -63,20 +68,20 @@ public class TestCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
-        List<Milestone> phases = new ArrayList<>();
-//        for (List<Task> tasks : courseDto.getPhases()) {
-//            Phase phase = Phase.builder()
-//                    .tasks(tasks)
-//                    .build();
-//            phases.add(phase);
-//        }
+        List<Milestone> milestones = new ArrayList<>();
+        for (List<TestTask> tasks : testDto.getMilestones()) {
+            Milestone milestone = Milestone.builder()
+                    .tasks(tasks)
+                    .build();
+            milestones.add(milestone);
+        }
         Test test = Test.builder()
                 .createdBy(principal.getName())
                 .testName(testDto.getTestName())
-                .teams(testDto.getTeams())
                 .reviewers(testDto.getReviewers())
-                .milestones(testDto.getMilestones())
-                .status(testDto.getStatus())
+                .teams(testDto.getTeams())
+                .createdBy(principal.getName())
+                .milestones(milestones)
                 .deleted(false)
                 .approved(false)
                 .build();
@@ -107,16 +112,6 @@ public class TestCRUD {
                 }
             }
             testDto.setApproved(test.getApproved());
-            System.out.println("status = " + testDto.getStatus());
-            if(testDto.getStatus() != null){
-                if(testDto.getStatus() != 1 && testDto.getStatus() != 2 && testDto.getStatus() != 3) {
-                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
-                }
-                if(!test.getApproved()) {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Test is not approved", null, response);
-                }
-                test = testService.updateStatus(testId, testDto.getStatus());
-            }
             TestResponseDto testResponseDto = CustomObjectMapper.mapTestToResponseDto(testService.updateTest(testDto, testId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Test updated successfully", testResponseDto, response);
         }else {
