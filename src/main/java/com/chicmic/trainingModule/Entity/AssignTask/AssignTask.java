@@ -1,11 +1,10 @@
-package com.chicmic.trainingModule.Entity.Plan;
+package com.chicmic.trainingModule.Entity.AssignTask;
 
-import jdk.jfr.Timestamp;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,17 +15,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Plan {
+public class AssignTask {
     @Id
     private String _id;
-    private String planName;
-    private String description;
-    private Set<String> reviewers;
-    private List<Phase> phases;
+    private String userId;
+    private List<Plan> plans;
+    private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

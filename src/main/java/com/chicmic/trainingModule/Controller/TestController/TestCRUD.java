@@ -22,8 +22,6 @@ import java.util.*;
 @AllArgsConstructor
 public class TestCRUD {
     private final TestService testService;
-    private final RestTemplate restTemplate;
-
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,

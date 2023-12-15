@@ -25,12 +25,6 @@ import java.util.*;
 @AllArgsConstructor
 public class CourseCRUD {
     private final CourseService courseService;
-    private final RestTemplate restTemplate;
-    @GetMapping("/{courseId}/{phaseId}")
-    public HashMap<String ,String> getCourseNamePhaseNameById(@PathVariable String courseId, @PathVariable String phaseId){
-        return courseService.getCourseNamePhaseNameById(courseId, phaseId);
-    }
-
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,

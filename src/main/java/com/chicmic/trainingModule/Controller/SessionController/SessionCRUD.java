@@ -24,7 +24,6 @@ import java.util.*;
 @AllArgsConstructor
 public class SessionCRUD {
     private final SessionService sessionService;
-    private final RestTemplate restTemplate;
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(

@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Util;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
+import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
@@ -11,6 +12,8 @@ import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
 import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import com.chicmic.trainingModule.Entity.GithubSample.GithubSample;
 import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan.Task;
 import com.chicmic.trainingModule.Entity.Session.Session;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
 import com.chicmic.trainingModule.Entity.Test.Test;
@@ -389,6 +392,89 @@ public class CustomObjectMapper {
                 .createdByName(TrainingModuleApplication.searchNameById(test.getCreatedBy()))
                 .build();
     }
+    public static  String calculateTotalEstimatedTimeInPlan(List<com.chicmic.trainingModule.Entity.Plan.Phase> phases) {
+
+        long totalHours = 0;
+        long totalMinutes = 0;
+        for (com.chicmic.trainingModule.Entity.Plan.Phase phase : phases) {
+            long phaseHours = 0;
+            long phaseMinutes = 0;
+
+            for (Task task : phase.getTasks()) {
+
+//                        System.out.println("Estimated time : " + subTask.getEstimatedTime());
+                    String[] timeParts = task.getEstimatedTime().split(":");
+                    if (timeParts.length == 1) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    } else if (timeParts.length == 2) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                    }
+                }
+
+
+            totalHours += phaseHours + phaseMinutes / 60;
+            totalMinutes += phaseMinutes % 60;
+
+        }
+        // Convert total hours and minutes to proper format
+        totalHours += totalMinutes / 60;
+        totalMinutes %= 60;
+
+        return String.format("%02d:%02d", totalHours, totalMinutes);
+    }
+    public static List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
+        List<PlanResponseDto> planResponseDtoList = new ArrayList<>();
+        for (Plan plan : plans) {
+            planResponseDtoList.add(mapPlanToResponseDto(plan));
+        }
+        return planResponseDtoList;
+    }
+
+    public static PlanResponseDto mapPlanToResponseDto(Plan plan) {
+        List<UserIdAndNameDto> approver = Optional.ofNullable(plan.getReviewers())
+                .map(approverIds -> approverIds.stream()
+                        .map(approverId -> {
+                            String name = TrainingModuleApplication.searchNameById(approverId);
+                            return new UserIdAndNameDto(approverId, name);
+                        })
+                        .collect(Collectors.toList())
+                )
+                .orElse(null);
+
+        List<UserIdAndNameDto> approvedBy = Optional.ofNullable(plan.getApprovedBy())
+                .map(approvedByIds -> approvedByIds.stream()
+                        .map(approverId -> {
+                            String name = TrainingModuleApplication.searchNameById(approverId);
+                            return new UserIdAndNameDto(approverId, name);
+                        })
+                        .collect(Collectors.toList())
+                )
+                .orElse(null);
+
+        String totalEstimatedTime = calculateTotalEstimatedTimeInPlan(plan.getPhases());
+        int noOfTasks = 0;
+        for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
+            noOfTasks += phase.getTasks().size();
+        }
+
+        return PlanResponseDto.builder()
+                ._id(plan.get_id())
+                .planName(plan.getPlanName())
+                .estimatedTime(totalEstimatedTime)
+                .noOfPhases(plan.getPhases().size())
+                .noOfTasks(noOfTasks)
+                .reviewers(approver)
+                .totalPhases(plan.getPhases().size())
+                .phases(plan.getPhases())
+                .deleted(plan.getDeleted())
+                .approvedBy(approvedBy)
+                .approved(plan.getApproved())
+                .createdBy(plan.getCreatedBy())
+                .createdByName(TrainingModuleApplication.searchNameById(plan.getCreatedBy()))
+                .build();
+    }
+
 
 }
 

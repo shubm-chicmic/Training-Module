@@ -5,7 +5,9 @@ import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import com.chicmic.trainingModule.Entity.Course.Phase;
 import com.chicmic.trainingModule.Repository.CourseRepo;
+import com.mongodb.BasicDBObject;
 import lombok.RequiredArgsConstructor;
+import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,9 +22,9 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,7 @@ public class CourseService {
         HashMap<String, String> result = new HashMap<>();
         if (course != null) {
             result.put("courseName", course.getName());
-
+            System.out.println(course.getPhases().size());
             for (Phase phase : course.getPhases()) {
                 if (phase.get_id().equals(phaseId)) {
                     result.put("phaseName", phase.getName());
@@ -51,6 +53,7 @@ public class CourseService {
         }
         return result;
     }
+
     public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("name").regex(query, "i"))
@@ -179,7 +182,7 @@ public class CourseService {
     }
 
     public long countNonDeletedCourses() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("isDeleted").is(false));
+        MatchOperation matchStage = match(Criteria.where("isDeleted").is(false));
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Course> aggregationResults = mongoTemplate.aggregate(aggregation, "course", Course.class);
         return aggregationResults.getMappedResults().size();
