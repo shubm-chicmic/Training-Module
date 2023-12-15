@@ -5,9 +5,9 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 
-import com.chicmic.trainingModule.Entity.Course;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.CourseTask;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +26,10 @@ import java.util.*;
 public class CourseCRUD {
     private final CourseService courseService;
     private final RestTemplate restTemplate;
+    @GetMapping("/{courseId}/{phaseId}")
+    public HashMap<String ,String> getCourseNamePhaseNameById(@PathVariable String courseId, @PathVariable String phaseId){
+        return courseService.getCourseNamePhaseNameById(courseId, phaseId);
+    }
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(

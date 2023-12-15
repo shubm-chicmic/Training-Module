@@ -1,7 +1,9 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
-import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.CourseTask;
+import com.chicmic.trainingModule.Entity.Course.Phase;
 import com.chicmic.trainingModule.Repository.CourseRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -31,9 +34,23 @@ public class CourseService {
         course = courseRepo.save(course);
         return course;
     }
-//    public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
-//         return
-//    }
+    public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
+        Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").is(phaseId));
+        Course course = mongoTemplate.findOne(courseQuery, Course.class);
+
+        HashMap<String, String> result = new HashMap<>();
+        if (course != null) {
+            result.put("courseName", course.getName());
+
+            for (Phase phase : course.getPhases()) {
+                if (phase.get_id().equals(phaseId)) {
+                    result.put("phaseName", phase.getName());
+                    break;
+                }
+            }
+        }
+        return result;
+    }
     public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("name").regex(query, "i"))

@@ -1,5 +1,6 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.Test;
 
+import com.chicmic.trainingModule.Entity.SubTask;
 import lombok.*;
 
 @Getter

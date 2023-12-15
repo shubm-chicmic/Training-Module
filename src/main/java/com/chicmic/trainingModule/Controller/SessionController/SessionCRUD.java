@@ -5,7 +5,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.SessionDto.Mommessage;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
-import com.chicmic.trainingModule.Entity.Session;
+import com.chicmic.trainingModule.Entity.Session.Session;
 import com.chicmic.trainingModule.Entity.StatusConstants;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;

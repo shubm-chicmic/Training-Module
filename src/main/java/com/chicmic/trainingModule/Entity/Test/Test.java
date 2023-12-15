@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.Test;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;

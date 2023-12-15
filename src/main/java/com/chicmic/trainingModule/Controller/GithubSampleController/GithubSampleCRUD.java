@@ -5,7 +5,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
-import com.chicmic.trainingModule.Entity.GithubSample;
+import com.chicmic.trainingModule.Entity.GithubSample.GithubSample;
 import com.chicmic.trainingModule.Service.GithubSampleServices.GithubSampleService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;

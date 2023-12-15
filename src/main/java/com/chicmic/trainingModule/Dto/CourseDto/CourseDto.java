@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.Dto.CourseDto;
 
-import com.chicmic.trainingModule.Entity.CourseTask;
+import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

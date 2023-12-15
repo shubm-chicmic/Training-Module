@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.GithubSample;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

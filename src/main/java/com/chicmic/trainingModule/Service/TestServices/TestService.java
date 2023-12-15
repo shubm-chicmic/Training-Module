@@ -1,7 +1,9 @@
 package com.chicmic.trainingModule.Service.TestServices;
 
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
-import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Test.Milestone;
+import com.chicmic.trainingModule.Entity.Test.Test;
+import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Repository.TestRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

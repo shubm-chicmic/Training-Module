@@ -1,5 +1,6 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.Session;
 
+import com.chicmic.trainingModule.Entity.StatusConstants;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

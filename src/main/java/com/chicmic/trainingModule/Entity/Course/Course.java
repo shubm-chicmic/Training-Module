@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.Course;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;

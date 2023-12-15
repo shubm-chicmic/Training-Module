@@ -1,16 +1,18 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.Course;
 
 import lombok.*;
 import org.bson.types.ObjectId;
 
 import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TestTask {
+public class CourseTask {
     private String _id = String.valueOf(new ObjectId());
     private String mainTask;
-    private List<TestSubTask> subtasks;
+    private List<CourseSubTask> subtasks;
+
 }

@@ -1,9 +1,8 @@
 package com.chicmic.trainingModule.Controller;
 
-import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.ExcelPerformOperations;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
