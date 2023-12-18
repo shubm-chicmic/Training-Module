@@ -14,4 +14,5 @@ public class Phase {
     private String phaseName;
     private List<Task> tasks;
     private Boolean isCompleted = false;
+
 }

@@ -1,6 +1,8 @@
 package com.chicmic.trainingModule.Service.TestServices;
 
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.Phase;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
 import com.chicmic.trainingModule.Entity.Test.Test;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
@@ -18,10 +20,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -179,4 +179,19 @@ public class TestService {
         return testRepo.save(test);
     }
 
+    public List<Milestone> getTestByMilestoneIds(String testId, List<Object> milestoneIds) {
+        List<String> milestonesIds = milestoneIds.stream().map(Object::toString).collect(Collectors.toList());
+        System.out.println("Test " + milestoneIds);
+        Query testQuery = new Query(Criteria.where("_id").is(testId).and("milestones._id").in(milestonesIds));
+        Test test = mongoTemplate.findOne(testQuery, Test.class);
+        System.out.println(test);
+        if (test != null) {
+            List<Milestone> milestones = test.getMilestones().stream()
+                    .filter(milestone -> milestoneIds.contains(milestone.get_id()))
+                    .collect(Collectors.toList());
+            return milestones;
+        } else {
+            return Collections.emptyList();
+        }
+    }
 }

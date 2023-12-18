@@ -10,12 +10,12 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Task {
     private String _id = String.valueOf(new ObjectId());
     private Integer planType = null;
     private String plan;
-    private List<String> milestones;
+    private Object milestones;
     private String estimatedTime;
     private Boolean isCompleted = false;
     public String getEstimatedTime() {

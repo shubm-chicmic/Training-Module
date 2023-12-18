@@ -198,4 +198,21 @@ public class CourseService {
         }
         return courseRepo.save(course);
     }
+
+    public List<Phase> getCourseByPhaseIds(String courseId, List<Object> phaseIds) {
+        System.out.println("course id = " + courseId + " " + phaseIds );
+        List<String> phasesIds = phaseIds.stream().map(Object::toString).collect(Collectors.toList());
+        Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").in(phasesIds));
+        Course course = mongoTemplate.findOne(courseQuery, Course.class);
+        System.out.println(course);
+        if (course != null) {
+            List<Phase> phases = course.getPhases().stream()
+                    .filter(phase -> phaseIds.contains(phase.get_id()))
+                    .collect(Collectors.toList());
+            return phases;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
 }

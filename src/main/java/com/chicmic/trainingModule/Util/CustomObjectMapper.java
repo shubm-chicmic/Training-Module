@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Util;
 
+import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
@@ -7,6 +8,7 @@ import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
 import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
 import com.chicmic.trainingModule.Entity.Course.CourseTask;
@@ -19,19 +21,28 @@ import com.chicmic.trainingModule.Entity.Test.Milestone;
 import com.chicmic.trainingModule.Entity.Test.Test;
 import com.chicmic.trainingModule.Entity.Test.TestSubTask;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Component
+@RequiredArgsConstructor
 public class CustomObjectMapper {
+    private  final CourseService courseService;
+    private  final TestService testService;
     public static <T> T convert(Object dto, Class<T> targetType) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -423,7 +434,7 @@ public class CustomObjectMapper {
 
         return String.format("%02d:%02d", totalHours, totalMinutes);
     }
-    public static List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
+    public  List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
         List<PlanResponseDto> planResponseDtoList = new ArrayList<>();
         for (Plan plan : plans) {
             planResponseDtoList.add(mapPlanToResponseDto(plan));
@@ -431,7 +442,7 @@ public class CustomObjectMapper {
         return planResponseDtoList;
     }
 
-    public static PlanResponseDto mapPlanToResponseDto(Plan plan) {
+    public  PlanResponseDto mapPlanToResponseDto(Plan plan) {
         List<UserIdAndNameDto> approver = Optional.ofNullable(plan.getReviewers())
                 .map(approverIds -> approverIds.stream()
                         .map(approverId -> {
@@ -457,24 +468,110 @@ public class CustomObjectMapper {
         for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
             noOfTasks += phase.getTasks().size();
         }
+        List<com.chicmic.trainingModule.Entity.Plan.Phase> phaseList = new ArrayList<>();
+        for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
+            com.chicmic.trainingModule.Entity.Plan.Phase newPhase = new com.chicmic.trainingModule.Entity.Plan.Phase();
+            List<Task> taskList = new ArrayList<>();
+            for (Task task : phase.getTasks()) {
+                Task newTask = new Task();
+                newTask.setPlanType(task.getPlanType());
+                newTask.setPlan(task.getPlan());
+                newTask.setIsCompleted(task.getIsCompleted());
+                newTask.setEstimatedTime(task.getEstimatedTime());
+                newTask.set_id(task.get_id());
+                Object milestone = null;
+                if(task.getPlanType() != null && task.getPlanType() == 1){
+                    System.out.println("Milestone: fet " + task.getMilestones());
+                    milestone = (courseService.getCourseByPhaseIds(task.getPlan(), (List<Object>) task.getMilestones()));
+                }else if(task.getPlanType() != null && task.getPlanType() == 2){
+                    milestone = (testService.getTestByMilestoneIds(task.getPlan(), (List<Object>) task.getMilestones()));
+                }
+                newTask.setMilestones( milestone);
+                taskList.add(newTask);
+            }
+            newPhase.set_id(phase.get_id());
+            newPhase.setPhaseName(phase.getPhaseName());
+            newPhase.setTasks(taskList);
+            newPhase.setIsCompleted(phase.getIsCompleted());
 
+            phaseList.add(newPhase);
+        }
         return PlanResponseDto.builder()
                 ._id(plan.get_id())
                 .planName(plan.getPlanName())
+                .description(plan.getDescription())
                 .estimatedTime(totalEstimatedTime)
                 .noOfPhases(plan.getPhases().size())
                 .noOfTasks(noOfTasks)
                 .reviewers(approver)
                 .totalPhases(plan.getPhases().size())
-                .phases(plan.getPhases())
+                .phases(phaseList)
                 .deleted(plan.getDeleted())
                 .approvedBy(approvedBy)
                 .approved(plan.getApproved())
                 .createdBy(plan.getCreatedBy())
                 .createdByName(TrainingModuleApplication.searchNameById(plan.getCreatedBy()))
+                .createdAt(plan.getCreatedAt())
                 .build();
     }
+    public static List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId) {
+        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
+        for (AssignTask assignTask : assignTasks) {
+            assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId));
+        }
+        return assignTaskResponseDtoList;
+    }
 
+    public static AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId) {
+        List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
+                .map(reviewersIds -> reviewersIds.stream()
+                        .map(reviewerId -> {
+                            String name = TrainingModuleApplication.searchNameById(reviewerId);
+                            return new UserIdAndNameDto(reviewerId, name);
+                        })
+                        .collect(Collectors.toList())
+                )
+                .orElse(null);
+
+        List<UserIdAndNameDto> approvedBy = Optional.ofNullable(assignTask.getApprovedBy())
+                .map(approvedByIds -> approvedByIds.stream()
+                        .map(approverId -> {
+                            String name = TrainingModuleApplication.searchNameById(approverId);
+                            return new UserIdAndNameDto(approverId, name);
+                        })
+                        .collect(Collectors.toList())
+                )
+                .orElse(null);
+        Object trainee = null;
+        if(traineeId == null && traineeId.isEmpty()) {
+            trainee = Optional.ofNullable(assignTask.getUsers())
+                    .map(userIds -> userIds.stream()
+                            .map(userId -> {
+                                String name = TrainingModuleApplication.searchNameById(userId);
+                                return new UserIdAndNameDto(userId, name);
+                            })
+                            .collect(Collectors.toList())
+                    )
+                    .orElse(null);
+        }else {
+            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
+        }
+//        for (Plan plan : assignTask.getPlans()) {
+//            for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()){
+//                System.out.println("");
+//               phase.setTasks(null);
+//            }
+//        }
+        return AssignTaskResponseDto.builder()
+                ._id(assignTask.get_id())
+                .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
+                .createdBy(assignTask.getCreatedBy())
+                .reviewers(reviewers)
+                .plans(assignTask.getPlans())
+                .approvedBy(approvedBy)
+                .trainee(trainee)
+                .build();
+    }
 
 }
 

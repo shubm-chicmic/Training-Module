@@ -119,6 +119,7 @@ public class PlanService {
         return planRepo.findById(planId).orElse(null);
     }
     public List<Plan> getPlanByIds(List<String> planIds) {
+        System.out.println("plans  +  " + planIds);
         return planRepo.findAllById(planIds);
     }
 

@@ -18,7 +18,7 @@ import java.util.Set;
 public class AssignTask {
     @Id
     private String _id;
-    private String userId;
+    private List<String> users;
     private List<Plan> plans;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();

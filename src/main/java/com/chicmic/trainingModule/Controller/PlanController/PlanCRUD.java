@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Entity.Plan.Phase;
 import com.chicmic.trainingModule.Entity.Plan.Plan;
 
+import com.chicmic.trainingModule.Entity.Plan.Task;
 import com.chicmic.trainingModule.Entity.Session.Session;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -25,6 +26,7 @@ import java.util.*;
 @AllArgsConstructor
 public class PlanCRUD {
     private final PlanService planService;
+    private  final CustomObjectMapper customObjectMapper;
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -41,7 +43,7 @@ public class PlanCRUD {
         if (isDropdown) {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
             Long count = planService.countNonDeletedPlans();
-            List<PlanResponseDto> planResponseDtoList = CustomObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
+            List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
             Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         }
@@ -52,7 +54,7 @@ public class PlanCRUD {
             List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
             Long count = planService.countNonDeletedPlans();
 
-            List<PlanResponseDto> planResponseDtoList = CustomObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
+            List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
             Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         } else {
@@ -60,7 +62,7 @@ public class PlanCRUD {
             if (plan == null) {
                 return new ApiResponseWithCount(0, HttpStatus.NOT_FOUND.value(), "Plan not found", null, response);
             }
-            PlanResponseDto planResponseDto = CustomObjectMapper.mapPlanToResponseDto(plan);
+            PlanResponseDto planResponseDto = customObjectMapper.mapPlanToResponseDto(plan);
             return new ApiResponseWithCount(1, HttpStatus.OK.value(), "Plan retrieved successfully", planResponseDto, response);
         }
     }
@@ -68,7 +70,19 @@ public class PlanCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody PlanDto planDto, Principal principal) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
-        Plan plan = planService.createPlan(CustomObjectMapper.convert(planDto, Plan.class), principal);
+        System.out.println("\u001B[33m planDto = ");
+        for (Phase phase : planDto.getPhases()){
+            for(Task task : phase.getTasks()) {
+                System.out.println("Test = " + task.getMilestones());
+            }
+        }
+        Plan plan = planService.createPlan(customObjectMapper.convert(planDto, Plan.class), principal);
+        for (Phase phase : plan.getPhases()){
+            for(Task task : phase.getTasks()) {
+                System.out.println("plan = " + task.getMilestones());
+            }
+        }
+
         return new ApiResponse(HttpStatus.CREATED.value(), "Plan created successfully", plan);
     }
 
@@ -96,7 +110,7 @@ public class PlanCRUD {
             }
             planDto.setApproved(plan.getApproved());
 
-            PlanResponseDto planResponseDto = CustomObjectMapper.mapPlanToResponseDto(planService.updatePlan(planDto, planId));
+            PlanResponseDto planResponseDto = customObjectMapper.mapPlanToResponseDto(planService.updatePlan(planDto, planId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Plan updated successfully", planResponseDto, response);
         } else {
             return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Plan not found", null, response);

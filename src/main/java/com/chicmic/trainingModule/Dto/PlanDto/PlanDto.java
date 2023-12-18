@@ -1,10 +1,7 @@
 package com.chicmic.trainingModule.Dto.PlanDto;
 
 import com.chicmic.trainingModule.Entity.Plan.Phase;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.Set;
@@ -12,6 +9,7 @@ import java.util.Set;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class PlanDto {
