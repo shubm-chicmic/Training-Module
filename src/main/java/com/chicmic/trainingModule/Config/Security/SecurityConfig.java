@@ -38,7 +38,7 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").hasAuthority("ROLE_ADMIN"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").hasAnyAuthority("ADMIN","TL","PA"));
         http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
         http.authorizeHttpRequests(requests -> requests.requestMatchers("/api/feedback","/api/feedback/**").authenticated());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());

@@ -167,7 +167,7 @@ public class FeedbackService {
                 .comment(feedback.getComment())
             .build();
     }
-    public HashMap<String,Float> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
+    public HashMap<String,Object> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
 //        MatchOperation matchOperation = new MatchOperation(Criteria.where("traineeID").is(traineeId)
 //                .and("type").is("1").and("courseId").is(courseId)
 //        );
@@ -196,7 +196,7 @@ public class FeedbackService {
         total /= feedbackList.size();
         tr /= cnt;
         pr /= pcnt;
-        HashMap<String,Float> rating = new HashMap<>();
+        HashMap<String,Object> rating = new HashMap<>();
         rating.put("overallRating",roundOff_Rating(total));
         rating.put("courseRating",roundOff_Rating(tr));
         rating.put("phaseRating",roundOff_Rating(pr));

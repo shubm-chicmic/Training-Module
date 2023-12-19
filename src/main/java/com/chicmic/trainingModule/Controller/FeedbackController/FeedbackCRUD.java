@@ -42,7 +42,6 @@ public class FeedbackCRUD {
                                     @RequestParam(value = "traineeId",defaultValue = "",required = false) String traineeId,
                                     Principal principal
                                     ){
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag){//trainee
@@ -155,7 +154,8 @@ public class FeedbackCRUD {
         if(q==0)
             return new ApiResponse(201, "Feedback successfully given to a user", feedbackResponse);
 
-        HashMap<String,Float> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        HashMap<String,Object> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        response.put("_id",feedback.getId());
         return new ApiResponse(201, "Feedback successfully given to a user", response);
     }
 
@@ -173,7 +173,8 @@ public class FeedbackCRUD {
         if(q==0)
             return new ApiResponse(200,"FeedBack updated successfully",feedbackResponse);
 
-        HashMap<String,Float> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        HashMap<String,Object> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        response.put("_id",feedback.getId());
         return new ApiResponse(201, "Feedback successfully given to a user", response);
     }
 
@@ -202,6 +203,7 @@ public class FeedbackCRUD {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
+
     @GetMapping("/milestone/{milestoneId}")
     public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @RequestParam String testId,@PathVariable String milestoneId) {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
