@@ -43,6 +43,17 @@ public class FeedbackService {
         this.feedbackRepo = feedbackRepo;
         this.mongoTemplate = mongoTemplate;
     }
+    public Float getOverallRatingOfTrainee(String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        float totalRating = 0;
+        for (Feedback feedback : feedbackList){
+            totalRating += feedback.getOverallRating();
+        }
+        return roundOff_Rating(totalRating/feedbackList.size());
+    }
+
     //method for finding feedbacks given to a trainee
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
