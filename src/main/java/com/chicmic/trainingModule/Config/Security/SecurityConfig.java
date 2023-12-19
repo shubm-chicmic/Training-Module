@@ -45,7 +45,7 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
 //        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
-        http.authorizeHttpRequests(requests->requests.anyRequest().authenticated());
+        http.authorizeHttpRequests(requests->requests.anyRequest().permitAll());
 
         //adding filters
         http.addFilterBefore(new CustomAuthorizationFilter(userService), UsernamePasswordAuthenticationFilter.class);

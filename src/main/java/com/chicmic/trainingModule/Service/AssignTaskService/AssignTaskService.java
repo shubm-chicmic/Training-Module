@@ -187,11 +187,15 @@ public class AssignTaskService {
         return assignTaskRepo.save(assignTask);
     }
 
-    public List<AssignTask> getAllAssignTasksByTraineeId(String traineeId) {
-        System.out.println(traineeId);
+//    public List<AssignTask> getAllAssignTasksByTraineeId(String traineeId) {
+//        System.out.println(traineeId);
+//            Query query = new Query(Criteria.where("userId").in(traineeId));
+//            return mongoTemplate.find(query, AssignTask.class);
+//    }
+        public AssignTask getAllAssignTasksByTraineeId(String traineeId) {
             Query query = new Query(Criteria.where("userId").in(traineeId));
-            return mongoTemplate.find(query, AssignTask.class);
-    }
+            return mongoTemplate.findOne(query, AssignTask.class);
+        }
 
     public AssignTask completeTask(TaskCompleteDto taskCompleteDto, Principal principal) {
         if(taskCompleteDto.getSubtaskId() == null  && taskCompleteDto.getMilestone() !=null) {

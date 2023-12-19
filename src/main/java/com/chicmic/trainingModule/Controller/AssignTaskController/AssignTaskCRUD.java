@@ -55,12 +55,12 @@ public class AssignTaskCRUD {
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
         }if (traineeId != null || !traineeId.isEmpty()){
             System.out.println("im in");
-            List<AssignTask> assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
-            System.out.println(assignTaskList.size());
+            AssignTask assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+//            System.out.println(assignTaskList.size());
 //            Long count = assignTaskService.countNonDeletedAssignTasksByTraineeId(traineeId);
-            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId);
-            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(assignTaskList.size(),HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
+            AssignTaskResponseDto assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId);
+//            Collections.reverse(assignTaskResponseDtoList);
+            return new ApiResponseWithCount(1,HttpStatus.OK.value(), assignTaskResponseDtoList + " AssignTasks retrieved", assignTaskResponseDtoList, response);
         }
         if(assignTaskId == null || assignTaskId.isEmpty()) {
             pageNumber /= pageSize;
