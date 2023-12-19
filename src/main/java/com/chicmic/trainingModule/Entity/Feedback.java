@@ -4,10 +4,8 @@ import com.chicmic.trainingModule.Dto.ratings.Rating;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.repository.Update;
 
 import java.util.Date;
 
@@ -17,7 +15,7 @@ public class Feedback {
     @Id
     private String id;
     private String traineeID;
-    private String feedbackType;
+    private String type;
     private Rating rating;
     private String comment;
     private Date createdAt;

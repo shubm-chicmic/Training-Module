@@ -34,10 +34,10 @@ public class FeedbackResponse1 {
         //Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
         UserDto userDto = searchUserById(feedback.getTraineeID());
 
-        int feedbackTypeId = feedback.getFeedbackType().charAt(0) - '1';
+        int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
          FeedbackResponse1 feedbackResponse1 = FeedbackResponse1.builder()
-                 .feedbackType((feedback.getFeedbackType().charAt(0) - '0'))
+                 .feedbackType((feedback.getType().charAt(0) - '0'))
                          .trainee(new Trainee(feedback.getTraineeID(),userDto.getName()))
                  .reviewer(new Trainee(feedback.getCreatedBy(), TrainingModuleApplication.searchNameById(feedback.getCreatedBy())))
                  .comment(feedback.getComment())
@@ -56,7 +56,7 @@ public class FeedbackResponse1 {
              feedbackResponse1.setMilestone(new Milestone(rating_test.getMilestoneId(),rating_test.getMilestoneId()));
              feedbackResponse1.setTheoreticalRating(rating_test.getTheoreticalRating());
              feedbackResponse1.setCommunicationRating(rating_test.getCommunicationRating());
-             feedbackResponse1.setCommunicationRating(rating_test.getCommunicationRating());
+             feedbackResponse1.setCodingRating(rating_test.getCodingRating());
          }else if (feedbackTypeId == 2){
              Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
              feedbackResponse1.setCommunicationRating(rating_ppt.getCommunicationRating());

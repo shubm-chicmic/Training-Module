@@ -1,10 +1,8 @@
 package com.chicmic.trainingModule.Service.FeedBackService;
 
-import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
+import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
-import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse_COURSE;
-import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse_TEST;
 import com.chicmic.trainingModule.Dto.ratings.Rating;
 import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
 import com.chicmic.trainingModule.Dto.ratings.Rating_TEST;
@@ -14,11 +12,14 @@ import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.mongodb.client.result.DeleteResult;
+import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -28,7 +29,9 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
+import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class FeedbackService {
@@ -38,6 +41,26 @@ public class FeedbackService {
     public FeedbackService(FeedbackRepo feedbackRepo, MongoTemplate mongoTemplate) {
         this.feedbackRepo = feedbackRepo;
         this.mongoTemplate = mongoTemplate;
+    }
+    //method for finding feedbacks given to a trainee
+    public List<Feedback> findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
+        Pageable pageable;
+        if (!sortKey.isEmpty()) {
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = Sort.by(direction, sortKey);
+            pageable = PageRequest.of(pageNumber, pageSize, sort);
+        } else {
+            pageable = PageRequest.of(pageNumber, pageSize);
+        }
+        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+
+        //temporary search query!!!
+        if(query!=null && !query.isBlank()) {
+            criteria.and("createdBy").in(searchNameAndEmployeeCode(query));
+        }
+
+        Query query1 = new Query(criteria).with(pageable);
+        return mongoTemplate.find(query1,Feedback.class);
     }
 
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
@@ -55,7 +78,7 @@ public class FeedbackService {
         Feedback feedback = Feedback.builder()
                 .traineeID(feedBackDto.getTrainee())
                 .rating(rating)
-                .feedbackType(feedBackDto.getFeedbackType())
+                .type(feedBackDto.getFeedbackType())
                 .comment(feedBackDto.getComment())
                 .createdAt(currentDate)
                 .updateAt(currentDate)
@@ -97,7 +120,7 @@ public class FeedbackService {
 
     public FeedbackResponse buildFeedbackResponse(Feedback feedback){
         String taskName = null,subTask = null;
-        int feedbackTypeId = feedback.getFeedbackType().charAt(0) - '1';
+        int feedbackTypeId = feedback.getType().charAt(0) - '1';
         if(feedbackTypeId == 0){
             Rating_COURSE ratingCourse = (Rating_COURSE) feedback.getRating();
             taskName = ratingCourse.getCourseId();
@@ -126,9 +149,49 @@ public class FeedbackService {
                 .comment(feedback.getComment())
             .build();
     }
-    public List<Reviewer> buildFeedbackResponseForCourseAndTest(List<Feedback> feedbackList){
-        HashMap<String,Integer> dp = new HashMap<>();
-        List<Reviewer> courseResponseList = new ArrayList<>();
+    public HashMap<String,Float> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
+//        MatchOperation matchOperation = new MatchOperation(Criteria.where("traineeID").is(traineeId)
+//                .and("type").is("1").and("courseId").is(courseId)
+//        );
+//        Aggregation aggregation = newAggregation(matchOperation,);
+//        mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+//                .and("type").is("1").and("courseId").is(courseId);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        float total = 0;
+        float tr = 0,cnt = 0;
+        float pr = 0,pcnt = 0;
+        for (Feedback feedback : feedbackList){
+            total += feedback.getOverallRating();
+            if(feedback.getType().equals("1")){
+                Rating_COURSE ratingCourse = (Rating_COURSE) feedback.getRating();
+                if(!ratingCourse.getCourseId().equals(courseId)) continue;
+                tr += feedback.getOverallRating();
+                cnt += 1;
+                if(ratingCourse.getPhaseId().equals(phaseId)){
+                    pr += feedback.getOverallRating();
+                    pcnt += 1;
+                }
+            }
+        }
+        total /= feedbackList.size();
+        tr /= cnt;
+        pr /= pcnt;
+        HashMap<String,Float> rating = new HashMap<>();
+        rating.put("overallRating",roundOff_Rating(total));
+        rating.put("courseRating",roundOff_Rating(tr));
+        rating.put("phaseRating",roundOff_Rating(pr));
+        return rating;
+    }
+    public long countDocuments(Criteria criteria){
+        Query query = new Query(criteria);
+        return mongoTemplate.count(query,Feedback.class);
+    }
+    public List<CourseResponse> buildFeedbackResponseForCourseAndTest(List<Feedback> feedbackList){
+        HashMap<String,TraineeRating> dp = new HashMap<>();
+//        List<Reviewer> courseResponseList = new ArrayList<>();
+        List<CourseResponse> courseResponseList = new ArrayList<>();
         for(Feedback feedback : feedbackList){
             String reviewerId = feedback.getCreatedBy();
             if(dp.get(reviewerId) == null) {//not present
@@ -140,59 +203,93 @@ public class FeedbackService {
                         .reviewerName(reviewer.getName())
                         .code(reviewer.getEmpCode())
                         .overallRating(5.0f)
-                        .phases(new ArrayList<>())
+                        .records(new ArrayList<>())
                         .build();
 
                 PhaseResponse phaseResponse = buildPhaseResponseForCourseOrTest(feedback);
                 //adding the phase into it
-                courseResponse.getPhases().add(phaseResponse);
-                dp.put(reviewerId,courseResponseList.size());
-                courseResponseList.add(new Reviewer(courseResponse));
+                courseResponse.getRecords().add(phaseResponse);
+                dp.put(reviewerId,new TraineeRating(courseResponseList.size(),feedback.getOverallRating(),1));
+//                courseResponseList.add(new Reviewer(courseResponse));
+                courseResponseList.add(courseResponse);
             }else{
-                int idx = dp.get(reviewerId);
+                //int idx = dp.get(reviewerId).getIndex();
+                TraineeRating traineeRating = dp.get(reviewerId);
                 PhaseResponse phaseResponse = buildPhaseResponseForCourseOrTest(feedback);
-                courseResponseList.get(idx).reviewer().getPhases().add(phaseResponse);
+                //updating the count
+                traineeRating.incrRating(feedback.getOverallRating());
+                traineeRating.incrCount();
+//               courseResponseList.get(traineeRating.getIndex()).reviewer().getPhases().add(phaseResponse);
+               courseResponseList.get(traineeRating.getIndex()).getRecords().add(phaseResponse);
+                // courseResponseList.get(idx).reviewer().getPhases().add(phaseResponse);
             }
+        }
+        //set overall rating in list
+        for (TraineeRating rating : dp.values()){
+               int index = rating.getIndex();
+//               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
+               courseResponseList.get(index).setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
         }
         return courseResponseList;
     }
+    public List<CourseResponse> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,String phaseId,String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("1")
+                .and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId);
+//        criteria.elemMatch(new Criteria().and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId));
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query, Feedback.class);
+
+        List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        return courseResponseList;
+    }
+    public List<CourseResponse> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String milestoneid,String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
+                .and("rating.testId").is(testId).and("rating.milestoneId").is(milestoneid);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        return testResponseList;
+    }
     public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback){
-        if(feedback.getFeedbackType().equals("1")) {
-            Rating_COURSE ratingCourse = (Rating_COURSE) feedback.getRating();
-            return PhaseResponse_COURSE.builder()
-                    .phaseId(ratingCourse.getPhaseId())
-                    .phaseName(ratingCourse.getPhaseId())
-                    .createAt(feedback.getCreatedAt())
-                    .overallRating(feedback.getOverallRating())
-                    .technicalRating(ratingCourse.getTechnicalRating())
-                    .communicationRating(ratingCourse.getCommunicationRating())
-                    .theoreticalRating(ratingCourse.getTheoreticalRating())
-                    .comment(feedback.getComment())
-                    .build();
-        }
-        Rating_TEST ratingTest = (Rating_TEST) feedback.getRating();
-        return PhaseResponse_TEST.builder()
-                .milestoneId(ratingTest.getMilestoneId())
-                .milestoneName(ratingTest.getMilestoneId())
-                .overallRating(feedback.getOverallRating())
+        PhaseResponse phaseResponse = PhaseResponse.builder()
                 .comment(feedback.getComment())
-                .communicationRating(ratingTest.getCommunicationRating())
-                .theoreticalRating(ratingTest.getTheoreticalRating())
-                .codingRating(ratingTest.getCodingRating())
+                .overallRating(feedback.getOverallRating())
+                .createdAt(feedback.getCreatedAt())
                 .build();
+
+        if(feedback.getType().equals("1")) {
+            Rating_COURSE ratingCourse = (Rating_COURSE) feedback.getRating();
+            phaseResponse.set_id(ratingCourse.getPhaseId());
+            phaseResponse.setName(ratingCourse.getPhaseId());
+            phaseResponse.setTheoreticalRating(ratingCourse.getTheoreticalRating());
+            phaseResponse.setCommunicationRating(ratingCourse.getCommunicationRating());
+            phaseResponse.setTechnicalRating(ratingCourse.getTechnicalRating());
+        }else{
+            Rating_TEST ratingTest = (Rating_TEST) feedback.getRating();
+            phaseResponse.set_id(ratingTest.getMilestoneId());
+            phaseResponse.setName(ratingTest.getMilestoneId());
+            phaseResponse.setTheoreticalRating(ratingTest.getTheoreticalRating());
+            phaseResponse.setCommunicationRating(ratingTest.getCommunicationRating());
+            phaseResponse.setCodingRating(ratingTest.getCodingRating());
+        }
+        return phaseResponse;
     }
 
     public FeedbackResponse1 buildFeedbackResponseForSpecificFeedback(Feedback feedback){
         return FeedbackResponse1.buildResponse(feedback);
     }
     public List<Feedback> findFeedbacksByTestIdAndTraineeId(String testId,String traineeId,String feedbackType){
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("feedbackType").is("2")
+        searchUserById(traineeId);
+
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
                 .and("rating.testId").is(testId);
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Feedback.class);
     }
     public List<Feedback> findFeedbacksByCourseIdAndTraineeId(String courseId,String traineeId,String feedbackType){
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("feedbackType").is("1")
+        searchUserById(traineeId);
+
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("1")
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
 
@@ -226,48 +323,92 @@ public class FeedbackService {
     public List<Feedback> findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
         Pageable pageable;
         if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(direction, sortKey);
             pageable = PageRequest.of(pageNumber, pageSize, sort);
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
+
         Criteria criteria = Criteria.where("createdBy").is(reviewer);
-        return mongoTemplate.find(new Query(criteria).with(pageable),Feedback.class);
+        //temporary search query!!!
+        if(query!=null && !query.isBlank()) {
+            criteria.and("traineeID").in(searchNameAndEmployeeCode(query));
+        }
+        Query query1 = new Query(criteria).with(pageable);
+        query1.collation(Collation.of("en").strength(2));
+        return mongoTemplate.find(query1,Feedback.class);
         //return feedbackRepo.findAll(pageable);
     }
 
-    public List<Feedback> getAllFeedbacksOfEmployeeById(String traineeId){
-        searchUserById(traineeId);
-        return feedbackRepo.findAllByTraineeID(traineeId);
+    public List<Document> getAllFeedbacksOfEmployeeById(String traineeId){
+        // Define your match criteria
+//        AggregationOperation addFieldsOperation = context -> {
+//            Document condExpr = new Document();
+//            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
+//                String traineeID = entry.getKey();
+//                String teamName = entry.getValue().getTeamName();
+//                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+//            }
+//            return new Document("$addFields", new Document("teamName", condExpr));
+//        };
+//
+//        Aggregation aggregation = Aggregation.newAggregation(
+//                addFieldsOperation,
+//                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
+//                // Add other stages as needed
+//        );
+//        return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//        AggregationOperation addFieldsOperation = context -> {
+//            return new Document("$addFields",new Document("teamName",56));
+//        };
+        List<UserDto> userDtos = new ArrayList<>();
+       for (Map.Entry entry: TrainingModuleApplication.idUserMap.entrySet()){
+           userDtos.add((UserDto) entry.getValue());
+        }
+
+        LookupOperation lookupOperation = LookupOperation.newLookup()
+                .from("userDtos")  // Replace with your actual collection name
+                .localField("_id")
+                .foreignField("traineeID")
+                .as("user");
+
+        Aggregation  aggregation = Aggregation.newAggregation(
+                lookupOperation,
+                AddFieldsOperation.builder().addFieldWithValue("teamName", "$user.teamName").build(),
+                Aggregation.match(Criteria.where("traineeID").exists(true))
+        );
+
+        return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
     }
 
     public boolean feedbackExist(FeedBackDto feedBackDto,String reviewer){
-        String feedbcakType = feedBackDto.getFeedbackType();
-        if(feedbcakType.equals("1")){
-            Criteria criteria = Criteria.where("feedbackType").is("1").and("createdBy")
+        String feedback = feedBackDto.getFeedbackType();
+        if(feedback.equals("1")){
+            Criteria criteria = Criteria.where("type").is("1").and("createdBy")
                     .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
                     .and("rating.phaseId").is(feedBackDto.getPhase()).and("rating.courseId").is(feedBackDto.getCourse());
             Query query = new Query(criteria);
             return mongoTemplate.exists(query,Feedback.class);
-        }else if(feedbcakType.equals("2")){
-            Criteria criteria = Criteria.where("feedbackType").is(feedBackDto.getFeedbackType()).and("createdBy")
+        }else if(feedback.equals("2")){
+            Criteria criteria = Criteria.where("type").is("2").and("createdBy")
                     .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
                     .and("rating.milestoneId").is(feedBackDto.getMilestone()).and("rating.testId").is(feedBackDto.getTest());;
             Query query = new Query(criteria);
             return mongoTemplate.exists(query,Feedback.class);
-        }else if(feedbcakType.equals("3")){
-            Criteria criteria = Criteria.where("feedbackType").is("3").and("createdBy")
+        }else if(feedback.equals("3")){
+            Criteria criteria = Criteria.where("type").is("3").and("createdBy")
                     .is(reviewer).and("traineeID").is(feedBackDto.getTrainee());
 
             Query query = new Query(criteria);
             return mongoTemplate.exists(query,Feedback.class);
         }
-        Criteria criteria = Criteria.where("feedbackType").is("4").and("createdBy")
+        Criteria criteria = Criteria.where("type").is("4").and("createdBy")
                 .is(reviewer).and("traineeID").is(feedBackDto.getTrainee());
         Query query = new Query(criteria);
         return mongoTemplate.exists(query,Feedback.class);
     }
+
     public List<Feedback> getAllFeedbacksOfTraineeOnCourseWithId(String traineeId,String courseId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId)
                 .and("feedbackType").is("1")
@@ -276,5 +417,5 @@ public class FeedbackService {
 
         return mongoTemplate.find(query,Feedback.class);
     }
-
+    //create advance filters
 }

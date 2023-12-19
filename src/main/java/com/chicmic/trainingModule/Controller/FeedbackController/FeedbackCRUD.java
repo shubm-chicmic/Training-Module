@@ -9,7 +9,13 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
 import jakarta.validation.Valid;
+import org.bson.Document;
+import org.springframework.boot.autoconfigure.pulsar.PulsarProperties;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Field;
@@ -39,6 +45,18 @@ public class FeedbackCRUD {
                                     @RequestParam(value = "traineeId",defaultValue = "",required = false) String traineeId,
                                     Principal principal
                                     ){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag){//trainee
+            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,principal.getName());
+            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+            for (Feedback feedback : feedbackList) {
+                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+            }
+            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+        }
+
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
@@ -49,7 +67,8 @@ public class FeedbackCRUD {
             for (Feedback feedback : feedbackList) {
                 feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
             }
-            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+            long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
+            return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
         }
         if(feedbackType < 1 || feedbackType > 2)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
@@ -58,7 +77,41 @@ public class FeedbackCRUD {
             feedbackList = feedbackService.findFeedbacksByCourseIdAndTraineeId(_id,traineeId,"1");
         else
             feedbackList = feedbackService.findFeedbacksByTestIdAndTraineeId(_id,traineeId,"2");
-        List<Reviewer> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
+
+        return new ApiResponse(200,"List of All feedbacks",responseList);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ApiResponse findCourseAndTestFeedbacksForTrainee(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
+                                                            @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+                                                            @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
+                                                            @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
+                                                            @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
+                                                            @PathVariable String userId,@RequestParam(required = false) String _id,
+                                                            @RequestParam(required = false) Integer type){
+        pageNumber /= pageSize;
+        if (pageNumber < 0 || pageSize < 1)
+            throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
+
+        if(_id == null &&  type == null){
+            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
+            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+            for (Feedback feedback : feedbackList) {
+                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+            }
+            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+        }
+
+        if(type < 1 || type > 2)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
+
+        List<Feedback> feedbackList;
+        if(type == 1)
+            feedbackList = feedbackService.findFeedbacksByCourseIdAndTraineeId(_id,userId,"1");
+        else
+            feedbackList = feedbackService.findFeedbacksByTestIdAndTraineeId(_id,userId,"2");
+        List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
 
         return new ApiResponse(200,"List of All feedbacks",responseList);
     }
@@ -82,34 +135,46 @@ public class FeedbackCRUD {
 
     @GetMapping("/emp/{id}")
     public ApiResponse getAllFeedbacksOfEmployeeById(@PathVariable String id){
-        List<Feedback> feedbackList = feedbackService.getAllFeedbacksOfEmployeeById(id);
+        System.out.println("fsafsa");
+        List<Document> feedbackList = feedbackService.getAllFeedbacksOfEmployeeById(id);
 
-        List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
-        for (Feedback feedback : feedbackList)
-            feedbackResponseList.add(feedbackService.buildFeedbackResponse(feedback));
-        return new ApiResponse(200,"Feedback fetched successfully for trainee",feedbackResponseList);
+        //List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
+        //for (Feedback feedback : feedbackList)
+          //  feedbackResponseList.add(feedbackService.buildFeedbackResponse(feedback));
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",feedbackList);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse feedback(@Valid  @RequestBody FeedBackDto feedBackDto,Principal principal){
+    public ApiResponse feedback(@Valid  @RequestBody FeedBackDto feedBackDto, Principal principal, @RequestParam(defaultValue = "0",required = false)Integer q){
         //System.out.println(principal.getName() + "///");
-        Feedback feedback = feedbackService.saveFeedbackInDB(feedBackDto,principal.getName());
+
+        Feedback feedback = feedbackService.saveFeedbackInDB(feedBackDto, principal.getName());
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
-        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
-        return new ApiResponse(201,"Feedback successfully given to a user",feedbackResponse);
+                com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
+        if(q==0)
+            return new ApiResponse(201, "Feedback successfully given to a user", feedbackResponse);
+
+        HashMap<String,Float> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        return new ApiResponse(201, "Feedback successfully given to a user", response);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal){
+    public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
 //        System.out.println(principal.getName() + "-----------------");
         Feedback feedback = feedbackService.updateFeedback(feedBackDto,principal.getName());
         if(feedback == null)
             throw new ApiException(HttpStatus.UNAUTHORIZED,"Something Went Wrong");
-        FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponse(feedback);
 
-        return new ApiResponse(200,"FeedBack updated successfully",feedbackResponse);
+        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
+                com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
+
+        if(q==0)
+            return new ApiResponse(200,"FeedBack updated successfully",feedbackResponse);
+
+        HashMap<String,Float> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        return new ApiResponse(201, "Feedback successfully given to a user", response);
     }
 
     @DeleteMapping("/{id}")
@@ -129,22 +194,16 @@ public class FeedbackCRUD {
              feedbackResponseForCourses.add(feedbackResponseForCourse);
          }
 
-         /*
-         List<HashMap<String,Object>> res = new ArrayList<>();
-         for(Feedback feedback : feedbackList){
-             Rating rating = feedback.getRating();
-             HashMap<String,Object> feedbackRes = new HashMap<>();
-             Class<?> clazz = rating.getClass();
-             Field[] fields = clazz.getDeclaredFields();
-             for(Field field : fields){
-                 field.setAccessible(true);
-                 //System.out.println(field.getName() + ":" + field.get(feedback));
-                 feedbackRes.put(field.getName(),field.get(rating));
-             }
-             res.add(feedbackRes);
-         }
-          */
-
          return new ApiResponse(200,"fnsa",feedbackResponseForCourses);
+    }
+    @GetMapping("/phase/{phaseId}")
+    public ApiResponse getFeedbackByPhase(@RequestParam String traineeId, @RequestParam String courseId,@PathVariable String phaseId) {
+        List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
+    }
+    @GetMapping("/milestone/{milestoneId}")
+    public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @RequestParam String testId,@PathVariable String milestoneId) {
+        List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
 }

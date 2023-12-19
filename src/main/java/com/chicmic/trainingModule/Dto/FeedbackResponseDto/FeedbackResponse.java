@@ -1,13 +1,12 @@
 package com.chicmic.trainingModule.Dto.FeedbackResponseDto;
 
-import com.chicmic.trainingModule.Dto.FeedBackDto;
 import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import org.springframework.http.HttpStatus;
 
 public interface FeedbackResponse {
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
-        String type = feedback.getFeedbackType();
+        String type = feedback.getType();
         switch (type){
             case "1" :
                 return FeedbackResponse_COURSE.buildFeedbackResponse(feedback);
@@ -20,4 +19,5 @@ public interface FeedbackResponse {
         }
         throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
     }
+
 }

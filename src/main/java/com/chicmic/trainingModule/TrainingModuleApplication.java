@@ -1,12 +1,14 @@
 package com.chicmic.trainingModule;
 
 import com.chicmic.trainingModule.Dto.UserDto;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
@@ -55,7 +57,7 @@ public class TrainingModuleApplication {
 			teamIdAndNameMap.put(userId, userName);
 		}
 	}
-	public static String searchUserById(String userId) {
+	public static String searchNameById(String userId) {
 		UserDto userDto = idUserMap.get(userId);
 		if(userId == null || userId.isEmpty() || userDto == null) {
 			return "User not found";
@@ -66,7 +68,7 @@ public class TrainingModuleApplication {
 	public static UserDto searchUserById(String userId){
 		UserDto userDto = idUserMap.get(userId);
 		if(userId == null || userId.isEmpty() || userDto == null) {
-			throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid traineeId");
+			throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid userId");
 		}
 		return userDto;
 	}
@@ -107,9 +109,6 @@ public class TrainingModuleApplication {
 		return executor;
 	}
 
-	public static List<UserDto> getTraineeList() {
-		return null;
-	}
 
 	@Bean
 	public RestTemplate restTemplate() {

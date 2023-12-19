@@ -13,5 +13,5 @@ public class CourseResponse {
     private String reviewerName;
     private String code;
     private Float overallRating;
-    private List<PhaseResponse> phases;
+    private List<PhaseResponse> records;
 }
