@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Util;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
@@ -254,9 +255,31 @@ public class CustomObjectMapper {
         String totalEstimatedTime = calculateTotalEstimatedTime(course.getPhases());
         int noOfTopics = 0;
         for (Phase phase : course.getPhases()) {
+            int numOfTasksTopics = 0;
+            String estimatedTime = null;
             for(CourseTask courseTask : phase.getTasks()) {
                 noOfTopics += courseTask.getSubtasks().size();
+                numOfTasksTopics += courseTask.getSubtasks().size();
+                long totalHours = 0;
+                long totalMinutes = 0;
+                long phaseHours = 0;
+                long phaseMinutes = 0;
+                for (CourseSubTask courseSubTask  : courseTask.getSubtasks()){
+                    String[] timeParts = courseSubTask.getEstimatedTime().split(":");
+                    if (timeParts.length == 1) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    } else if (timeParts.length == 2) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                    }
+                }
+                totalHours += phaseHours + phaseMinutes / 60;
+                totalMinutes += phaseMinutes % 60;
+                estimatedTime = String.format("%02d:%02d", totalHours, totalMinutes);
+                System.out.println("Estimated time = " + estimatedTime);
             }
+            phase.setNoOfTasks(numOfTasksTopics);
+            phase.setEstimatedTime(estimatedTime);
         }
         return CourseResponseDto.builder()
                 ._id(course.get_id())
@@ -291,9 +314,31 @@ public class CustomObjectMapper {
         String totalEstimatedTime = calculateTotalEstimatedTime(course.getPhases());
         int noOfTopics = 0;
         for (Phase phase : course.getPhases()) {
+            int numOfTasksTopics = 0;
+            String estimatedTime = null;
             for(CourseTask courseTask : phase.getTasks()) {
                 noOfTopics += courseTask.getSubtasks().size();
+                numOfTasksTopics += courseTask.getSubtasks().size();
+                long totalHours = 0;
+                long totalMinutes = 0;
+                long phaseHours = 0;
+                long phaseMinutes = 0;
+                for (CourseSubTask courseSubTask  : courseTask.getSubtasks()){
+                    String[] timeParts = courseSubTask.getEstimatedTime().split(":");
+                    if (timeParts.length == 1) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    } else if (timeParts.length == 2) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                    }
+                }
+                totalHours += phaseHours + phaseMinutes / 60;
+                totalMinutes += phaseMinutes % 60;
+                estimatedTime = String.format("%02d:%02d", totalHours, totalMinutes);
+                System.out.println("Estimated time = " + estimatedTime);
             }
+            phase.setNoOfTasks(numOfTasksTopics);
+            phase.setEstimatedTime(estimatedTime);
         }
         return CourseResponseDto.builder()
                 ._id(course.get_id())
@@ -383,9 +428,30 @@ public class CustomObjectMapper {
         String totalEstimatedTime = calculateTotalEstimatedTimeInTest(test.getMilestones());
         int noOfTopics = 0;
         for (Milestone milestone : test.getMilestones()) {
+            int numOfTopics = 0;
+            String estimatedTime = null;
             for(TestTask testTask : milestone.getTasks()) {
                 noOfTopics += testTask.getSubtasks().size();
+                numOfTopics += testTask.getSubtasks().size();
+                long totalHours = 0;
+                long totalMinutes = 0;
+                long phaseHours = 0;
+                long phaseMinutes = 0;
+                for (TestSubTask testSubTask : testTask.getSubtasks()){
+                    String[] timeParts = testSubTask.getEstimatedTime().split(":");
+                    if (timeParts.length == 1) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    } else if (timeParts.length == 2) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                    }
+                }
+                totalHours += phaseHours + phaseMinutes / 60;
+                totalMinutes += phaseMinutes % 60;
+                estimatedTime = String.format("%02d:%02d", totalHours, totalMinutes);
             }
+            milestone.setEstimatedTime(estimatedTime);
+            milestone.setNoOfTasks(numOfTopics);
         }
         return TestResponseDto.builder()
                 ._id(test.get_id())
@@ -468,10 +534,15 @@ public class CustomObjectMapper {
         for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
             noOfTasks += phase.getTasks().size();
         }
+
         List<com.chicmic.trainingModule.Entity.Plan.Phase> phaseList = new ArrayList<>();
         for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
             com.chicmic.trainingModule.Entity.Plan.Phase newPhase = new com.chicmic.trainingModule.Entity.Plan.Phase();
             List<Task> taskList = new ArrayList<>();
+            long phaseHours = 0;
+            long phaseMinutes = 0;
+            long totalHours = 0;
+            long totalMinutes = 0;
             for (Task task : phase.getTasks()) {
                 Task newTask = new Task();
                 newTask.setPlanType(task.getPlanType());
@@ -486,11 +557,23 @@ public class CustomObjectMapper {
                 }else if(task.getPlanType() != null && task.getPlanType() == 2){
                     milestone = (testService.getTestByMilestoneIds(task.getPlan(), (List<Object>) task.getMilestones()));
                 }
+                String[] timeParts = task.getEstimatedTime().split(":");
+                if (timeParts.length == 1) {
+                    phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                } else if (timeParts.length == 2) {
+                    phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
+                }
+
                 newTask.setMilestones( milestone);
                 taskList.add(newTask);
             }
+            totalHours += phaseHours + phaseMinutes / 60;
+            totalMinutes += phaseMinutes % 60;
             newPhase.set_id(phase.get_id());
             newPhase.setPhaseName(phase.getPhaseName());
+            newPhase.setEstimatedTime(String.format("%02d:%02d", totalHours, totalMinutes));
+            newPhase.setNoOfTasks(phase.getTasks().size());
             newPhase.setTasks(taskList);
             newPhase.setIsCompleted(phase.getIsCompleted());
 
@@ -562,12 +645,18 @@ public class CustomObjectMapper {
 //               phase.setTasks(null);
 //            }
 //        }
+        List<PlanDto> plans = new ArrayList<>();
         return AssignTaskResponseDto.builder()
                 ._id(assignTask.get_id())
                 .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
                 .createdBy(assignTask.getCreatedBy())
                 .reviewers(reviewers)
-                .plans(assignTask.getPlans())
+                .plans(plans)
+                .totalPhases(5)
+                .approved(false)
+                .deleted(false)
+
+//                .plans(assignTask.getPlans())
                 .approvedBy(approvedBy)
                 .trainee(trainee)
                 .build();

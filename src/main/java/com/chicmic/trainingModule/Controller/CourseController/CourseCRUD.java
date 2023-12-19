@@ -12,6 +12,7 @@ import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -71,6 +72,7 @@ public class CourseCRUD {
         List<Phase> phases = new ArrayList<>();
         for (List<CourseTask> courseTasks : courseDto.getPhases()) {
             Phase phase = Phase.builder()
+                    ._id(String.valueOf(new ObjectId()))
                     .tasks(courseTasks)
                     .build();
             phases.add(phase);

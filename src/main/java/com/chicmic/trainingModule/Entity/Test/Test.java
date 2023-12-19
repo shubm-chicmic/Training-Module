@@ -11,6 +11,7 @@ import java.util.Set;
 @Document
 @Getter
 @Setter
+
 @AllArgsConstructor
 @Builder
 public class Test {
