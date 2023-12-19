@@ -21,7 +21,7 @@ public class FeedbackUtil {
         for (Map.Entry entry : idUserMap.entrySet()){
             //searching text
             UserDto userDto = (UserDto) entry.getValue();
-            if(userDto.getName().toLowerCase().contains(query) || userDto.getTeamName().toLowerCase().contains(searchQuery)){
+            if(userDto.getName().toLowerCase().contains(searchQuery) || userDto.getTeamName().toLowerCase().contains(searchQuery)){
                 ids.add(userDto.get_id());
             }
         }
