@@ -16,6 +16,7 @@ public class Task {
     private Integer planType = null;
     private String plan;
     private Object milestones;
+    List<String> mentor;
     private String estimatedTime;
     private Boolean isCompleted = false;
     public String getEstimatedTime() {

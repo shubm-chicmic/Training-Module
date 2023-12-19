@@ -19,8 +19,8 @@ public class AssignTaskResponseDto {
     private Object trainee;
     private List<UserIdAndNameDto> reviewers;
     private int totalPhases;
-    private List<Plan> plans;
-    private List<Milestone> milestones;
+    private List<PlanDto> plans;
+//    private List<Milestone> milestones;
     private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private String createdByName;

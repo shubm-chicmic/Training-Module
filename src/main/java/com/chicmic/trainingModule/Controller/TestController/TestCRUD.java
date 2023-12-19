@@ -11,6 +11,7 @@ import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -47,6 +48,7 @@ public class TestCRUD {
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<Test> testList = testService.getAllTests(pageNumber, pageSize, searchString, sortDirection, sortKey);
+            System.out.println(testList);
             Long count = testService.countNonDeletedTests();
 
             List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
@@ -68,6 +70,7 @@ public class TestCRUD {
         List<Milestone> milestones = new ArrayList<>();
         for (List<TestTask> tasks : testDto.getMilestones()) {
             Milestone milestone = Milestone.builder()
+                    ._id(String.valueOf(new ObjectId()))
                     .tasks(tasks)
                     .build();
             milestones.add(milestone);
