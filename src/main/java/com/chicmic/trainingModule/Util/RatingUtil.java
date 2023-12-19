@@ -1,7 +1,7 @@
 package com.chicmic.trainingModule.Util;
 
 public class RatingUtil {
-    public static Float roundOff_Rating(float rating){
+    public static Float roundOff_Rating(double rating){
         int dat = (int)(rating * 10);
         float val = 0f;
         if((dat%10)==0) val = dat/10;

@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Builder @Getter @Setter
 public class TraineePlanReponse {
     private String _id;
@@ -11,5 +13,5 @@ public class TraineePlanReponse {
     private UserIdAndNameDto team;
     private String mentor;
     private Float overallRating;
-    private UserIdAndNameDto course;
+    private List<UserIdAndNameDto> course;
 }

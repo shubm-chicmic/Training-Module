@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,11 +28,13 @@ public class TraineePlanService {
     private final MongoTemplate mongoTemplate;
     private final UserPlanRepo userPlanRepo;
     private final FeedbackService feedbackService;
+    private final PlanService planService;
 
-    public TraineePlanService(MongoTemplate mongoTemplate, UserPlanRepo userPlanRepo, FeedbackService feedbackService) {
+    public TraineePlanService(MongoTemplate mongoTemplate, UserPlanRepo userPlanRepo, FeedbackService feedbackService, PlanService planService) {
         this.mongoTemplate = mongoTemplate;
         this.userPlanRepo = userPlanRepo;
         this.feedbackService = feedbackService;
+        this.planService = planService;
     }
 
     public List<TraineePlanReponse> assignMultiplePlansToTrainees(PlanRequestDto planRequestDto, String createdBy){
@@ -54,17 +57,23 @@ public class TraineePlanService {
         //fetch user plans!!
         List<UserPlan> userDtos = mongoTemplate.find(new Query().with(PageRequest.of(0,10)), UserPlan.class);
         //fetch course name through plan----
-        List<String> userIds = userDtos.stream().map(UserPlan::getTraineeId).collect(Collectors.toList());
+        HashMap<String,String> userPlanId = new HashMap<>();
+        List<String> userIds = userDtos.stream().map((user)->{
+            userPlanId.put(user.getTraineeId(),user.getPlanId());
+            return user.getTraineeId();
+        }).collect(Collectors.toList());
+        List<String> planIds = userDtos.stream().map(UserPlan::getPlanId).collect(Collectors.toList());
         List<Document> documentList = feedbackService.calculateEmployeeRatingSummary(userIds);
-
         List<TraineePlanReponse> traineePlanReponseList = new ArrayList<>();
+        HashMap<String, List<UserIdAndNameDto>> planDetails = planService.getPlanCourseByPlanIds(planIds);
         for (Document document : documentList){
             String _id = (String) document.get("_id");
             UserDto userDto = TrainingModuleApplication.searchUserById(_id);
             traineePlanReponseList.add(TraineePlanReponse.builder()
                             .team(new UserIdAndNameDto(userDto.getTeamId(),userDto.getTeamName()))
                             .name(userDto.getName())
-                            .overallRating(roundOff_Rating((float)document.get("overallRating")/(int)document.get("count")))
+                            .course(planDetails.get(userPlanId.get(_id)))
+                            .overallRating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
                             ._id(_id)
                     .build());
         }
