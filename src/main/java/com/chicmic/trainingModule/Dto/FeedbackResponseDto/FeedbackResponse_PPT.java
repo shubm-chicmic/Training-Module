@@ -23,6 +23,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     private UserDto reviewer;
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
+    private UserIdAndNameDto task;
     private Date createdOn;
     private Float rating;
     private String comment;
@@ -45,6 +46,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
                 .communicationRating(rating_ppt.getCommunicationRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
                 .feedbackType(new UserIdAndNameDto("3",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
+                .task(new UserIdAndNameDto(rating_ppt.getCourseId(), rating_ppt.getCourseId()))
                 .createdOn(feedback.getCreatedAt())
                 .rating(feedback.getOverallRating())
                 .build();

@@ -15,7 +15,7 @@ public interface Rating {
                 return new Rating_TEST(feedBackDto.getTest(), feedBackDto.getMilestone(), feedBackDto.getTheoreticalRating(), feedBackDto.getCodingRating(), feedBackDto.getCommunicationRating());
             }
             case "3" : {
-                return new Rating_PPT(feedBackDto.getCommunicationRating(), feedBackDto.getTechnicalRating(), feedBackDto.getPresentationRating());
+                return new Rating_PPT(feedBackDto.getCommunicationRating(), feedBackDto.getTechnicalRating(), feedBackDto.getPresentationRating(),feedBackDto.getCourse());
             }
             case "4" : {
                 return new Rating_BEHAVIOUR(feedBackDto.getTeamSpiritRating(), feedBackDto.getAttitudeRating());

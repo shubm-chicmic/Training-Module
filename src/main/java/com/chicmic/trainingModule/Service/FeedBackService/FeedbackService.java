@@ -53,7 +53,6 @@ public class FeedbackService {
         }
         return roundOff_Rating(totalRating/feedbackList.size());
     }
-
     //method for finding feedbacks given to a trainee
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
@@ -366,42 +365,23 @@ public class FeedbackService {
 
     public List<Document> getAllFeedbacksOfEmployeeById(String traineeId){
         // Define your match criteria
-//        AggregationOperation addFieldsOperation = context -> {
-//            Document condExpr = new Document();
-//            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
-//                String traineeID = entry.getKey();
-//                String teamName = entry.getValue().getTeamName();
+        AggregationOperation addFieldsOperation = context -> {
+            Document condExpr = new Document();
+            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
+                String traineeID = entry.getKey();
+                String teamName = entry.getValue().getTeamName();
+                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
 //                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
-//            }
-//            return new Document("$addFields", new Document("teamName", condExpr));
-//        };
-//
-//        Aggregation aggregation = Aggregation.newAggregation(
-//                addFieldsOperation,
-//                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
-//                // Add other stages as needed
-//        );
-//        return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
-//        AggregationOperation addFieldsOperation = context -> {
-//            return new Document("$addFields",new Document("teamName",56));
-//        };
-        List<UserDto> userDtos = new ArrayList<>();
-       for (Map.Entry entry: TrainingModuleApplication.idUserMap.entrySet()){
-           userDtos.add((UserDto) entry.getValue());
-        }
+//                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+            }
+            return new Document("$addFields", new Document("teamName", condExpr));
+        };
 
-        LookupOperation lookupOperation = LookupOperation.newLookup()
-                .from("userDtos")  // Replace with your actual collection name
-                .localField("_id")
-                .foreignField("traineeID")
-                .as("user");
-
-        Aggregation  aggregation = Aggregation.newAggregation(
-                lookupOperation,
-                AddFieldsOperation.builder().addFieldWithValue("teamName", "$user.teamName").build(),
-                Aggregation.match(Criteria.where("traineeID").exists(true))
+        Aggregation aggregation = Aggregation.newAggregation(
+                addFieldsOperation,
+                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
+                // Add other stages as needed
         );
-
         return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
     }
 
@@ -421,7 +401,8 @@ public class FeedbackService {
             return mongoTemplate.exists(query,Feedback.class);
         }else if(feedback.equals("3")){
             Criteria criteria = Criteria.where("type").is("3").and("createdBy")
-                    .is(reviewer).and("traineeID").is(feedBackDto.getTrainee());
+                    .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
+                    .and("rating.courseId").is(feedBackDto.getCourse());
 
             Query query = new Query(criteria);
             return mongoTemplate.exists(query,Feedback.class);
@@ -439,6 +420,16 @@ public class FeedbackService {
         Query query = new Query(criteria);
 
         return mongoTemplate.find(query,Feedback.class);
+    }
+    public List<Document> calculateEmployeeRatingSummary(List<String> userIds) {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeID").in(userIds)),
+                Aggregation.group("traineeID")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback", Document.class);
+        return aggregationResults.getMappedResults();
     }
     //create advance filters
 }
