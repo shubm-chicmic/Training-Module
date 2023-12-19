@@ -5,6 +5,7 @@ import com.chicmic.trainingModule.Entity.Plan.Plan;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class AssignTaskResponseDto {
 
     private String _id;
     private Object trainee;
+    private LocalDateTime date;
     private List<UserIdAndNameDto> reviewers;
     private int totalPhases;
     private List<PlanDto> plans;

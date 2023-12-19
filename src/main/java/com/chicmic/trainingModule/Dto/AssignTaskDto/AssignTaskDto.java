@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Dto.AssignTaskDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class AssignTaskDto {
+    private LocalDateTime date;
     private List<String> users;
     private List<String> planIds;
     private Set<String> reviewers = new HashSet<>();

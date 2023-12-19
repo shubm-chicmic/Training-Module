@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
@@ -27,7 +28,9 @@ public class AssignTaskCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal) {
         System.out.println("assignTaskDto = " + assignTaskDto);
-        AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, principal);
+        for (String userId : assignTaskDto.getUsers()) {
+            AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
+        }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
     }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
@@ -79,5 +82,12 @@ public class AssignTaskCRUD {
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "AssignTask retrieved successfully", assignTaskResponseDto, response);
         }
     }
+
+    @PostMapping("/complete")
+    public ApiResponse completeTask(@RequestBody TaskCompleteDto taskCompleteDto, Principal principal) {
+        AssignTask assignTask = assignTaskService.completeTask(taskCompleteDto, principal);
+        return new ApiResponse(HttpStatus.CREATED.value(), "Task completed successfully", assignTask);
+    }
+
 
 }

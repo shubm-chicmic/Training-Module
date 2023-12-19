@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +19,8 @@ import java.util.Set;
 public class AssignTask {
     @Id
     private String _id;
-    private List<String> users;
+    private String userId;
+    private LocalDateTime date;
     private List<Plan> plans;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();

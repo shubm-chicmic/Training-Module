@@ -648,15 +648,15 @@ public class CustomObjectMapper {
                 .orElse(null);
         Object trainee = null;
         if(traineeId == null && traineeId.isEmpty()) {
-            trainee = Optional.ofNullable(assignTask.getUsers())
-                    .map(userIds -> userIds.stream()
-                            .map(userId -> {
-                                String name = TrainingModuleApplication.searchNameById(userId);
-                                return new UserIdAndNameDto(userId, name);
-                            })
-                            .collect(Collectors.toList())
-                    )
-                    .orElse(null);
+//            trainee = Optional.ofNullable(assignTask.getUsers())
+//                    .map(userIds -> userIds.stream()
+//                            .map(userId -> {
+//                                String name = TrainingModuleApplication.searchNameById(userId);
+//                                return new UserIdAndNameDto(userId, name);
+//                            })
+//                            .collect(Collectors.toList())
+//                    )
+//                    .orElse(null);
         }else {
             trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
         }

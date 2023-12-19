@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
 import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
 import com.chicmic.trainingModule.Entity.Plan.Plan;
 import com.chicmic.trainingModule.Repository.AssignTaskRepo;
@@ -33,13 +34,13 @@ public class AssignTaskService {
     private final AssignTaskRepo assignTaskRepo;
     private final PlanService planService;
     private final MongoTemplate mongoTemplate;
-    public AssignTask createAssignTask(AssignTaskDto assignTaskDto, Principal principal) {
+    public AssignTask createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
 
         List<Plan> plan = planService.getPlanByIds(assignTaskDto.getPlanIds());
         AssignTask assignTask = AssignTask.builder()
                 .createdBy(principal.getName())
                 .plans(plan)
-                .users(assignTaskDto.getUsers())
+                .userId(userId)
                 .reviewers(assignTaskDto.getReviewers())
                 .build();
         return assignTaskRepo.save(assignTask);
@@ -188,9 +189,16 @@ public class AssignTaskService {
 
     public List<AssignTask> getAllAssignTasksByTraineeId(String traineeId) {
         System.out.println(traineeId);
-            Query query = new Query(Criteria.where("users").in(traineeId));
+            Query query = new Query(Criteria.where("userId").in(traineeId));
             return mongoTemplate.find(query, AssignTask.class);
+    }
 
+    public AssignTask completeTask(TaskCompleteDto taskCompleteDto, Principal principal) {
+        if(taskCompleteDto.getSubtaskId() == null  && taskCompleteDto.getMilestone() !=null) {
+            AssignTask assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
+
+        }
+        return null;
     }
 }
 
