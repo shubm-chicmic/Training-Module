@@ -1,16 +1,19 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.CourseTask;
+import com.chicmic.trainingModule.Entity.Course.Phase;
 import com.chicmic.trainingModule.Repository.CourseRepo;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
+import com.mongodb.BasicDBObject;
 import lombok.RequiredArgsConstructor;
+import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -18,14 +21,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +36,24 @@ public class CourseService {
         course = courseRepo.save(course);
         return course;
     }
+    public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
+        Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").is(phaseId));
+        Course course = mongoTemplate.findOne(courseQuery, Course.class);
+
+        HashMap<String, String> result = new HashMap<>();
+        if (course != null) {
+            result.put("courseName", course.getName());
+            System.out.println(course.getPhases().size());
+            for (Phase phase : course.getPhases()) {
+                if (phase.get_id().equals(phaseId)) {
+                    result.put("phaseName", phase.getName());
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
     public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("name").regex(query, "i"))
@@ -133,9 +150,9 @@ public class CourseService {
         if (course != null) {
             List<Phase> phases = new ArrayList<>();
             if (courseDto.getPhases() != null) {
-                for (List<Task> tasks : courseDto.getPhases()) {
+                for (List<CourseTask> courseTasks : courseDto.getPhases()) {
                     Phase phase = Phase.builder()
-                            .tasks(tasks)
+                            .tasks(courseTasks)
                             .build();
                     phases.add(phase);
                 }
@@ -165,7 +182,7 @@ public class CourseService {
     }
 
     public long countNonDeletedCourses() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("isDeleted").is(false));
+        MatchOperation matchStage = match(Criteria.where("isDeleted").is(false));
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Course> aggregationResults = mongoTemplate.aggregate(aggregation, "course", Course.class);
         return aggregationResults.getMappedResults().size();
@@ -181,4 +198,21 @@ public class CourseService {
         }
         return courseRepo.save(course);
     }
+
+    public List<Phase> getCourseByPhaseIds(String courseId, List<Object> phaseIds) {
+        System.out.println("course id = " + courseId + " " + phaseIds );
+        List<String> phasesIds = phaseIds.stream().map(Object::toString).collect(Collectors.toList());
+        Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").in(phasesIds));
+        Course course = mongoTemplate.findOne(courseQuery, Course.class);
+        System.out.println(course);
+        if (course != null) {
+            List<Phase> phases = course.getPhases().stream()
+                    .filter(phase -> phaseIds.contains(phase.get_id()))
+                    .collect(Collectors.toList());
+            return phases;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
 }

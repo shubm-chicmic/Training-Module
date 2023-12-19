@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service.FeedBackService;
 
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
 import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
@@ -43,7 +44,7 @@ public class FeedbackService {
         this.mongoTemplate = mongoTemplate;
     }
     //method for finding feedbacks given to a trainee
-    public List<Feedback> findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
+    public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -58,9 +59,16 @@ public class FeedbackService {
         if(query!=null && !query.isBlank()) {
             criteria.and("createdBy").in(searchNameAndEmployeeCode(query));
         }
-
+        //get the count of trainee as well
+        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
         Query query1 = new Query(criteria).with(pageable);
-        return mongoTemplate.find(query1,Feedback.class);
+        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+
+        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+        for (Feedback feedback : feedbackList) {
+            feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+        }
+        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
     }
 
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
@@ -69,7 +77,7 @@ public class FeedbackService {
 
         //checking feedback exist in db!!!
         boolean flag = feedbackExist(feedBackDto,userId);
-        if(flag) throw new ApiException(HttpStatus.OK,"You already give feedback on this topic!!!");
+        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"You already give feedback on this topic!!!");
 
         Rating rating = Rating.getRating(feedBackDto);
         Float overallRating = Rating.computeOverallRating(feedBackDto);
@@ -108,7 +116,7 @@ public class FeedbackService {
                 .set("updateAt",new Date(System.currentTimeMillis()))
                 .set("comment",feedBackDto.getComment())
                 .set("traineeID",feedBackDto.getTrainee())
-                .set("feedbackType",feedBackDto.getFeedbackType())
+                .set("type",feedBackDto.getFeedbackType())
                 .set("overallRating",roundOff_Rating(overallRating))
                 .set("rating",rating);
 
@@ -184,10 +192,12 @@ public class FeedbackService {
         rating.put("phaseRating",roundOff_Rating(pr));
         return rating;
     }
+
     public long countDocuments(Criteria criteria){
         Query query = new Query(criteria);
         return mongoTemplate.count(query,Feedback.class);
     }
+
     public List<CourseResponse> buildFeedbackResponseForCourseAndTest(List<Feedback> feedbackList){
         HashMap<String,TraineeRating> dp = new HashMap<>();
 //        List<Reviewer> courseResponseList = new ArrayList<>();
@@ -242,6 +252,7 @@ public class FeedbackService {
         List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return courseResponseList;
     }
+
     public List<CourseResponse> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String milestoneid,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
                 .and("rating.testId").is(testId).and("rating.milestoneId").is(milestoneid);
@@ -250,6 +261,7 @@ public class FeedbackService {
         List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return testResponseList;
     }
+
     public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback){
         PhaseResponse phaseResponse = PhaseResponse.builder()
                 .comment(feedback.getComment())
@@ -411,7 +423,7 @@ public class FeedbackService {
 
     public List<Feedback> getAllFeedbacksOfTraineeOnCourseWithId(String traineeId,String courseId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId)
-                .and("feedbackType").is("1")
+                .and("type").is("1")
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
 

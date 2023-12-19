@@ -30,7 +30,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getRating();
         UserDto trainee = searchUserById(feedback.getTraineeID());
-        UserDto reviewer = searchUserById(feedback.getTraineeID());
+        UserDto reviewer = searchUserById(feedback.getCreatedBy());
         int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
         return FeedbackResponse_BEHAVIOUR.builder()
@@ -40,7 +40,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .comment(feedback.getComment())
                 .teamSpiritRating(rating_behaviour.getTeamSpiritRating())
                 .attitudeRating(rating_behaviour.getAttitudeRating())
-                .feedbackType(new UserIdAndNameDto("1",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
+                .feedbackType(new UserIdAndNameDto("4",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
                 .createdOn(feedback.getCreatedAt())
                 .rating(feedback.getOverallRating())
                 .build();

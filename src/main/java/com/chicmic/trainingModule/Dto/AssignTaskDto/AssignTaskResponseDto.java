@@ -1,7 +1,8 @@
-package com.chicmic.trainingModule.Dto.CourseDto;
+package com.chicmic.trainingModule.Dto.AssignTaskDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Test.Milestone;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -12,20 +13,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CourseResponseDto {
+public class AssignTaskResponseDto {
+
     private String _id;
-    private String courseName;
-    private String estimatedTime;
-    private int noOfTopics;
+    private Object trainee;
     private List<UserIdAndNameDto> reviewers;
-    private String figmaLink;
-    private String guidelines;
     private int totalPhases;
-    private List<Phase> phases;
+    private List<Plan> plans;
+    private List<Milestone> milestones;
     private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private String createdByName;
     private Boolean deleted = false;
     private Boolean approved = false;
 }
-

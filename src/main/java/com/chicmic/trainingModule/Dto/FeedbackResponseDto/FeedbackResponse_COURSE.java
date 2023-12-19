@@ -31,7 +31,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         Rating_COURSE rating_course = (Rating_COURSE) feedback.getRating();
         UserDto trainee = searchUserById(feedback.getTraineeID());
-        UserDto reviewer = searchUserById(feedback.getTraineeID());
+        UserDto reviewer = searchUserById(feedback.getCreatedBy());
         int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
         return FeedbackResponse_COURSE.builder()

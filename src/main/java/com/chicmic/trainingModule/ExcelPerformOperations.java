@@ -1,9 +1,9 @@
 package com.chicmic.trainingModule;
 
-import com.chicmic.trainingModule.Entity.Course;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.SubTask;
-import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
+import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -49,23 +49,23 @@ public class ExcelPerformOperations {
 
                 if (mainTaskCell != null && !mainTaskCell.getStringCellValue().isEmpty()) {
                     mainTask = mainTaskCell.getStringCellValue();
-                    Task task = new Task();
+                    CourseTask courseTask = new CourseTask();
 
-                    task.setMainTask(mainTask);
-                    task.setSubtasks(new ArrayList<>());
+                    courseTask.setMainTask(mainTask);
+                    courseTask.setSubtasks(new ArrayList<>());
                     if (phase != null) {
-                        phase.getTasks().add(task);
+                        phase.getTasks().add(courseTask);
                     }
                 }
 
                 if (subTaskCell != null && hoursCell != null && referenceCell != null &&
                         !subTaskCell.getStringCellValue().isEmpty() && hoursCell.getCellType() == CellType.NUMERIC) {
-                    SubTask subTask = new SubTask();
-                    subTask.setSubTask(subTaskCell.getStringCellValue());
-                    subTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()));
-                    subTask.setLink(referenceCell.getStringCellValue());
+                    CourseSubTask courseSubTask = new CourseSubTask();
+                    courseSubTask.setSubTask(subTaskCell.getStringCellValue());
+                    courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()));
+                    courseSubTask.setLink(referenceCell.getStringCellValue());
                     if (phase != null && phase.getTasks().size() > 0) {
-                        phase.getTasks().get(phase.getTasks().size() - 1).getSubtasks().add(subTask);
+                        phase.getTasks().get(phase.getTasks().size() - 1).getSubtasks().add(courseSubTask);
                     }
                 }
             }

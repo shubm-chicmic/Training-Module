@@ -29,9 +29,10 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
     private Float rating;
     private String comment;
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
+        System.out.println("inside feedback response............");
         Rating_TEST rating_test = (Rating_TEST) feedback.getRating();
         UserDto trainee = searchUserById(feedback.getTraineeID());
-        UserDto reviewer = searchUserById(feedback.getTraineeID());
+        UserDto reviewer = searchUserById(feedback.getCreatedBy());
         int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
         return FeedbackResponse_TEST.builder()
@@ -42,7 +43,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
                 .theoreticalRating(rating_test.getTheoreticalRating())
                 .codingRating(rating_test.getCodingRating())
                 .communicationRating(rating_test.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("1",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
+                .feedbackType(new UserIdAndNameDto("2",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
                 .task(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()))
                 .subTask(new UserIdAndNameDto(rating_test.getMilestoneId(),rating_test.getMilestoneId()))
                 .createdOn(feedback.getCreatedAt())

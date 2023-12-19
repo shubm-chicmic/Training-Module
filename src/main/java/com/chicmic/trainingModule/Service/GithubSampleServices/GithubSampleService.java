@@ -1,14 +1,12 @@
 package com.chicmic.trainingModule.Service.GithubSampleServices;
 
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleDto;
-import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Repository.GithubSampleRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.chicmic.trainingModule.Entity.GithubSample;
+import com.chicmic.trainingModule.Entity.GithubSample.GithubSample;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;

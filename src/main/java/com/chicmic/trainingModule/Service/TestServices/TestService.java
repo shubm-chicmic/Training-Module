@@ -1,13 +1,12 @@
-package com.chicmic.trainingModule.Service.TestService;
+package com.chicmic.trainingModule.Service.TestServices;
 
-import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.MomMessage;
-import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Test.Milestone;
+import com.chicmic.trainingModule.Entity.Test.Test;
+import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Repository.TestRepo;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.chicmic.trainingModule.Entity.Test;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +20,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
@@ -40,6 +37,38 @@ public class TestService {
         return test;
     }
 
+    public List<Test> getAllTests(String query, Integer sortDirection, String sortKey) {
+        Query searchQuery = new Query()
+                .addCriteria(Criteria.where("testName").regex(query, "i"))
+                .addCriteria(Criteria.where("deleted").is(false));
+
+        List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
+
+        if (!sortKey.isEmpty()) {
+            Comparator<Test> testComparator = Comparator.comparing(test -> {
+                try {
+                    Field field = Test.class.getDeclaredField(sortKey);
+                    field.setAccessible(true);
+                    Object value = field.get(test);
+                    if (value instanceof String) {
+                        return ((String) value).toLowerCase();
+                    }
+                    return value.toString();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "";
+                }
+            });
+
+            if (sortDirection == 1) {
+                tests.sort(testComparator.reversed());
+            } else {
+                tests.sort(testComparator);
+            }
+        }
+
+        return tests;
+    }
     public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
@@ -98,31 +127,32 @@ public class TestService {
         }
     }
 
-    public Test updateStatus(String testId, int status) {
-        Test test = testRepo.findById(testId).orElse(null);
-        if (test != null) {
-            test.setStatus(status);
-            testRepo.save(test);
-            return test;
-        } else {
-            return null;
-        }
-    }
-
     public Test updateTest(TestDto testDto, String testId) {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
-
-            test = Test.builder()
-                    ._id(testId)
-                    .testName(testDto.getTestName())
-                    .reviewers(testDto.getReviewers())
-                    .milestones(testDto.getMilestones())
-                    .approved(test.getApproved())
-                    .deleted(test.getDeleted())
-                    .createdBy(test.getCreatedBy())
-                    .build();
-
+            List<Milestone> milestones = new ArrayList<>();
+            if (testDto.getMilestones() != null) {
+                for (List<TestTask> testTasks : testDto.getMilestones()) {
+                    Milestone milestone = Milestone.builder()
+                            .tasks(testTasks)
+                            .build();
+                    milestones.add(milestone);
+                }
+            }
+            // Only update properties from the DTO if they are not null
+            if (testDto.getTestName() != null) {
+                test.setTestName(testDto.getTestName());
+            }
+            if (testDto.getReviewers() != null) {
+                test.setReviewers(testDto.getReviewers());
+            }
+            if (testDto.getTeams() != null) {
+                test.setTeams(testDto.getTeams());
+            }
+            if (!milestones.isEmpty()) {
+                test.setMilestones(milestones);
+            }
+            // Saving the updated test
             testRepo.save(test);
             return test;
         } else {
@@ -131,7 +161,7 @@ public class TestService {
     }
 
     public long countNonDeletedTests() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("isDeleted").is(false));
+        MatchOperation matchStage = Aggregation.match(Criteria.where("deleted").is(false));
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Test> aggregationResults = mongoTemplate.aggregate(aggregation, "test", Test.class);
         return aggregationResults.getMappedResults().size();
@@ -140,12 +170,28 @@ public class TestService {
     public Test approve(Test test, String userId) {
         Set<String> approvedBy = test.getApprovedBy();
         approvedBy.add(userId);
+        test.setApprovedBy(approvedBy);
         if (test.getReviewers().size() == approvedBy.size()) {
             test.setApproved(true);
-            test.setStatus(2);
         } else {
             test.setApproved(false);
         }
         return testRepo.save(test);
+    }
+
+    public List<Milestone> getTestByMilestoneIds(String testId, List<Object> milestoneIds) {
+        List<String> milestonesIds = milestoneIds.stream().map(Object::toString).collect(Collectors.toList());
+        System.out.println("Test " + milestoneIds);
+        Query testQuery = new Query(Criteria.where("_id").is(testId).and("milestones._id").in(milestonesIds));
+        Test test = mongoTemplate.findOne(testQuery, Test.class);
+        System.out.println(test);
+        if (test != null) {
+            List<Milestone> milestones = test.getMilestones().stream()
+                    .filter(milestone -> milestoneIds.contains(milestone.get_id()))
+                    .collect(Collectors.toList());
+            return milestones;
+        } else {
+            return Collections.emptyList();
+        }
     }
 }

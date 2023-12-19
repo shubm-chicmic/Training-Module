@@ -1,24 +1,21 @@
 package com.chicmic.trainingModule.Controller.FeedbackController;
 
-import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
-import com.chicmic.trainingModule.Dto.ratings.Rating;
+import com.chicmic.trainingModule.Dto.FeedBackDto;
+import com.chicmic.trainingModule.Dto.FeedbackResponse1;
+import com.chicmic.trainingModule.Dto.FeedbackResponseForCourse;
 import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
-import com.chicmic.trainingModule.Util.FeedbackUtil;
 import jakarta.validation.Valid;
 import org.bson.Document;
-import org.springframework.boot.autoconfigure.pulsar.PulsarProperties;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,12 +46,13 @@ public class FeedbackCRUD {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag){//trainee
-            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,principal.getName());
-            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
-            for (Feedback feedback : feedbackList) {
-                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
-            }
-            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+//            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,principal.getName());
+//            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//            for (Feedback feedback : feedbackList) {
+//                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//            }
+//            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+            return feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,principal.getName());
         }
 
         pageNumber /= pageSize;
@@ -95,12 +93,13 @@ public class FeedbackCRUD {
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
 
         if(_id == null &&  type == null){
-            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
-            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
-            for (Feedback feedback : feedbackList) {
-                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
-            }
-            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+//            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
+//            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//            for (Feedback feedback : feedbackList) {
+//                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//            }
+//            return new ApiResponse(200, "List of All feedbacks", feedbackResponses);
+            return feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
         }
 
         if(type < 1 || type > 2)
@@ -196,6 +195,7 @@ public class FeedbackCRUD {
 
          return new ApiResponse(200,"fnsa",feedbackResponseForCourses);
     }
+
     @GetMapping("/phase/{phaseId}")
     public ApiResponse getFeedbackByPhase(@RequestParam String traineeId, @RequestParam String courseId,@PathVariable String phaseId) {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);

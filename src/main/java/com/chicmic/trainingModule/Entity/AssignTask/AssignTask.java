@@ -1,5 +1,6 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.AssignTask;
 
+import com.chicmic.trainingModule.Entity.Plan.Plan;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,22 +12,17 @@ import java.util.Set;
 @Document
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Course {
+public class AssignTask {
     @Id
     private String _id;
-    private String name;
-    private String figmaLink;
-    private String guidelines;
-    List<Phase> phases;
+    private List<String> users;
+    private List<Plan> plans;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
-    private Boolean isDeleted = false;
-    private Boolean isApproved = false;
-
-    public Course() {
-        Phase.phaseCount = 0;
-    }
+    private Boolean deleted = false;
+    private Boolean approved = false;
 }

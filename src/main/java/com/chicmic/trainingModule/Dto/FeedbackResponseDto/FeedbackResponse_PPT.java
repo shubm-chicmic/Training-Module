@@ -33,7 +33,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
         UserDto trainee = searchUserById(feedback.getTraineeID());
-        UserDto reviewer = searchUserById(feedback.getTraineeID());
+        UserDto reviewer = searchUserById(feedback.getCreatedBy());
         int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
         return FeedbackResponse_PPT.builder()
@@ -44,7 +44,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
                 .technicalRating(rating_ppt.getTechnicalRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("1",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
+                .feedbackType(new UserIdAndNameDto("3",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
                 .createdOn(feedback.getCreatedAt())
                 .rating(feedback.getOverallRating())
                 .build();
