@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Entity.Plan;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -16,7 +17,7 @@ public class Task {
     private Integer planType = null;
     private String plan;
     private Object milestones;
-    List<String> mentor;
+    List<UserIdAndNameDto> mentor;
     private String estimatedTime;
     private Boolean isCompleted = false;
     public String getEstimatedTime() {

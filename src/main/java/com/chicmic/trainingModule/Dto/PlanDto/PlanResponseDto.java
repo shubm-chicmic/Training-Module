@@ -7,6 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -20,7 +21,7 @@ public class PlanResponseDto {
     private String estimatedTime;
     private int noOfTasks;
     private int noOfPhases;
-    private List<UserIdAndNameDto> reviewers;
+    private List<UserIdAndNameDto> approver;
     private int totalPhases;
     private List<Phase> phases;
     private List<UserIdAndNameDto> approvedBy = new ArrayList<>();

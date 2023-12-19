@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.Entity.Plan;
 
-import jdk.jfr.Timestamp;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,7 +21,7 @@ public class Plan {
     private String _id;
     private String planName;
     private String description;
-    private Set<String> reviewers;
+    private Set<String> approver;
     private List<Phase> phases;
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;

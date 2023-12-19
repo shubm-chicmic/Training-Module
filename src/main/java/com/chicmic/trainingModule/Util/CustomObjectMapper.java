@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Util;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.MilestoneDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
@@ -509,7 +510,7 @@ public class CustomObjectMapper {
     }
 
     public  PlanResponseDto mapPlanToResponseDto(Plan plan) {
-        List<UserIdAndNameDto> approver = Optional.ofNullable(plan.getReviewers())
+        List<UserIdAndNameDto> approver = Optional.ofNullable(plan.getApprover())
                 .map(approverIds -> approverIds.stream()
                         .map(approverId -> {
                             String name = TrainingModuleApplication.searchNameById(approverId);
@@ -564,8 +565,9 @@ public class CustomObjectMapper {
                     phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
                     phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
                 }
-
+                System.out.println("\u001B[31m milestone " + milestone + "\u001B[0m");
                 newTask.setMilestones( milestone);
+                newTask.setMentor(task.getMentor());
                 taskList.add(newTask);
             }
             totalHours += phaseHours + phaseMinutes / 60;
@@ -576,7 +578,6 @@ public class CustomObjectMapper {
             newPhase.setNoOfTasks(phase.getTasks().size());
             newPhase.setTasks(taskList);
             newPhase.setIsCompleted(phase.getIsCompleted());
-
             phaseList.add(newPhase);
         }
         return PlanResponseDto.builder()
@@ -586,7 +587,7 @@ public class CustomObjectMapper {
                 .estimatedTime(totalEstimatedTime)
                 .noOfPhases(plan.getPhases().size())
                 .noOfTasks(noOfTasks)
-                .reviewers(approver)
+                .approver(approver)
                 .totalPhases(plan.getPhases().size())
                 .phases(phaseList)
                 .deleted(plan.getDeleted())
@@ -597,15 +598,35 @@ public class CustomObjectMapper {
                 .createdAt(plan.getCreatedAt())
                 .build();
     }
-    public static List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId) {
+    public  List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId) {
         List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
         for (AssignTask assignTask : assignTasks) {
             assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId));
         }
         return assignTaskResponseDtoList;
     }
+    public List<UserIdAndNameDto> mapIdsToNames(List<String> ids, String type) {
+        return ids.stream()
+                .map(id -> {
+                    String name = "";
+                    switch (type) {
+                        case "user":
+                            name = TrainingModuleApplication.searchNameById(id);
+                            break;
+                        case "team":
+                            name = TrainingModuleApplication.searchTeamById(id);
+                            break;
+                        // Add cases for other types if required
 
-    public static AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId) {
+                        default:
+                            break;
+                    }
+                    return new UserIdAndNameDto(id, name);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public  AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId) {
         List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
                 .map(reviewersIds -> reviewersIds.stream()
                         .map(reviewerId -> {
@@ -639,13 +660,78 @@ public class CustomObjectMapper {
         }else {
             trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
         }
-//        for (Plan plan : assignTask.getPlans()) {
-//            for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()){
-//                System.out.println("");
-//               phase.setTasks(null);
-//            }
-//        }
+
         List<PlanDto> plans = new ArrayList<>();
+        for (Plan plan : assignTask.getPlans()) {
+            System.out.println(" plan = " + plan);
+            for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()){
+                for (Task task : phase.getTasks()) {
+                    PlanDto planDto = null;
+                    if(task.getPlanType() == 1) {
+                        Course course = courseService.getCourseById(task.getPlan());
+                        List<MilestoneDto> milestoneDtos = new ArrayList<>();
+                        for (Phase coursePhase : course.getPhases()) {
+                           MilestoneDto milestoneDto = MilestoneDto.builder()
+                                   ._id(coursePhase.get_id())
+                                   .reviewers(null)
+                                   .name(coursePhase.getName())
+                                   .isCompleted(phase.getIsCompleted())
+                                   .noOfTasks(coursePhase.getTasks().size())
+                                   .estimatedTime(coursePhase.getEstimatedTime())
+                                   .tasks(coursePhase.getTasks())
+                                   .build();
+                           milestoneDtos.add(milestoneDto);
+                        }
+                        planDto = PlanDto.builder()
+                                ._id(course.get_id())
+                                .planType(task.getPlanType())
+                                .isCompleted(task.getIsCompleted())
+                                .feedbackId(null)
+                                .estimatedTime(task.getEstimatedTime())
+                                .noOfTopics(5)
+                                .isApproved(course.getIsApproved())
+                                .isDeleted(course.getIsDeleted())
+                                .milestones(milestoneDtos)
+                                .name(course.getName())
+                                .rating(0.0f)
+                                .reviewers(null)
+                                .build();
+                    }else if (task.getPlanType() == 2){
+                        Test test = testService.getTestById(task.getPlan());
+                        List<MilestoneDto> milestoneDtos = new ArrayList<>();
+                        for (Milestone milestone : test.getMilestones()) {
+                            MilestoneDto milestoneDto = MilestoneDto.builder()
+                                    ._id(milestone.get_id())
+                                    .reviewers(null)
+                                    .name(milestone.getName())
+                                    .isCompleted(phase.getIsCompleted())
+                                    .noOfTasks(milestone.getTasks().size())
+                                    .estimatedTime(milestone.getEstimatedTime())
+                                    .tasks(milestone.getTasks())
+                                    .build();
+                            milestoneDtos.add(milestoneDto);
+                        }
+                        planDto = PlanDto.builder()
+                                ._id(test.get_id())
+                                .planType(task.getPlanType())
+                                .isCompleted(task.getIsCompleted())
+                                .feedbackId(null)
+                                .estimatedTime(task.getEstimatedTime())
+                                .noOfTopics(5)
+                                .isApproved(test.getApproved())
+                                .isDeleted(test.getDeleted())
+                                .milestones(milestoneDtos)
+                                .name(test.getTestName())
+                                .rating(null)
+                                .reviewers(null)
+                                .build();
+                    }
+                    plans.add(planDto);
+                }
+            }
+        }
+        System.out.println("Plans list finished = " + plans.size());
+        System.out.println(plans);
         return AssignTaskResponseDto.builder()
                 ._id(assignTask.get_id())
                 .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
