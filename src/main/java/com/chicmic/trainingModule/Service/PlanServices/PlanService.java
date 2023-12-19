@@ -1,10 +1,14 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Plan.Phase;
 import com.chicmic.trainingModule.Entity.Plan.Plan;
 
-import com.chicmic.trainingModule.Entity.Session.Session;
+import com.chicmic.trainingModule.Entity.Plan.Task;
+import com.chicmic.trainingModule.Repository.CourseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -15,20 +19,19 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class PlanService {
     private final PlanRepo planRepo;
+    private final CourseService courseService;
     private final MongoTemplate mongoTemplate;
 
     public Plan createPlan(Plan plan, Principal principal) {
@@ -146,6 +149,28 @@ public class PlanService {
         }
 
     }
+    public HashMap<String, List<UserIdAndNameDto>> getPlanCourseByPlanIds(List<String> planIds) {
+        Query searchQuery = new Query(Criteria.where("_id").in(planIds).and("phases.tasks.planType").is(1));
+        List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
+        HashMap<String, List<UserIdAndNameDto>> courseIds = new HashMap<>();
+
+        for (Plan plan : plans) {
+            for (Phase phase : plan.getPhases()) {
+                for (Task task : phase.getTasks()) {
+                    if (task.getPlanType() == 1) {
+                        UserIdAndNameDto course = new UserIdAndNameDto();
+                        course.set_id(task.getPlan());
+                        course.setName(courseService.getCourseById(task.getPlan()).getName());
+
+                        courseIds.putIfAbsent(plan.get_id(), new ArrayList<>());
+                        courseIds.get(plan.get_id()).add(course);
+                    }
+                }
+            }
+        }
+        return courseIds;
+    }
+
 
     public long countNonDeletedPlans() {
         MatchOperation matchStage = Aggregation.match(Criteria.where("deleted").is(false));
@@ -157,7 +182,7 @@ public class PlanService {
         Set<String> approvedBy = plan.getApprovedBy();
         approvedBy.add(userId);
         plan.setApprovedBy(approvedBy);
-        if (plan.getReviewers().size() == approvedBy.size()) {
+        if (plan.getApprover().size() == approvedBy.size()) {
             plan.setApproved(true);
         } else {
             plan.setApproved(false);

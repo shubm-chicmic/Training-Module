@@ -4,19 +4,18 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
-import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Plan.Phase;
 import com.chicmic.trainingModule.Entity.Plan.Plan;
 
 import com.chicmic.trainingModule.Entity.Plan.Task;
-import com.chicmic.trainingModule.Entity.Session.Session;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;
@@ -27,6 +26,10 @@ import java.util.*;
 public class PlanCRUD {
     private final PlanService planService;
     private  final CustomObjectMapper customObjectMapper;
+    @GetMapping("/getting")
+    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
+       return planService.getPlanCourseByPlanIds(plansIds);
+    }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -101,7 +104,7 @@ public class PlanCRUD {
         Plan plan = planService.getPlanById(planId);
         if (plan != null) {
             if (planDto != null && planDto.getApproved() == true) {
-                Set<String> approver = plan.getReviewers();
+                Set<String> approver = plan.getApprover();
                 if (approver.contains(principal.getName())) {
                     plan = planService.approve(plan, principal.getName());
                 } else {

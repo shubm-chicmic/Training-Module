@@ -1,5 +1,7 @@
 package com.chicmic.trainingModule.Dto.PlanDto;
 
+import com.chicmic.trainingModule.Dto.UserDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Plan.Phase;
 import lombok.*;
 
@@ -15,7 +17,7 @@ import java.util.Set;
 public class PlanDto {
     private String planName;
     private String description;
-    private Set<String> reviewers;
+    private Set<String> approver;
     private List<Phase> phases;
     private Boolean approved = false;
 }
