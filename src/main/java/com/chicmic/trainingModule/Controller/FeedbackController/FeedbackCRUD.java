@@ -100,14 +100,16 @@ public class FeedbackCRUD {
             return feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
         }
 
-        if(type < 1 || type > 2)
+        if(type < 1 || type > 3)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
 
         List<Feedback> feedbackList;
         if(type == 1)
             feedbackList = feedbackService.findFeedbacksByCourseIdAndTraineeId(_id,userId,"1");
-        else
+        else if(type == 2)
             feedbackList = feedbackService.findFeedbacksByTestIdAndTraineeId(_id,userId,"2");
+        else
+            feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(userId,"3");
         List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
 
         return new ApiResponse(200,"List of All feedbacks",responseList);
@@ -120,8 +122,11 @@ public class FeedbackCRUD {
             throw new ApiException(HttpStatus.NOT_FOUND,"No Feedback exist with this Id.");
         }
         Feedback feedback = feedbackOptional.get();
+        if(feedback == null)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedback id.");
 //        FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponse(feedback);
         FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
+        feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         //com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
          //       com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
         //FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
@@ -150,6 +155,7 @@ public class FeedbackCRUD {
         Feedback feedback = feedbackService.saveFeedbackInDB(feedBackDto, principal.getName());
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
                 com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
+        feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(Arrays.asList(feedbackResponse)).get(0);
         if(q==0)
             return new ApiResponse(201, "Feedback successfully given to a user", feedbackResponse);
 
@@ -168,7 +174,7 @@ public class FeedbackCRUD {
 
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
                 com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
-
+        feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(Arrays.asList(feedbackResponse)).get(0);
         if(q==0)
             return new ApiResponse(200,"FeedBack updated successfully",feedbackResponse);
 

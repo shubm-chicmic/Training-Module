@@ -18,9 +18,9 @@ public class FeedbackResponse1 {
     private Trainee reviewer;
     private int feedbackType;
     private Course course;
-    private Phase phase;
+    private UserIdAndNameDto phase;
     private Test test;
-    private Milestone milestone;
+    private UserIdAndNameDto milestone;
     private float communicationRating;
     private float presentationRating;
     private float technicalRating;
@@ -46,14 +46,14 @@ public class FeedbackResponse1 {
          if(feedbackTypeId == 0){
              Rating_COURSE rating_course = (Rating_COURSE)  feedback.getRating();
             feedbackResponse1.setCourse(new Course(rating_course.getCourseId(), rating_course.getCourseId()));
-            feedbackResponse1.setPhase(new Phase(rating_course.getPhaseId(),rating_course.getPhaseId()));
+            feedbackResponse1.setPhase(new UserIdAndNameDto(rating_course.getPhaseId(),rating_course.getPhaseId()));
             feedbackResponse1.setTheoreticalRating(rating_course.getTheoreticalRating());
             feedbackResponse1.setTechnicalRating(rating_course.getTechnicalRating());
             feedbackResponse1.setCommunicationRating(rating_course.getCommunicationRating());
          }else if(feedbackTypeId == 1){
              Rating_TEST rating_test = (Rating_TEST) feedback.getRating();
              feedbackResponse1.setTest(new Test(rating_test.getTestId(), rating_test.getTestId()));
-             feedbackResponse1.setMilestone(new Milestone(rating_test.getMilestoneId(),rating_test.getMilestoneId()));
+             feedbackResponse1.setMilestone(new UserIdAndNameDto(rating_test.getMilestoneId(),rating_test.getMilestoneId()));
              feedbackResponse1.setTheoreticalRating(rating_test.getTheoreticalRating());
              feedbackResponse1.setCommunicationRating(rating_test.getCommunicationRating());
              feedbackResponse1.setCodingRating(rating_test.getCodingRating());
@@ -62,6 +62,7 @@ public class FeedbackResponse1 {
              feedbackResponse1.setCommunicationRating(rating_ppt.getCommunicationRating());
              feedbackResponse1.setTechnicalRating(rating_ppt.getTechnicalRating());
              feedbackResponse1.setPresentationRating(rating_ppt.getPresentationRating());
+             feedbackResponse1.setCourse(new Course(rating_ppt.getCourseId(), rating_ppt.getCourseId()));
          }else{
              Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getRating();
              feedbackResponse1.setAttitudeRating(rating_behaviour.getAttitudeRating());

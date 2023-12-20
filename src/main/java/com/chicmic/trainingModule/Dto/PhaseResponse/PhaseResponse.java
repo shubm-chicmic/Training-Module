@@ -20,6 +20,9 @@ public class PhaseResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Float theoreticalRating;
     private Float technicalRating;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Float presentationRating;
     private String comment;
     private Date createdAt;
 }
