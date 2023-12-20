@@ -36,6 +36,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -601,10 +602,10 @@ public class CustomObjectMapper {
                 .createdAt(plan.getCreatedAt())
                 .build();
     }
-    public  List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId) {
+    public  List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId, Principal principal) {
         List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
         for (AssignTask assignTask : assignTasks) {
-            assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId));
+            assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId, principal));
         }
         return assignTaskResponseDtoList;
     }
@@ -629,7 +630,7 @@ public class CustomObjectMapper {
                 .collect(Collectors.toList());
     }
 
-    public  AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId) {
+    public  AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
         if(assignTask == null) {
             return null;
         }
@@ -682,7 +683,7 @@ public class CustomObjectMapper {
                                    ._id(coursePhase.get_id())
                                    .reviewers(task.getMentor())
                                    .name(coursePhase.getName())
-                                   .feedbackId(null)
+                                   .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), (String)task.getPlan(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
                                    .isCompleted(phase.getIsCompleted())
                                    .noOfTasks(coursePhase.getTasks().size())
                                    .estimatedTime(coursePhase.getEstimatedTime())
