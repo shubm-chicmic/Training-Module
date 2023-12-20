@@ -570,7 +570,7 @@ public class FeedbackService {
 
         return testDetails;
     }
-    public Document getFeedbackIdForMileStoneAndPhase(String type,String testId,String mileStoneId,String reviewerId,String traineeId){
+    public String getFeedbackIdForMileStoneAndPhase(String type,String testId,String mileStoneId,String reviewerId,String traineeId){
         if(type.equals("1")){
             Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(type)
                     .and("createdBy").is(reviewerId)
@@ -578,7 +578,9 @@ public class FeedbackService {
                     .and("rating.phaseId").is(mileStoneId);
             Query query = new Query(criteria);
             query.fields().include("_id");
-            return mongoTemplate.findOne(query, Document.class, "feedaback");
+            Document document =  mongoTemplate.findOne(query, Document.class, "feedaback");
+            assert document != null;
+            return document.get("_id").toString();
         }
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(type)
                 .and("createdBy").is(reviewerId)
@@ -586,7 +588,9 @@ public class FeedbackService {
                 .and("rating.milestoneId").is(mileStoneId);
         Query query = new Query(criteria);
         query.fields().include("_id");
-        return mongoTemplate.findOne(query, Document.class, "feedaback");
+        Document document =  mongoTemplate.findOne(query, Document.class, "feedaback");
+        assert document != null;
+        return document.get("_id").toString();
     }
     //create advance filters
 }
