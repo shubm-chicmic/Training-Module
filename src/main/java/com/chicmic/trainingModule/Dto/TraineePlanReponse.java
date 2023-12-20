@@ -10,8 +10,9 @@ import java.util.List;
 public class TraineePlanReponse {
     private String _id;
     private String name;
-    private UserIdAndNameDto team;
+    private String employeeCode;
+    private String team;
     private String mentor;
-    private Float overallRating;
+    private Float rating;
     private List<UserIdAndNameDto> course;
 }

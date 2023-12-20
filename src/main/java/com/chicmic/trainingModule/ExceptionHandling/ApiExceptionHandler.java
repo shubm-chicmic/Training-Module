@@ -48,7 +48,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         System.out.println("\u001B[31m" + ex.getBindingResult().getAllErrors()+"\u001B[0m" );
 //        System.out.println(ex.getMessage());
-        for (final FieldError error : ex.getBindingResult().getFieldErrors()) {
+        for(final FieldError error : ex.getBindingResult().getFieldErrors()) {
             System.out.println("\u001B[31m" + ex.getBindingResult()+"\u001B[0m" );
             errors.add(error.getDefaultMessage());
             //errors.add(error.getField() + ": " + error.getDefaultMessage());

@@ -8,9 +8,11 @@ import com.chicmic.trainingModule.Entity.Plan.UserPlan;
 import com.chicmic.trainingModule.Repository.UserPlanRepo;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.FeedbackUtil;
+import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -70,11 +72,63 @@ public class TraineePlanService {
             String _id = (String) document.get("_id");
             UserDto userDto = TrainingModuleApplication.searchUserById(_id);
             traineePlanReponseList.add(TraineePlanReponse.builder()
-                            .team(new UserIdAndNameDto(userDto.getTeamId(),userDto.getTeamName()))
+                            .team(userDto.getTeamName())
+                            .mentor("safafa")
                             .name(userDto.getName())
                             .course(planDetails.get(userPlanId.get(_id)))
-                            .overallRating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
+                            .employeeCode(userDto.getEmpCode())
+                            .rating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
                             ._id(_id)
+                    .build());
+        }
+        return traineePlanReponseList;
+    }
+    public List<TraineePlanReponse> fetchUserPlans(Integer pageNumber,Integer pageSize,String searchString,Integer sortDirection,String sortKey){
+        Pageable pageable;
+        if (!sortKey.isEmpty()) {
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = Sort.by(direction, sortKey);
+            pageable = PageRequest.of(pageNumber, pageSize, sort);
+        } else {
+            pageable = PageRequest.of(pageNumber, pageSize);
+        }
+
+        List<UserPlan> userPlanList = mongoTemplate.find(new Query().with(pageable), UserPlan.class);
+        HashMap<String,String> userPlanId = new HashMap<>();
+        List<String> userIds = userPlanList.stream().map((user)->{
+            userPlanId.put(user.getTraineeId(),user.getPlanId());
+            return user.getTraineeId();
+        }).collect(Collectors.toList());
+        List<String> planIds = userPlanList.stream().map(UserPlan::getPlanId).collect(Collectors.toList());
+        List<Document> documentList = feedbackService.calculateEmployeeRatingSummary(userIds);
+        List<TraineePlanReponse> traineePlanReponseList = new ArrayList<>();
+        HashMap<String, List<UserIdAndNameDto>> planDetails = planService.getPlanCourseByPlanIds(planIds);
+        if(documentList.size()==0){
+            for (UserPlan userPlan : userPlanList){
+                String _id = userPlan.get_id();
+                UserDto userDto = TrainingModuleApplication.searchUserById(_id);
+                traineePlanReponseList.add(TraineePlanReponse.builder()
+                        .team(userDto.getTeamName())
+                        .mentor("safafa")
+                        .name(userDto.getName())
+                        .course(planDetails.get(userPlanId.get(_id)))
+                        .employeeCode(userDto.getEmpCode())
+                        .rating(0f)
+                        ._id(_id)
+                        .build());
+            }
+        }
+        for (Document document : documentList){
+            String _id = (String) document.get("_id");
+            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
+            traineePlanReponseList.add(TraineePlanReponse.builder()
+                    .team(userDto.getTeamName())
+                    .mentor("safafa")
+                    .name(userDto.getName())
+                    .course(planDetails.get(userPlanId.get(_id)))
+                    .employeeCode(userDto.getEmpCode())
+                    .rating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
+                    ._id(_id)
                     .build());
         }
         return traineePlanReponseList;

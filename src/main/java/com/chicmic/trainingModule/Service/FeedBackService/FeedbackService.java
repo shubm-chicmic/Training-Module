@@ -2,7 +2,14 @@ package com.chicmic.trainingModule.Service.FeedBackService;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
+import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
+import com.chicmic.trainingModule.Dto.DashboardDto.FeedbackResponseDto;
+import com.chicmic.trainingModule.Dto.DashboardDto.RatingDto;
+import com.chicmic.trainingModule.Dto.DashboardDto.RatingReponseDto;
 import com.chicmic.trainingModule.Dto.*;
+import com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse_COURSE;
+import com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse_PPT;
+import com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse_TEST;
 import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
 import com.chicmic.trainingModule.Dto.ratings.Rating;
 import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
@@ -19,7 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,12 +36,14 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.getTypeOfFeedbackResponse;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
+import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class FeedbackService {
@@ -42,6 +53,104 @@ public class FeedbackService {
     public FeedbackService(FeedbackRepo feedbackRepo, MongoTemplate mongoTemplate) {
         this.feedbackRepo = feedbackRepo;
         this.mongoTemplate = mongoTemplate;
+    }
+    public List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse>
+            addingPhaseAndTestNameInResponse(List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses){
+        //fetch courseId and TestId
+        List<String> courseId = new ArrayList<>();
+        List<String> testId = new ArrayList<>();
+        for (var feedbackResponse : feedbackResponses){
+            int type = getTypeOfFeedbackResponse(feedbackResponse);
+            if(type == 1){
+                FeedbackResponse_COURSE feedbackResponseCourse = (FeedbackResponse_COURSE) feedbackResponse;
+                courseId.add(feedbackResponseCourse.getTask().get_id());
+            } else if (type == 2) {
+                FeedbackResponse_TEST feedbackResponseTest = (FeedbackResponse_TEST) feedbackResponse;
+                testId.add(feedbackResponseTest.getTask().get_id());
+            } else if (type == 3) {
+                FeedbackResponse_PPT feedbackResponsePpt = (FeedbackResponse_PPT) feedbackResponse;
+                courseId.add(feedbackResponsePpt.getTask().get_id());
+            }
+        }
+        //fetch course details
+        Map<String,Document> courseDetail = getCourseNameAndPhaseName(courseId);
+        Map<String,Document> testDetail =  getTestNameAndMilestoneName(testId);
+        for (var feedbackResponse : feedbackResponses){
+            int type = getTypeOfFeedbackResponse(feedbackResponse);
+            if(type == 1){
+                FeedbackResponse_COURSE feedbackResponseCourse = (FeedbackResponse_COURSE) feedbackResponse;
+                Document courseData = courseDetail.get(feedbackResponseCourse.getTask().get_id());
+                feedbackResponseCourse.getTask().setName((String) courseData.get("name"));
+                List<Document> documentList = (List<Document>) courseData.get("phases");
+                int count = 0;
+                for (Document document : documentList){
+                    ++count;
+                    if(document.get("_id") == null) continue;
+                    if (document.get("_id").toString().equals(feedbackResponseCourse.getSubTask().get_id()))
+                        feedbackResponseCourse.getSubTask().setName(String.format("Phase-%d",count));
+                }
+            } else if (type == 2) {
+                FeedbackResponse_TEST feedbackResponseTest = (FeedbackResponse_TEST) feedbackResponse;
+                Document testData = testDetail.get(feedbackResponseTest.getTask().get_id());
+                feedbackResponseTest.getTask().setName((String) testData.get("testName"));
+                List<Document> documentList = (List<Document>) testData.get("milestones");
+                int count = 0;
+                for (Document document : documentList){
+                    ++count;
+                    if (document.get("_id").toString().equals(feedbackResponseTest.getSubTask().get_id()))
+                        feedbackResponseTest.getSubTask().setName(String.format("Milestone-%d",count));
+                }
+            } else if (type == 3) {
+                FeedbackResponse_PPT feedbackResponsePpt = (FeedbackResponse_PPT) feedbackResponse;
+                Document pptData = courseDetail.get(feedbackResponsePpt.getTask().get_id());
+                feedbackResponsePpt.getTask().setName((String) pptData.get("name"));
+            }
+        }
+        return feedbackResponses;
+    }
+    public DashboardResponse findFeedbacksSummaryOfTrainee(String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        float totalRating = 0;
+        int count = 0;
+        DashboardResponse dashboardResponse = DashboardResponse.builder().feedbacks(new ArrayList<>()).build();
+       // RatingReponseDto ratingReponseDto = RatingReponseDto.builder().build();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+        List<RatingDto> ratingDtoList = new ArrayList<>();
+        for (int i=0;i<4;i++) ratingDtoList.add(new RatingDto(0f,1));
+        for (Feedback feedback : feedbackList){
+            if(++count<5){
+                dashboardResponse.getFeedbacks().add(FeedbackResponseDto.builder().date(formatter.format(new Date()))
+                                .rating(feedback.getOverallRating())
+                                .feedback(feedback.getComment())
+                                .name(TrainingModuleApplication.searchNameById(feedback.getCreatedBy()))
+                        .build());
+            }
+            int type = feedback.getType().charAt(0) - '1';
+            ratingDtoList.get(type).incrTotalRating(feedback.getOverallRating());
+            ratingDtoList.get(type).incrcount();
+            totalRating += feedback.getOverallRating();
+        }
+        float overallRating = compute_rating(totalRating,feedbackList.size());
+        RatingReponseDto ratingReponseDto = RatingReponseDto.builder().overall(overallRating)
+                .course(compute_rating(ratingDtoList.get(0).getTotalRating(),ratingDtoList.get(0).getCount()))
+                .test(compute_rating(ratingDtoList.get(1).getTotalRating(),ratingDtoList.get(1).getCount()))
+                .presentation(compute_rating(ratingDtoList.get(2).getTotalRating(),ratingDtoList.get(2).getCount()))
+                .behaviour(compute_rating(ratingDtoList.get(3).getTotalRating(),ratingDtoList.get(3).getCount()))
+                .attendance(0f)
+                .comment(getFeedbackMessageBasedOnOverallRating(overallRating))
+                .build();
+
+        dashboardResponse.setRating(ratingReponseDto);
+        return dashboardResponse;
+        //return roundOff_Rating(totalRating/feedbackList.size());
+    }
+    private static Float compute_rating(float totalRating,int count){
+        if(totalRating==0) return 0f;
+        int temp = (int)(totalRating/count * 100);
+//        return roundOff_Rating(totalRating/count);
+        return ((float) temp) / 100;
     }
     public Float getOverallRatingOfTrainee(String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId);
@@ -167,7 +276,7 @@ public class FeedbackService {
                 .comment(feedback.getComment())
             .build();
     }
-    public HashMap<String,Float> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
+    public HashMap<String,Object> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
 //        MatchOperation matchOperation = new MatchOperation(Criteria.where("traineeID").is(traineeId)
 //                .and("type").is("1").and("courseId").is(courseId)
 //        );
@@ -196,7 +305,7 @@ public class FeedbackService {
         total /= feedbackList.size();
         tr /= cnt;
         pr /= pcnt;
-        HashMap<String,Float> rating = new HashMap<>();
+        HashMap<String,Object> rating = new HashMap<>();
         rating.put("overallRating",roundOff_Rating(total));
         rating.put("courseRating",roundOff_Rating(tr));
         rating.put("phaseRating",roundOff_Rating(pr));
@@ -430,6 +539,54 @@ public class FeedbackService {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback", Document.class);
         return aggregationResults.getMappedResults();
+    }
+    //courses method
+    public Map<String,Document> getCourseNameAndPhaseName(List<String> _ids){
+        Query query = Query.query(Criteria.where("_id").in(_ids));
+
+       // Fields fields = Fields.fields("name", "phases._id", "phases.tasks._id");
+        query.fields().include("_id","name","phases._id");
+
+        List<Document> documentList =  mongoTemplate.find(query, Document.class, "course");
+
+        Map<String,Document> coursesDetails = new HashMap<>();
+        for (Document document : documentList)
+            coursesDetails.put(document.get("_id").toString(),document);
+
+        return coursesDetails;
+    }
+    //
+    public Map<String,Document> getTestNameAndMilestoneName(List<String> _ids){
+        Query query = Query.query(Criteria.where("_id").in(_ids));
+
+        // Fields fields = Fields.fields("name", "phases._id", "phases.tasks._id");
+        query.fields().include("_id","testName","milestones._id");
+
+        List<Document> documentList =  mongoTemplate.find(query, Document.class, "test");
+
+        Map<String,Document> testDetails = new HashMap<>();
+        for (Document document : documentList)
+            testDetails.put(document.get("_id").toString(),document);
+
+        return testDetails;
+    }
+    public Document getFeedbackIdForMileStoneAndPhase(String type,String testId,String mileStoneId,String reviewerId,String traineeId){
+        if(type.equals("1")){
+            Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(type)
+                    .and("createdBy").is(reviewerId)
+                    .and("rating.courseId").is(testId)
+                    .and("rating.phaseId").is(mileStoneId);
+            Query query = new Query(criteria);
+            query.fields().include("_id");
+            return mongoTemplate.findOne(query, Document.class, "feedaback");
+        }
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(type)
+                .and("createdBy").is(reviewerId)
+                .and("rating.testId").is(testId)
+                .and("rating.milestoneId").is(mileStoneId);
+        Query query = new Query(criteria);
+        query.fields().include("_id");
+        return mongoTemplate.findOne(query, Document.class, "feedaback");
     }
     //create advance filters
 }

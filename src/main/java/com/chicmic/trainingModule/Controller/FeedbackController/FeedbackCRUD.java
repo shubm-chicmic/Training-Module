@@ -17,10 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/feedback")
@@ -42,7 +39,6 @@ public class FeedbackCRUD {
                                     @RequestParam(value = "traineeId",defaultValue = "",required = false) String traineeId,
                                     Principal principal
                                     ){
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag){//trainee
@@ -66,6 +62,7 @@ public class FeedbackCRUD {
             for (Feedback feedback : feedbackList) {
                 feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
             }
+            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
             long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
             return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
         }
@@ -135,6 +132,7 @@ public class FeedbackCRUD {
 
     @GetMapping("/emp/{id}")
     public ApiResponse getAllFeedbacksOfEmployeeById(@PathVariable String id){
+        feedbackService.getCourseNameAndPhaseName(Arrays.asList("6579b4500cf9d953fe39e2a4"));
         System.out.println("fsafsa");
         List<Document> feedbackList = feedbackService.getAllFeedbacksOfEmployeeById(id);
 
@@ -155,7 +153,8 @@ public class FeedbackCRUD {
         if(q==0)
             return new ApiResponse(201, "Feedback successfully given to a user", feedbackResponse);
 
-        HashMap<String,Float> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        HashMap<String,Object> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        response.put("_id",feedback.getId());
         return new ApiResponse(201, "Feedback successfully given to a user", response);
     }
 
@@ -173,7 +172,8 @@ public class FeedbackCRUD {
         if(q==0)
             return new ApiResponse(200,"FeedBack updated successfully",feedbackResponse);
 
-        HashMap<String,Float> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        HashMap<String,Object> response = feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee(),feedBackDto.getCourse(), feedBackDto.getPhase());
+        response.put("_id",feedback.getId());
         return new ApiResponse(201, "Feedback successfully given to a user", response);
     }
 
@@ -202,6 +202,7 @@ public class FeedbackCRUD {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
+
     @GetMapping("/milestone/{milestoneId}")
     public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @RequestParam String testId,@PathVariable String milestoneId) {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
