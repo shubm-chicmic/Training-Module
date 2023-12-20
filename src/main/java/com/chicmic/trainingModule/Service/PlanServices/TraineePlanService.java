@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Entity.Plan.UserPlan;
 import com.chicmic.trainingModule.Repository.UserPlanRepo;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -92,16 +93,31 @@ public class TraineePlanService {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-        List<UserPlan> userDtos = mongoTemplate.find(new Query().with(pageable), UserPlan.class);
+        List<UserPlan> userPlanList = mongoTemplate.find(new Query().with(pageable), UserPlan.class);
         HashMap<String,String> userPlanId = new HashMap<>();
-        List<String> userIds = userDtos.stream().map((user)->{
+        List<String> userIds = userPlanList.stream().map((user)->{
             userPlanId.put(user.getTraineeId(),user.getPlanId());
             return user.getTraineeId();
         }).collect(Collectors.toList());
-        List<String> planIds = userDtos.stream().map(UserPlan::getPlanId).collect(Collectors.toList());
+        List<String> planIds = userPlanList.stream().map(UserPlan::getPlanId).collect(Collectors.toList());
         List<Document> documentList = feedbackService.calculateEmployeeRatingSummary(userIds);
         List<TraineePlanReponse> traineePlanReponseList = new ArrayList<>();
         HashMap<String, List<UserIdAndNameDto>> planDetails = planService.getPlanCourseByPlanIds(planIds);
+        if(documentList.size()==0){
+            for (UserPlan userPlan : userPlanList){
+                String _id = userPlan.get_id();
+                UserDto userDto = TrainingModuleApplication.searchUserById(_id);
+                traineePlanReponseList.add(TraineePlanReponse.builder()
+                        .team(userDto.getTeamName())
+                        .mentor("safafa")
+                        .name(userDto.getName())
+                        .course(planDetails.get(userPlanId.get(_id)))
+                        .employeeCode(userDto.getEmpCode())
+                        .rating(0f)
+                        ._id(_id)
+                        .build());
+            }
+        }
         for (Document document : documentList){
             String _id = (String) document.get("_id");
             UserDto userDto = TrainingModuleApplication.searchUserById(_id);

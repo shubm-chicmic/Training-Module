@@ -3,6 +3,10 @@ package com.chicmic.trainingModule.Service.FeedBackService;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
 import com.chicmic.trainingModule.Dto.*;
+import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
+import com.chicmic.trainingModule.Dto.DashboardDto.FeedbackResponseDto;
+import com.chicmic.trainingModule.Dto.DashboardDto.RatingDto;
+import com.chicmic.trainingModule.Dto.DashboardDto.RatingReponseDto;
 import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
 import com.chicmic.trainingModule.Dto.ratings.Rating;
 import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
@@ -27,12 +31,12 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class FeedbackService {
@@ -42,6 +46,49 @@ public class FeedbackService {
     public FeedbackService(FeedbackRepo feedbackRepo, MongoTemplate mongoTemplate) {
         this.feedbackRepo = feedbackRepo;
         this.mongoTemplate = mongoTemplate;
+    }
+    public DashboardResponse findFeedbacksSummaryOfTrainee(String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        float totalRating = 0;
+        int count = 0;
+        DashboardResponse dashboardResponse = DashboardResponse.builder().feedbacks(new ArrayList<>()).build();
+       // RatingReponseDto ratingReponseDto = RatingReponseDto.builder().build();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+        List<RatingDto> ratingDtoList = new ArrayList<>();
+        for (int i=0;i<4;i++) ratingDtoList.add(new RatingDto(0f,1));
+        for (Feedback feedback : feedbackList){
+            if(++count<5){
+                dashboardResponse.getFeedbacks().add(FeedbackResponseDto.builder().date(formatter.format(new Date()))
+                                .rating(feedback.getOverallRating())
+                                .feedback(feedback.getComment())
+                                .name(TrainingModuleApplication.searchNameById(feedback.getCreatedBy()))
+                        .build());
+            }
+            int type = feedback.getType().charAt(0) - '1';
+            ratingDtoList.get(type).incrTotalRating(feedback.getOverallRating());
+            ratingDtoList.get(type).incrcount();
+            totalRating += feedback.getOverallRating();
+        }
+        RatingReponseDto ratingReponseDto = RatingReponseDto.builder().overall(compute_rating(totalRating,feedbackList.size()))
+                .course(compute_rating(ratingDtoList.get(0).getTotalRating(),ratingDtoList.get(0).getCount()))
+                .test(compute_rating(ratingDtoList.get(1).getTotalRating(),ratingDtoList.get(1).getCount()))
+                .presentation(compute_rating(ratingDtoList.get(2).getTotalRating(),ratingDtoList.get(2).getCount()))
+                .behaviour(compute_rating(ratingDtoList.get(3).getTotalRating(),ratingDtoList.get(3).getCount()))
+                .attendance(0f)
+                .comment("Almost There!")
+                .build();
+
+        dashboardResponse.setRating(ratingReponseDto);
+        return dashboardResponse;
+        //return roundOff_Rating(totalRating/feedbackList.size());
+    }
+    private static Float compute_rating(float totalRating,int count){
+        if(totalRating==0) return 0f;
+        int temp = (int)(totalRating/count * 100);
+//        return roundOff_Rating(totalRating/count);
+        return ((float) temp) / 100;
     }
     public Float getOverallRatingOfTrainee(String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId);
