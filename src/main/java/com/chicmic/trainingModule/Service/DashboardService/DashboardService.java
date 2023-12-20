@@ -31,7 +31,8 @@ public class DashboardService {
         //fetch plans of user
         if(dashboardResponse.getFeedbacks().size()>0) {
             dashboardResponse.setCourses(Arrays.asList(CourseDto.builder().name("ReactJs").progress(50).build(),
-                    CourseDto.builder().name("VueJS").progress(53).build()));
+                    CourseDto.builder().name("VueJS").progress(53).build(),
+                    CourseDto.builder().name("NodeJs").progress(63).build()));
             dashboardResponse.setPlan(Arrays.asList(PlanDto.builder()
                             .name("Initial Plan")
                             .date(formatter.format(new Date()))

@@ -17,10 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/feedback")
@@ -65,6 +62,7 @@ public class FeedbackCRUD {
             for (Feedback feedback : feedbackList) {
                 feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
             }
+            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
             long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
             return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
         }
@@ -134,6 +132,7 @@ public class FeedbackCRUD {
 
     @GetMapping("/emp/{id}")
     public ApiResponse getAllFeedbacksOfEmployeeById(@PathVariable String id){
+        feedbackService.getCourseNameAndPhaseName(Arrays.asList("6579b4500cf9d953fe39e2a4"));
         System.out.println("fsafsa");
         List<Document> feedbackList = feedbackService.getAllFeedbacksOfEmployeeById(id);
 

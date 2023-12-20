@@ -27,4 +27,16 @@ public class FeedbackUtil {
         }
         return ids;
     }
+    public static String getFeedbackMessageBasedOnOverallRating(Float overallRating){
+        if(overallRating < 1)
+            return  "Considerable Work Required.";
+        else if (overallRating < 2)
+            return "Needs Significant Enhancement.";
+        else if (overallRating < 3)
+            return "Room for Improvement.";
+        else if (overallRating < 4) {
+            return "Almost There!";
+        }
+        return "Impressive! Well Done!";
+    }
 }
