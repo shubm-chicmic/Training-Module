@@ -54,6 +54,45 @@ public class FeedbackService {
         this.feedbackRepo = feedbackRepo;
         this.mongoTemplate = mongoTemplate;
     }
+    public FeedbackResponse1 addingPhaseAndTestNameInResponse(FeedbackResponse1 feedbackResponse1){
+        List<String> courseId = new ArrayList<>();
+        List<String> testId = new ArrayList<>();
+        int type = feedbackResponse1.getFeedbackType();
+
+        if(type == 1||type == 3)
+            courseId.add(feedbackResponse1.getCourse().get_id());
+        else if (type == 2)
+            testId.add(feedbackResponse1.getTest().get_id());
+        //fetch course and test details
+        Map<String,Document> courseDetail = getCourseNameAndPhaseName(courseId);
+        Map<String,Document> testDetail =  getTestNameAndMilestoneName(testId);
+        if(feedbackResponse1.getFeedbackType() == 1 || feedbackResponse1.getFeedbackType() == 3){
+            Document courseData = courseDetail.get(feedbackResponse1.getCourse().get_id());
+            feedbackResponse1.getCourse().setCourseName((String) courseData.get("name"));
+            if(feedbackResponse1.getFeedbackType() == 1){
+                List<Document> documentList = (List<Document>) courseData.get("phases");
+                int count = 0;
+                for (Document document : documentList){
+                    ++count;
+                    if(document.get("_id") == null) continue;
+                    if (document.get("_id").toString().equals(feedbackResponse1.getPhase().get_id()))
+                        feedbackResponse1.getPhase().setName(String.format("Phase-%d",count));
+                }
+            }
+        }else if (feedbackResponse1.getFeedbackType() == 2){
+            Document testData = testDetail.get(feedbackResponse1.getTest().get_id());
+            feedbackResponse1.getTest().setTestName((String) testData.get("testName"));
+            List<Document> documentList = (List<Document>) testData.get("milestones");
+            int count = 0;
+            for (Document document : documentList){
+                ++count;
+                if(document.get("_id") == null) continue;
+                if (document.get("_id").toString().equals(feedbackResponse1.getMilestone().get_id()))
+                    feedbackResponse1.getMilestone().setName(String.format("Milestone-%d",count));
+            }
+        }
+        return feedbackResponse1;
+    }
     public List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse>
             addingPhaseAndTestNameInResponse(List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses){
         //fetch courseId and TestId
@@ -187,6 +226,7 @@ public class FeedbackService {
         for (Feedback feedback : feedbackList) {
             feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
         }
+        feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
         return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
     }
 
@@ -579,7 +619,7 @@ public class FeedbackService {
             Query query = new Query(criteria);
             query.fields().include("_id");
             Document document =  mongoTemplate.findOne(query, Document.class, "feedaback");
-            assert document != null;
+            if(document == null) return null;
             return document.get("_id").toString();
         }
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(type)
@@ -589,7 +629,7 @@ public class FeedbackService {
         Query query = new Query(criteria);
         query.fields().include("_id");
         Document document =  mongoTemplate.findOne(query, Document.class, "feedaback");
-        assert document != null;
+        if(document == null) return  null;
         return document.get("_id").toString();
     }
     //create advance filters

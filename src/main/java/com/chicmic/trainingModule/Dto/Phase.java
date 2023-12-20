@@ -1,4 +1,5 @@
 package com.chicmic.trainingModule.Dto;
 
-public record Phase(String _id,String name) {
+public class Phase {
+//    String _id,String name
 }
