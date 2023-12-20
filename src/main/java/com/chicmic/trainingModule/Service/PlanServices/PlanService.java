@@ -159,8 +159,8 @@ public class PlanService {
                 for (Task task : phase.getTasks()) {
                     if (task.getPlanType() == 1) {
                         UserIdAndNameDto course = new UserIdAndNameDto();
-                        course.set_id(task.getPlan());
-                        course.setName(courseService.getCourseById(task.getPlan()).getName());
+                        course.set_id((String) task.getPlan());
+                        course.setName(courseService.getCourseById((String) task.getPlan()).getName());
 
                         courseIds.putIfAbsent(plan.get_id(), new ArrayList<>());
                         courseIds.get(plan.get_id()).add(course);

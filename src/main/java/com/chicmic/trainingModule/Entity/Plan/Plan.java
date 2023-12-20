@@ -21,6 +21,7 @@ public class Plan {
     private String _id;
     private String planName;
     private String description;
+    private Boolean isCompleted = false;
     private Set<String> approver;
     private List<Phase> phases;
     private Set<String> approvedBy = new HashSet<>();

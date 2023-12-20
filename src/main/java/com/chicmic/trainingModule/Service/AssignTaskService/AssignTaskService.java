@@ -4,42 +4,136 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
 import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
+import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
+import com.chicmic.trainingModule.Entity.Course.CourseTask;
+import com.chicmic.trainingModule.Entity.Plan.Phase;
 import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan.Task;
+import com.chicmic.trainingModule.Entity.Test.Milestone;
+import com.chicmic.trainingModule.Entity.Test.Test;
+import com.chicmic.trainingModule.Entity.Test.TestSubTask;
+import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Repository.AssignTaskRepo;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.security.Principal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 @Service
 @RequiredArgsConstructor
 public class AssignTaskService {
     private final AssignTaskRepo assignTaskRepo;
     private final PlanService planService;
+    private final CourseService courseService;
+    private final TestService testService;
     private final MongoTemplate mongoTemplate;
     public AssignTask createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
 
-        List<Plan> plan = planService.getPlanByIds(assignTaskDto.getPlanIds());
+        List<Plan> plans = planService.getPlanByIds(assignTaskDto.getPlanIds());
+        for (Plan plan : plans) {
+            for (Phase phase : plan.getPhases()){
+                for (Task task : phase.getTasks()) {
+                    String planId = (String)task.getPlan();
+                    AssignTaskPlanTrack modifiedPlan = AssignTaskPlanTrack.builder()
+                            .isCompleted(false)
+                            ._id(planId)
+                            .build();
+                    System.out.println(task.getMilestones());
+                    Object milestonesObject = task.getMilestones();
+                    List<String> milestoneList;
+                    if (milestonesObject instanceof String) {
+                        milestoneList = new ArrayList<>();
+                        milestoneList.add((String) milestonesObject);
+                    } else if (milestonesObject instanceof List) {
+                        milestoneList = (List<String>) milestonesObject;
+                    } else {
+                        milestoneList = Collections.emptyList();
+                    }
+                    List<String> milestonesId = milestoneList;
+                    List<AssignTaskPlanTrack> milestones = new ArrayList<>();
+                    for (String milestone : milestonesId){
+                        AssignTaskPlanTrack assignTaskPlanTrack = null;
+                        if(task.getPlanType() == 1) {
+                            Course course = courseService.getCourseById(planId);
+                            List<AssignTaskPlanTrack> assignTaskCourse = new ArrayList<>();
+                            for (com.chicmic.trainingModule.Entity.Course.Phase coursePhase : course.getPhases()) {
+                                for (CourseTask courseTask : coursePhase.getTasks()){
+                                    List<AssignTaskPlanTrack> assignTaskCourseSubTask = new ArrayList<>();
+                                    for (CourseSubTask courseSubTask : courseTask.getSubtasks()){
+                                       assignTaskPlanTrack = AssignTaskPlanTrack.builder()
+                                               ._id(courseSubTask.get_id())
+                                               .isCompleted(false)
+                                               .build();
+                                       assignTaskCourseSubTask.add(assignTaskPlanTrack);
+                                   }
+                                    assignTaskPlanTrack = AssignTaskPlanTrack.builder()
+                                            ._id(courseTask.get_id())
+                                            .isCompleted(false)
+                                            .subtasks(assignTaskCourseSubTask)
+                                            .build();
+                                    assignTaskCourse.add(assignTaskPlanTrack);
+                                }
+                            }
+                            assignTaskPlanTrack = AssignTaskPlanTrack.builder()
+                                    ._id(milestone)
+                                    .isCompleted(false)
+                                    .tasks(assignTaskCourse)
+                                    .build();
+                        }else if(task.getPlanType() == 2){
+                            Test test = testService.getTestById(planId);
+                            List<AssignTaskPlanTrack> assignTaskTest = new ArrayList<>();
+                            for (Milestone testMilestone : test.getMilestones()) {
+                                for (TestTask testTask : testMilestone.getTasks()){
+                                    List<AssignTaskPlanTrack> assignTaskTestSubTask = new ArrayList<>();
+                                    for (TestSubTask testSubTask : testTask.getSubtasks()){
+                                        assignTaskPlanTrack = AssignTaskPlanTrack.builder()
+                                                ._id(testSubTask.get_id())
+                                                .isCompleted(false)
+                                                .build();
+                                        assignTaskTestSubTask.add(assignTaskPlanTrack);
+                                    }
+                                    assignTaskPlanTrack = AssignTaskPlanTrack.builder()
+                                            ._id(testTask.get_id())
+                                            .isCompleted(false)
+                                            .subtasks(assignTaskTestSubTask)
+                                            .build();
+                                    assignTaskTest.add(assignTaskPlanTrack);
+                                }
+                            }
+                            assignTaskPlanTrack = AssignTaskPlanTrack.builder()
+                                    ._id(milestone)
+                                    .isCompleted(false)
+                                    .tasks(assignTaskTest)
+                                    .build();
+                        }
+                        milestones.add(assignTaskPlanTrack);
+                    }
+                    task.setPlan(modifiedPlan);
+                    task.setMilestones(milestones);
+                }
+            }
+        }
         AssignTask assignTask = AssignTask.builder()
                 .createdBy(principal.getName())
-                .plans(plan)
+                .plans(plans)
                 .userId(userId)
                 .reviewers(assignTaskDto.getReviewers())
                 .build();
@@ -136,7 +230,7 @@ public class AssignTaskService {
 
     public long countNonDeletedAssignTasks() {
         MatchOperation matchStage = match(Criteria.where("deleted").is(false));
-        Aggregation aggregation = Aggregation.newAggregation(matchStage);
+        Aggregation aggregation = newAggregation(matchStage);
         AggregationResults<AssignTask> aggregationResults = mongoTemplate.aggregate(aggregation, "assignTask", AssignTask.class);
         return aggregationResults.getMappedResults().size();
     }
@@ -198,11 +292,82 @@ public class AssignTaskService {
         }
 
     public AssignTask completeTask(TaskCompleteDto taskCompleteDto, Principal principal) {
-        if(taskCompleteDto.getSubtaskId() == null  && taskCompleteDto.getMilestone() !=null) {
+        System.out.println("Task complete Dto " + taskCompleteDto);
+        if (taskCompleteDto.getMilestone() != null) {
+            System.out.println("Im completing this task ");
             AssignTask assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
-
+            return markMilestoneAsCompleted(taskCompleteDto);
         }
         return null;
     }
+
+    public AssignTask markMilestoneAsCompleted(TaskCompleteDto taskCompleteDto) {
+        String assignTaskId = taskCompleteDto.getAssignTaskId();
+        String planId = taskCompleteDto.getPlanId();
+        String milestoneId = taskCompleteDto.getMilestone();
+        String mainTaskId = taskCompleteDto.getMainTaskId();
+        String subTaskId = taskCompleteDto.getSubtaskId();
+        Query query = new Query(Criteria.where("_id").is(assignTaskId).and("plans._id").is(planId));
+        List<Plan> plans = mongoTemplate.find(query, AssignTask.class)
+                .stream()
+                .flatMap(assignTask -> assignTask.getPlans().stream()
+                        .filter(plan -> plan.get_id().equals(planId)))
+                .collect(Collectors.toList());
+        if(subTaskId == null) {
+            one:
+            for (Plan plan : plans) {
+                if (plan.get_id().equals(planId)) {
+                    for (Phase phase : plan.getPhases()) {
+                        for (Task task : phase.getTasks()) {
+                            List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                            for (AssignTaskPlanTrack milestone : milestones) {
+                                if (milestone.get_id().equals(milestoneId)) {
+                                    milestone.setIsCompleted(true);
+                                    for(AssignTaskPlanTrack milestoneMainTask : milestone.getTasks()){
+                                        milestoneMainTask.setIsCompleted(true);
+                                        for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
+                                            milestoneSubTask.setIsCompleted(true);
+                                        }
+                                    }
+                                    break one;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }else {
+            one:
+            for (Plan plan : plans) {
+                if (plan.get_id().equals(planId)) {
+                    for (Phase phase : plan.getPhases()) {
+                        for (Task task : phase.getTasks()) {
+                            List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                            for (AssignTaskPlanTrack milestone : milestones) {
+                                if (milestone.get_id().equals(milestoneId)) {
+                                    for(AssignTaskPlanTrack milestoneMainTask : milestone.getTasks()){
+                                        if(milestoneMainTask.get_id().equals(mainTaskId)) {
+                                            for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
+                                                if(milestoneSubTask.get_id().equals(subTaskId)){
+                                                    milestoneSubTask.setIsCompleted(true);
+                                                    break one;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignTask assignTask = assignTaskRepo.findById(assignTaskId).orElse(null);
+        assignTask.setPlans(plans);
+        return assignTaskRepo.save(assignTask);
+//        return null;
+    }
+
+
 }
 
