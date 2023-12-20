@@ -297,8 +297,12 @@ public class AssignTaskService {
             System.out.println("Im completing this task ");
             AssignTask assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
             return markMilestoneAsCompleted(taskCompleteDto);
+        }else {
+            System.out.println("Im completing this task ");
+            AssignTask assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
+            return markMilestoneAsCompleted(taskCompleteDto);
         }
-        return null;
+//        return null;
     }
 
     public AssignTask markMilestoneAsCompleted(TaskCompleteDto taskCompleteDto) {
@@ -313,7 +317,9 @@ public class AssignTaskService {
                 .flatMap(assignTask -> assignTask.getPlans().stream()
                         .filter(plan -> plan.get_id().equals(planId)))
                 .collect(Collectors.toList());
-        if(subTaskId == null) {
+        if(subTaskId == null && milestoneId != null) {
+            System.out.println("\u001B[31m milestone id 1 ");
+
             one:
             for (Plan plan : plans) {
                 if (plan.get_id().equals(planId)) {
@@ -336,7 +342,26 @@ public class AssignTaskService {
                     }
                 }
             }
-        }else {
+        }else if (milestoneId == null) {
+            System.out.println("\u001B[31m milestone id 2");
+            one:
+            for (Plan plan : plans) {
+                if (plan.get_id().equals(planId)) {
+                    for (Phase phase : plan.getPhases()) {
+                        for (Task task : phase.getTasks()) {
+                            System.out.println("Plan type = " + task.getPlanType());
+                            if (task.getPlanType() == 4) {
+                                phase.setIsCompleted(true);
+                                break one;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            System.out.println("\u001B[31m milestone id 3");
+
             one:
             for (Plan plan : plans) {
                 if (plan.get_id().equals(planId)) {
