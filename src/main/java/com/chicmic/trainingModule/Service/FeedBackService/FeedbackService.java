@@ -469,7 +469,7 @@ public class FeedbackService {
     public List<Feedback> findFeedbacksByPptIdAndTraineeId(String traineeId,String feedbackType){
         searchUserById(traineeId);
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3");
-        Query query = new Query();
+        Query query = new Query(criteria);
         return mongoTemplate.find(query,Feedback.class);
     }
 
