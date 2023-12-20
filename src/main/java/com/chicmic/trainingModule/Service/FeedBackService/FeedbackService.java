@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse_TEST;
 import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
 import com.chicmic.trainingModule.Dto.ratings.Rating;
 import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
+import com.chicmic.trainingModule.Dto.ratings.Rating_PPT;
 import com.chicmic.trainingModule.Dto.ratings.Rating_TEST;
 import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
@@ -435,13 +436,20 @@ public class FeedbackService {
             phaseResponse.setTheoreticalRating(ratingCourse.getTheoreticalRating());
             phaseResponse.setCommunicationRating(ratingCourse.getCommunicationRating());
             phaseResponse.setTechnicalRating(ratingCourse.getTechnicalRating());
-        }else{
+        }else if(feedback.getType().equals("2")){
             Rating_TEST ratingTest = (Rating_TEST) feedback.getRating();
             phaseResponse.set_id(ratingTest.getMilestoneId());
             phaseResponse.setName(ratingTest.getMilestoneId());
             phaseResponse.setTheoreticalRating(ratingTest.getTheoreticalRating());
             phaseResponse.setCommunicationRating(ratingTest.getCommunicationRating());
             phaseResponse.setCodingRating(ratingTest.getCodingRating());
+        }else{
+            Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
+            phaseResponse.set_id(rating_ppt.getCourseId());
+            phaseResponse.setName(rating_ppt.getCourseId());
+            phaseResponse.setPresentationRating(rating_ppt.getPresentationRating());
+            phaseResponse.setCommunicationRating(rating_ppt.getCommunicationRating());
+            phaseResponse.setTechnicalRating(rating_ppt.getTechnicalRating());
         }
         return phaseResponse;
     }
@@ -457,10 +465,18 @@ public class FeedbackService {
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Feedback.class);
     }
+
+    public List<Feedback> findFeedbacksByPptIdAndTraineeId(String traineeId,String feedbackType){
+        searchUserById(traineeId);
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3");
+        Query query = new Query();
+        return mongoTemplate.find(query,Feedback.class);
+    }
+
     public List<Feedback> findFeedbacksByCourseIdAndTraineeId(String courseId,String traineeId,String feedbackType){
         searchUserById(traineeId);
 
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("1")
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(feedbackType)
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
 

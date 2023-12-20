@@ -100,14 +100,16 @@ public class FeedbackCRUD {
             return feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
         }
 
-        if(type < 1 || type > 2)
+        if(type < 1 || type > 3)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
 
         List<Feedback> feedbackList;
         if(type == 1)
             feedbackList = feedbackService.findFeedbacksByCourseIdAndTraineeId(_id,userId,"1");
-        else
+        else if(type == 2)
             feedbackList = feedbackService.findFeedbacksByTestIdAndTraineeId(_id,userId,"2");
+        else
+            feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(userId,"3");
         List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
 
         return new ApiResponse(200,"List of All feedbacks",responseList);
