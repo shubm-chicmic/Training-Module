@@ -578,8 +578,8 @@ public class FeedbackService {
                     .and("rating.phaseId").is(mileStoneId);
             Query query = new Query(criteria);
             query.fields().include("_id");
-            Document document =  mongoTemplate.findOne(query, Document.class, "feedaback");
-            assert document != null;
+            Document document =  mongoTemplate.findOne(query, Document.class, "feedback");
+            if(document == null || document.get("_id")==null) return null;
             return document.get("_id").toString();
         }
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(type)
@@ -588,8 +588,8 @@ public class FeedbackService {
                 .and("rating.milestoneId").is(mileStoneId);
         Query query = new Query(criteria);
         query.fields().include("_id");
-        Document document =  mongoTemplate.findOne(query, Document.class, "feedaback");
-        assert document != null;
+        Document document =  mongoTemplate.findOne(query, Document.class, "feedback");
+        if(document == null || document.get("_id")==null) return null;
         return document.get("_id").toString();
     }
     //create advance filters

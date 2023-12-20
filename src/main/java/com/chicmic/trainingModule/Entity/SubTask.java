@@ -10,6 +10,7 @@ public class SubTask {
     String _id = String.valueOf(new ObjectId());
     String subTask;
     String estimatedTime;
+    Boolean isCompleted = false;
 
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;

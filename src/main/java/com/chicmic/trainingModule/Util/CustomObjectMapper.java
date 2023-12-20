@@ -46,15 +46,17 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class CustomObjectMapper {
-    private  final CourseService courseService;
+    private final CourseService courseService;
     private final FeedbackService feedbackService;
-    private  final TestService testService;
+    private final TestService testService;
+
     public static <T> T convert(Object dto, Class<T> targetType) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         return mapper.convertValue(dto, targetType);
     }
+
     public static Object updateFields(Object source, Object target) {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -62,11 +64,11 @@ public class CustomObjectMapper {
             mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             return mapper.updateValue(target, source);
-        }
-        catch (JsonMappingException e) {
+        } catch (JsonMappingException e) {
             throw new RuntimeException(e);
         }
     }
+
     public static List<SessionResponseDto> mapSessionToResponseDto(List<Session> sessions) {
         List<SessionResponseDto> sessionResponseDtoList = new ArrayList<>();
         for (Session session : sessions) {
@@ -74,6 +76,7 @@ public class CustomObjectMapper {
         }
         return sessionResponseDtoList;
     }
+
     public static SessionResponseDto mapSessionToResponseDto(Session session) {
         List<UserIdAndNameDto> teams = session.getTeams().stream()
                 .map(teamId -> {
@@ -189,45 +192,47 @@ public class CustomObjectMapper {
                 .createdBy(githubSample.getCreatedBy())
                 .build();
     }
+
     public static List<CourseResponseDto> mapCourseToResponseDto(List<Course> courses, Boolean isPhaseRequired) {
         List<CourseResponseDto> courseResponseDtoList = new ArrayList<>();
-        if(isPhaseRequired) {
+        if (isPhaseRequired) {
             for (Course course : courses) {
                 courseResponseDtoList.add(mapCourseToResponseDto(course));
             }
-        }else{
+        } else {
             for (Course course : courses) {
                 courseResponseDtoList.add(mapCourseToResponseDtoForNoPhase(course));
             }
         }
         return courseResponseDtoList;
     }
-    public static  String calculateTotalEstimatedTime(List<Phase> phases) {
+
+    public static String calculateTotalEstimatedTime(List<Phase> phases) {
 
         long totalHours = 0;
         long totalMinutes = 0;
         for (Phase phase : phases) {
-                long phaseHours = 0;
-                long phaseMinutes = 0;
+            long phaseHours = 0;
+            long phaseMinutes = 0;
 
-                for (CourseTask courseTask : phase.getTasks()) {
-                    for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
+            for (CourseTask courseTask : phase.getTasks()) {
+                for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
 
 //                        System.out.println("Estimated time : " + subTask.getEstimatedTime());
-                        String[] timeParts = courseSubTask.getEstimatedTime().split(":");
-                        if (timeParts.length == 1) {
-                            phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-                        } else if (timeParts.length == 2) {
-                            phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-                            phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
-                        }
+                    String[] timeParts = courseSubTask.getEstimatedTime().split(":");
+                    if (timeParts.length == 1) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    } else if (timeParts.length == 2) {
+                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
                     }
                 }
-
-                totalHours += phaseHours + phaseMinutes / 60;
-                totalMinutes += phaseMinutes % 60;
-
             }
+
+            totalHours += phaseHours + phaseMinutes / 60;
+            totalMinutes += phaseMinutes % 60;
+
+        }
         // Convert total hours and minutes to proper format
         totalHours += totalMinutes / 60;
         totalMinutes %= 60;
@@ -262,14 +267,14 @@ public class CustomObjectMapper {
         for (Phase phase : course.getPhases()) {
             int numOfTasksTopics = 0;
             String estimatedTime = null;
-            for(CourseTask courseTask : phase.getTasks()) {
+            for (CourseTask courseTask : phase.getTasks()) {
                 noOfTopics += courseTask.getSubtasks().size();
                 numOfTasksTopics += courseTask.getSubtasks().size();
                 long totalHours = 0;
                 long totalMinutes = 0;
                 long phaseHours = 0;
                 long phaseMinutes = 0;
-                for (CourseSubTask courseSubTask  : courseTask.getSubtasks()){
+                for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
                     String[] timeParts = courseSubTask.getEstimatedTime().split(":");
                     if (timeParts.length == 1) {
                         phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
@@ -303,6 +308,7 @@ public class CustomObjectMapper {
                 .createdByName(TrainingModuleApplication.searchNameById(course.getCreatedBy()))
                 .build();
     }
+
     public static CourseResponseDto mapCourseToResponseDtoForNoPhase(Course course) {
         List<UserIdAndNameDto> approver = course.getReviewers().stream()
                 .map(approverId -> {
@@ -321,14 +327,14 @@ public class CustomObjectMapper {
         for (Phase phase : course.getPhases()) {
             int numOfTasksTopics = 0;
             String estimatedTime = null;
-            for(CourseTask courseTask : phase.getTasks()) {
+            for (CourseTask courseTask : phase.getTasks()) {
                 noOfTopics += courseTask.getSubtasks().size();
                 numOfTasksTopics += courseTask.getSubtasks().size();
                 long totalHours = 0;
                 long totalMinutes = 0;
                 long phaseHours = 0;
                 long phaseMinutes = 0;
-                for (CourseSubTask courseSubTask  : courseTask.getSubtasks()){
+                for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
                     String[] timeParts = courseSubTask.getEstimatedTime().split(":");
                     if (timeParts.length == 1) {
                         phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
@@ -361,7 +367,8 @@ public class CustomObjectMapper {
                 .createdByName(TrainingModuleApplication.searchNameById(course.getCreatedBy()))
                 .build();
     }
-    public static  String calculateTotalEstimatedTimeInTest(List<Milestone> milestones) {
+
+    public static String calculateTotalEstimatedTimeInTest(List<Milestone> milestones) {
 
         long totalHours = 0;
         long totalMinutes = 0;
@@ -393,13 +400,15 @@ public class CustomObjectMapper {
 
         return String.format("%02d:%02d", totalHours, totalMinutes);
     }
+
     public static List<TestResponseDto> mapTestToResponseDto(List<Test> tests, Boolean isMilestoneRequired) {
         List<TestResponseDto> testResponseDtoList = new ArrayList<>();
         for (Test test : tests) {
-                testResponseDtoList.add(mapTestToResponseDto(test));
+            testResponseDtoList.add(mapTestToResponseDto(test));
         }
         return testResponseDtoList;
     }
+
     public static TestResponseDto mapTestToResponseDto(Test test) {
         List<UserIdAndNameDto> approver = Optional.ofNullable(test.getReviewers())
                 .map(approverIds -> approverIds.stream()
@@ -435,14 +444,14 @@ public class CustomObjectMapper {
         for (Milestone milestone : test.getMilestones()) {
             int numOfTopics = 0;
             String estimatedTime = null;
-            for(TestTask testTask : milestone.getTasks()) {
+            for (TestTask testTask : milestone.getTasks()) {
                 noOfTopics += testTask.getSubtasks().size();
                 numOfTopics += testTask.getSubtasks().size();
                 long totalHours = 0;
                 long totalMinutes = 0;
                 long phaseHours = 0;
                 long phaseMinutes = 0;
-                for (TestSubTask testSubTask : testTask.getSubtasks()){
+                for (TestSubTask testSubTask : testTask.getSubtasks()) {
                     String[] timeParts = testSubTask.getEstimatedTime().split(":");
                     if (timeParts.length == 1) {
                         phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
@@ -474,7 +483,8 @@ public class CustomObjectMapper {
                 .createdByName(TrainingModuleApplication.searchNameById(test.getCreatedBy()))
                 .build();
     }
-    public static  String calculateTotalEstimatedTimeInPlan(List<com.chicmic.trainingModule.Entity.Plan.Phase> phases) {
+
+    public static String calculateTotalEstimatedTimeInPlan(List<com.chicmic.trainingModule.Entity.Plan.Phase> phases) {
 
         long totalHours = 0;
         long totalMinutes = 0;
@@ -485,14 +495,14 @@ public class CustomObjectMapper {
             for (Task task : phase.getTasks()) {
 
 //                        System.out.println("Estimated time : " + subTask.getEstimatedTime());
-                    String[] timeParts = task.getEstimatedTime().split(":");
-                    if (timeParts.length == 1) {
-                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-                    } else if (timeParts.length == 2) {
-                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
-                    }
+                String[] timeParts = task.getEstimatedTime().split(":");
+                if (timeParts.length == 1) {
+                    phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                } else if (timeParts.length == 2) {
+                    phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
+                    phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
                 }
+            }
 
 
             totalHours += phaseHours + phaseMinutes / 60;
@@ -505,7 +515,8 @@ public class CustomObjectMapper {
 
         return String.format("%02d:%02d", totalHours, totalMinutes);
     }
-    public  List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
+
+    public List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
         List<PlanResponseDto> planResponseDtoList = new ArrayList<>();
         for (Plan plan : plans) {
             planResponseDtoList.add(mapPlanToResponseDto(plan));
@@ -513,7 +524,7 @@ public class CustomObjectMapper {
         return planResponseDtoList;
     }
 
-    public  PlanResponseDto mapPlanToResponseDto(Plan plan) {
+    public PlanResponseDto mapPlanToResponseDto(Plan plan) {
         List<UserIdAndNameDto> approver = Optional.ofNullable(plan.getApprover())
                 .map(approverIds -> approverIds.stream()
                         .map(approverId -> {
@@ -556,10 +567,10 @@ public class CustomObjectMapper {
                 newTask.setEstimatedTime(task.getEstimatedTime());
                 newTask.set_id(task.get_id());
                 Object milestone = null;
-                if(task.getPlanType() != null && task.getPlanType() == 1){
+                if (task.getPlanType() != null && task.getPlanType() == 1) {
                     System.out.println("Milestone: fet " + task.getMilestones());
                     milestone = (courseService.getCourseByPhaseIds((String) task.getPlan(), (List<Object>) task.getMilestones()));
-                }else if(task.getPlanType() != null && task.getPlanType() == 2){
+                } else if (task.getPlanType() != null && task.getPlanType() == 2) {
                     milestone = (testService.getTestByMilestoneIds((String) task.getPlan(), (List<Object>) task.getMilestones()));
                 }
                 String[] timeParts = task.getEstimatedTime().split(":");
@@ -570,7 +581,7 @@ public class CustomObjectMapper {
                     phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
                 }
                 System.out.println("\u001B[31m milestone " + milestone + "\u001B[0m");
-                newTask.setMilestones( milestone);
+                newTask.setMilestones(milestone);
                 newTask.setMentor(task.getMentor());
                 taskList.add(newTask);
             }
@@ -602,13 +613,15 @@ public class CustomObjectMapper {
                 .createdAt(plan.getCreatedAt())
                 .build();
     }
-    public  List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId, Principal principal) {
+
+    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId, Principal principal) {
         List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
         for (AssignTask assignTask : assignTasks) {
             assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId, principal));
         }
         return assignTaskResponseDtoList;
     }
+
     public List<UserIdAndNameDto> mapIdsToNames(List<String> ids, String type) {
         return ids.stream()
                 .map(id -> {
@@ -630,8 +643,8 @@ public class CustomObjectMapper {
                 .collect(Collectors.toList());
     }
 
-    public  AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
-        if(assignTask == null) {
+    public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
+        if (assignTask == null) {
             return null;
         }
         List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
@@ -654,7 +667,7 @@ public class CustomObjectMapper {
                 )
                 .orElse(null);
         Object trainee = null;
-        if(traineeId == null && traineeId.isEmpty()) {
+        if (traineeId == null && traineeId.isEmpty()) {
 //            trainee = Optional.ofNullable(assignTask.getUsers())
 //                    .map(userIds -> userIds.stream()
 //                            .map(userId -> {
@@ -664,39 +677,70 @@ public class CustomObjectMapper {
 //                            .collect(Collectors.toList())
 //                    )
 //                    .orElse(null);
-        }else {
-            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
+        } else {
+            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
         }
 
         List<PlanDto> plans = new ArrayList<>();
         for (Plan plan : assignTask.getPlans()) {
             System.out.println(" plan = " + plan);
-            for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()){
+            for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
                 for (Task task : phase.getTasks()) {
                     PlanDto planDto = null;
-                    if(task.getPlanType() == 1) {
+                    if (task.getPlanType() == 1) {
 
-                        Course course = courseService.getCourseById(((AssignTaskPlanTrack)task.getPlan()).get_id());
+                        Course course = courseService.getCourseById(((AssignTaskPlanTrack) task.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
                         for (Phase coursePhase : course.getPhases()) {
-                           MilestoneDto milestoneDto = MilestoneDto.builder()
-                                   ._id(coursePhase.get_id())
-                                   .reviewers(task.getMentor())
-                                   .name(coursePhase.getName())
-                                   .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), (String)task.getPlan(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
-                                   .isCompleted(phase.getIsCompleted())
-                                   .noOfTasks(coursePhase.getTasks().size())
-                                   .estimatedTime(coursePhase.getEstimatedTime())
-                                   .tasks(coursePhase.getTasks())
-                                   .build();
-                           milestoneDtos.add(milestoneDto);
+                            boolean isMilestoneCompleted = false;
+                            for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                if (assignTaskPlanTrack.get_id().equals(coursePhase.get_id())) {
+                                    isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
+                                    break;
+                                }
+                            }
+                            List<CourseTask> courseTasks = coursePhase.getTasks();
+                            for (CourseTask courseTask : courseTasks) {
+                                for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
+
+                                    String subTaskId = courseSubTask.get_id();
+                                    System.out.println("subtask id = " + subTaskId);
+                                    one:
+                                    for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+//                                        if (milestonePlan.get_id().equals(phase.get_id())) {
+                                            for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
+                                                for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
+                                                    System.out.println("milestone Subtask id = " + milestoneSubTask.get_id());
+                                                    if (milestoneSubTask.get_id().equals(subTaskId)) {
+                                                        System.out.println("value of is complete = " + milestoneSubTask.getIsCompleted());
+                                                        courseSubTask.setIsCompleted(milestoneSubTask.getIsCompleted());
+                                                        break one;
+                                                    }
+                                                }
+                                            }
+//                                        }
+                                    }
+                                }
+
+                            }
+                            MilestoneDto milestoneDto = MilestoneDto.builder()
+                                    ._id(coursePhase.get_id())
+                                    .reviewers(task.getMentor())
+                                    .name(coursePhase.getName())
+                                    .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
+                                    .isCompleted(isMilestoneCompleted)
+                                    .noOfTasks(coursePhase.getTasks().size())
+                                    .estimatedTime(coursePhase.getEstimatedTime())
+                                    .tasks(coursePhase.getTasks())
+                                    .build();
+                            milestoneDtos.add(milestoneDto);
                         }
                         planDto = PlanDto.builder()
                                 ._id(course.get_id())
                                 .planType(task.getPlanType())
                                 .assignPlanId(plan.get_id())
                                 .isCompleted(task.getIsCompleted())
-                                .feedbackId("6581c5388096904d2af3204d")
+//                                .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), (String)task.getPlan(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
                                 .estimatedTime(task.getEstimatedTime())
                                 .noOfTopics(5)
                                 .isApproved(course.getIsApproved())
@@ -706,16 +750,45 @@ public class CustomObjectMapper {
                                 .rating(0.0f)
                                 .reviewers(null)
                                 .build();
-                    }else if (task.getPlanType() == 2){
+                    } else if (task.getPlanType() == 2) {
+
                         Test test = testService.getTestById(((AssignTaskPlanTrack) task.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
                         for (Milestone milestone : test.getMilestones()) {
+                            boolean isMilestoneCompleted = false;
+                            for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                if (assignTaskPlanTrack.get_id().equals(milestone.get_id())) {
+                                    isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
+                                    break;
+                                }
+                            }
+                            List<TestTask> testTasks = milestone.getTasks();
+                            for (TestTask testTask : testTasks) {
+                                for (TestSubTask testSubTask : testTask.getSubtasks()) {
+
+                                    String subTaskId = testSubTask.get_id();
+                                    one:
+                                    for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                        if (milestonePlan.get_id().equals(milestone.get_id())) {
+                                            for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
+                                                for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
+                                                    if (milestoneSubTask.get_id().equals(subTaskId)) {
+                                                        testSubTask.setIsCompleted(milestoneSubTask.getIsCompleted());
+                                                        break one;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
                             MilestoneDto milestoneDto = MilestoneDto.builder()
                                     ._id(milestone.get_id())
                                     .reviewers(null)
                                     .name(milestone.getName())
-                                    .feedbackId("6581c5388096904d2af3204d")
-                                    .isCompleted(phase.getIsCompleted())
+                                    .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
+                                    .isCompleted(isMilestoneCompleted)
                                     .noOfTasks(milestone.getTasks().size())
                                     .estimatedTime(milestone.getEstimatedTime())
                                     .tasks(milestone.getTasks())
@@ -727,7 +800,7 @@ public class CustomObjectMapper {
                                 .planType(task.getPlanType())
                                 .assignPlanId(plan.get_id())
                                 .isCompleted(task.getIsCompleted())
-                                .feedbackId("6581c5388096904d2af3204d")
+//                                .feedbackId("6581c5388096904d2af3204d")
                                 .estimatedTime(task.getEstimatedTime())
                                 .noOfTopics(5)
                                 .isApproved(test.getApproved())
@@ -737,19 +810,33 @@ public class CustomObjectMapper {
                                 .rating(null)
                                 .reviewers(null)
                                 .build();
-                    }else if (task.getPlanType() == 3){
+                    } else if (task.getPlanType() == 4) {
+                        Course course = courseService.getCourseById(((AssignTaskPlanTrack)task.getPlan()).get_id());
+                        List<MilestoneDto> milestoneDtos = new ArrayList<>();
+                        MilestoneDto milestoneDto = MilestoneDto.builder()
+                                ._id(((AssignTaskPlanTrack) task.getPlan()).get_id())
+                                .reviewers(null)
+                                .tasks(new ArrayList<>())
+                                .name(course.getName())
+//                                .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
+//                                .isCompleted(course)
+                                .noOfTasks(course.getPhases().size())
+                                .estimatedTime("08:00")
+//                                .tasks(course)
+                                .build();
+                        milestoneDtos.add(milestoneDto);
                         planDto = PlanDto.builder()
-                                ._id(task.getPlan())
-                                .planType(task.getPlanType())
+                                ._id(((AssignTaskPlanTrack) task.getPlan()).get_id())
+                                .planType(3)
+                                .name("Ppt")
                                 .assignPlanId(plan.get_id())
                                 .isCompleted(task.getIsCompleted())
                                 .feedbackId("6581c5388096904d2af3204d")
                                 .estimatedTime(task.getEstimatedTime())
                                 .noOfTopics(5)
-                                .isApproved(null)
-                                .isDeleted(null)
-                                .milestones(null)
-                                .name(null)
+                                .isApproved(false)
+                                .isDeleted(false)
+                                .milestones(milestoneDtos)
                                 .rating(null)
                                 .reviewers(null)
                                 .build();
