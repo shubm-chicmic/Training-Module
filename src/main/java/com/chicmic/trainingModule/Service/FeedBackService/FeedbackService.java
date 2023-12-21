@@ -55,6 +55,21 @@ public class FeedbackService {
         this.feedbackRepo = feedbackRepo;
         this.mongoTemplate = mongoTemplate;
     }
+    //method for checking user completed his course  or not
+    public boolean checkIfExists(String userId, Integer planType, String planId, boolean isCompleted) {
+        Query query = new Query(Criteria.where("userId").is(userId)
+                .and("plans.phases.tasks").elemMatch(
+                        Criteria.where("planType").is(planType)
+                                .and("milestones._id").is(planId)
+                                .and("milestones.isCompleted").is(isCompleted)
+                )
+        );
+        boolean flag =  mongoTemplate.exists(query, "assignTask");
+        if(!flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Trainee hasn't complete the course yet!!");
+        return true;
+    }
+
     public FeedbackResponse1 addingPhaseAndTestNameInResponse(FeedbackResponse1 feedbackResponse1){
         List<String> courseId = new ArrayList<>();
         List<String> testId = new ArrayList<>();
@@ -234,6 +249,12 @@ public class FeedbackService {
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
         //checking trainee exist in db!!!
         searchUserById(feedBackDto.getTrainee());
+        //checking trainee Completed course or not!!!
+        int type = feedBackDto.getFeedbackType().charAt(0) - '0';
+        if(type == 1)
+            checkIfExists(feedBackDto.getTrainee(),1,feedBackDto.getPhase(),true);
+        else if(type == 2)
+            checkIfExists(feedBackDto.getTrainee(),2,feedBackDto.getMilestone(),true);
 
         //checking feedback exist in db!!!
         boolean flag = feedbackExist(feedBackDto,userId);
