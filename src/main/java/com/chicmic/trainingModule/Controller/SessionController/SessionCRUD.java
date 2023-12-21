@@ -33,14 +33,15 @@ public class SessionCRUD {
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
             @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
             @RequestParam(required = false) String sessionId,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     ) throws JsonProcessingException {
         if(sessionId == null || sessionId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = sessionService.countNonDeletedSessions();
+            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+            Long count = sessionService.countNonDeletedSessions(searchString);
 
             List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
             Collections.reverse(sessionResponseDtoList);

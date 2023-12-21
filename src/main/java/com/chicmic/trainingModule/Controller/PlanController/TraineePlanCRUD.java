@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //@RequestMapping("/v1/training/traineeList")
-@RequestMapping("/api/feedback/training/traineeList")
+@RequestMapping("/v1/training/traineeList")
 @RestController
 public class TraineePlanCRUD {
     private final TraineePlanService traineePlanService;

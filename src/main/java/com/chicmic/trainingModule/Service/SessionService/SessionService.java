@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
+import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Session.MomMessage;
 import com.chicmic.trainingModule.Entity.StatusConstants;
 import com.chicmic.trainingModule.Repository.SessionRepo;
@@ -39,7 +40,7 @@ public class SessionService {
         session = sessionRepo.save(session);
         return session;
     }
-    public List<Session> getAllSessions(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
+    public List<Session> getAllSessions(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
@@ -53,11 +54,29 @@ public class SessionService {
         }else {
            pageable = PageRequest.of(pageNumber, pageSize);
         }
-        // Create a query object with criteria for title search and isDeleted filtering
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("title").regex(query, "i")) // Case-insensitive title search
-                .addCriteria(Criteria.where("isDeleted").is(false))
-                .with(pageable);
+
+        Criteria criteria = Criteria.where("title").regex(query, "i")
+                .and("isDeleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria).with(pageable);
+
+
+//        // Create a query object with criteria for title search and isDeleted filtering
+//        Query searchQuery = new Query()
+//                .addCriteria(Criteria.where("title").regex(query, "i")) // Case-insensitive title search
+//                .addCriteria(Criteria.where("isDeleted").is(false))
+//                .with(pageable);
 
         // Fetch data based on the query and apply sorting by title
         List<Session> sessions = mongoTemplate.find(searchQuery, Session.class);
@@ -137,8 +156,10 @@ public class SessionService {
             return null;
         }
     }
-    public long countNonDeletedSessions() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("isDeleted").is(false));
+    public long countNonDeletedSessions(String query) {
+        MatchOperation matchStage = Aggregation.match(Criteria.where("title").regex(query, "i")
+                .and("isDeleted").is(false));
+
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Session> aggregationResults = mongoTemplate.aggregate(aggregation, "session", Session.class);
         return aggregationResults.getMappedResults().size();

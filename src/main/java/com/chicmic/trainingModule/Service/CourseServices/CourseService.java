@@ -87,7 +87,7 @@ public class CourseService {
         return courses;
     }
 
-    public List<Course> getAllCourses(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
+    public List<Course> getAllCourses(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -97,10 +97,45 @@ public class CourseService {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("name").regex(query, "i"))
-                .addCriteria(Criteria.where("isDeleted").is(false))
-                .with(pageable);
+//        Query searchQuery = new Query()
+//                .addCriteria(Criteria.where("name").regex(query, "i"))
+//                .addCriteria(Criteria.where("isDeleted").is(false))
+//                .with(pageable);
+//
+//        List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
+//        List<Course> finalCourseList = new ArrayList<>();
+//        for (Course course : courses){
+//            System.out.println("course " + course.getName() + " approved " + course.getIsApproved());
+//            if(course.getIsApproved()){
+//                System.out.println("In 1");
+//                finalCourseList.add(course);
+//            }else {
+//                System.out.println("In 2");
+//                System.out.println("reviewers = " +course.getReviewers());
+//                System.out.println("createdBy = " + course.getCreatedBy());
+//                System.out.println("userId = " + userId);
+//                if(course.getReviewers().contains(userId) || course.getCreatedBy().equals(userId)){
+//                    finalCourseList.add(course);
+//                }
+//            }
+//        }
+//        courses = finalCourseList;
+        Criteria criteria = Criteria.where("name").regex(query, "i")
+                .and("isDeleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                .and("reviewers").in(userId);
+        Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                .and("createdBy").is(userId);
+
+        // Combining the conditions
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria).with(pageable);
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
 
@@ -181,8 +216,10 @@ public class CourseService {
         }
     }
 
-    public long countNonDeletedCourses() {
-        MatchOperation matchStage = match(Criteria.where("isDeleted").is(false));
+    public long countNonDeletedCourses(String query) {
+        MatchOperation matchStage = Aggregation.match(Criteria.where("name").regex(query, "i")
+                .and("isDeleted").is(false));
+
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Course> aggregationResults = mongoTemplate.aggregate(aggregation, "course", Course.class);
         return aggregationResults.getMappedResults().size();

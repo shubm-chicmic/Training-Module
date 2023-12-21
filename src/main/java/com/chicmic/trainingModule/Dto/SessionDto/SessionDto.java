@@ -21,5 +21,5 @@ public class SessionDto {
     private List<String> approver;
     private String dateTime;
     private Boolean approved;
-    private Integer status = 1;
+    private Integer status;
 }

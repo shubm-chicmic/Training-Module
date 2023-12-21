@@ -46,7 +46,10 @@ public class AssignTaskService {
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
     public AssignTask createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
-
+        AssignTask assignTask = getAllAssignTasksByTraineeId(userId);
+        if(assignTask != null) {
+            return null;
+        }
         List<Plan> plans = planService.getPlanByIds(assignTaskDto.getPlanIds());
         for (Plan plan : plans) {
             for (Phase phase : plan.getPhases()){
@@ -131,7 +134,7 @@ public class AssignTaskService {
                 }
             }
         }
-        AssignTask assignTask = AssignTask.builder()
+        assignTask = AssignTask.builder()
                 .createdBy(principal.getName())
                 .plans(plans)
                 .userId(userId)
@@ -370,15 +373,32 @@ public class AssignTaskService {
                             List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
                             for (AssignTaskPlanTrack milestone : milestones) {
                                 if (milestone.get_id().equals(milestoneId)) {
+                                    Integer countMainTaskComplete = 0;
                                     for(AssignTaskPlanTrack milestoneMainTask : milestone.getTasks()){
                                         if(milestoneMainTask.get_id().equals(mainTaskId)) {
+                                            Integer countSubTaskComplete = 0;
                                             for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
                                                 if(milestoneSubTask.get_id().equals(subTaskId)){
                                                     milestoneSubTask.setIsCompleted(true);
-                                                    break one;
+//                                                    milestoneMainTask.setIsCompleted(true);
+//                                                    milestone.setIsCompleted(true);
+                                                }
+                                                if(milestoneSubTask.getIsCompleted()){
+                                                    countSubTaskComplete++;
                                                 }
                                             }
+                                            if(countSubTaskComplete == milestoneMainTask.getSubtasks().size()){
+                                                milestoneMainTask.setIsCompleted(true);
+                                            }
+
                                         }
+                                        if(milestoneMainTask.getIsCompleted()) {
+                                            countMainTaskComplete++;
+                                        }
+                                    }
+                                    if(countMainTaskComplete == milestone.getTasks().size()){
+                                        milestone.setIsCompleted(true);
+                                        break one;
                                     }
                                 }
                             }
