@@ -1,23 +1,16 @@
 package com.chicmic.trainingModule.Service.DashboardService;
 
-import com.chicmic.trainingModule.Controller.DashboardController.DashboardCRUD;
 import com.chicmic.trainingModule.Dto.DashboardDto.CourseDto;
 import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
 import com.chicmic.trainingModule.Dto.DashboardDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-
-import static com.mongodb.client.model.Aggregates.group;
-import static com.mongodb.client.model.Aggregates.unwind;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 @Service
 public class DashboardService {
@@ -53,22 +46,6 @@ public class DashboardService {
                             .build()
             ));
         }
-        //computing course detail!!
-//        Aggregation aggregation = newAggregation(
-//                match(
-//                        where("userId").is("64e2e91decc13d506c72c267")
-//                                .and("plans.phases.tasks.planType").is(1)
-//                ),
-//                unwind("$plans"),
-//                unwind("$plans.phases"),
-//                unwind("$plans.phases.tasks"),
-//                group("$plans.phases.tasks.plan._id")
-//                        .count().as("totalCount")
-//                        .sum(
-//                                cond("$plans.phases.tasks.milestones.isCompleted").then(1).otherwise(0)
-//                        ).as("completedCount"),
-//                project("_id", "totalCount", "completedCount")
-//        );
         return dashboardResponse;
     }
 }
