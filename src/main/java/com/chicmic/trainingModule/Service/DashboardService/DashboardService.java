@@ -63,7 +63,6 @@ public class DashboardService {
         AssignTask assignTask = mongoTemplate.findOne(query, AssignTask.class);
         if(assignTask != null) {
             List<Plan> plans = assignTask.getPlans();
-            HashMap<String, Integer> courseId = new HashMap<>();
             List<CourseDto> courseDtos = new ArrayList<>();
             List<String> courseIds = new ArrayList<>();
             List<String> testIds = new ArrayList<>();
@@ -71,7 +70,6 @@ public class DashboardService {
                 for (Phase phase : plan.getPhases()) {
                     for (Task task : phase.getTasks()) {
                         String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
-
                         int count = 0;
                         List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
                         for (AssignTaskPlanTrack milestone : milestones) {
@@ -79,7 +77,7 @@ public class DashboardService {
                                 ++count;
                         }
                         courseIds.add(_id);
-                        courseDtos.add(new CourseDto(_id, milestones.size() * 100));
+                        courseDtos.add(new CourseDto(_id, count/milestones.size() * 100));
                         // courseId.put(_id,count/ milestones.size() * 100);
                     }
                 }
