@@ -66,7 +66,7 @@ public class FeedbackService {
         );
         boolean flag =  mongoTemplate.exists(query, "assignTask");
         if(!flag)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"Trainee is still working on course!!!");
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Trainee is still working on it!!!");
         return true;
     }
 
@@ -109,6 +109,7 @@ public class FeedbackService {
         }
         return feedbackResponse1;
     }
+
     public List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse>
             addingPhaseAndTestNameInResponse(List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses){
         //fetch courseId and TestId

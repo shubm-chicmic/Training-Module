@@ -15,12 +15,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
 
 @Service
@@ -93,8 +95,14 @@ public class TraineePlanService {
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
+        Query query1 = new Query();
+        //search query!!
+        if(searchString!=null && !searchString.isBlank()) {
+            query1 = new Query(Criteria.where("traineeId").in(searchNameAndEmployeeCode(searchString)));
+            //criteria.and("traineeId").in(searchNameAndEmployeeCode(query));
+        }
 
-        List<UserPlan> userPlanList = mongoTemplate.find(new Query().with(pageable), UserPlan.class);
+        List<UserPlan> userPlanList = mongoTemplate.find(query1.with(pageable), UserPlan.class);
         HashMap<String,String> userPlanId = new HashMap<>();
         List<String> userIds = userPlanList.stream().map((user)->{
             userPlanId.put(user.getTraineeId(),user.getPlanId());
