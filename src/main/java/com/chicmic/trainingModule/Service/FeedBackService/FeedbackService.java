@@ -66,7 +66,7 @@ public class FeedbackService {
         );
         boolean flag =  mongoTemplate.exists(query, "assignTask");
         if(!flag)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"Trainee hasn't complete the course yet!!");
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Trainee is still working on course!!!");
         return true;
     }
 
