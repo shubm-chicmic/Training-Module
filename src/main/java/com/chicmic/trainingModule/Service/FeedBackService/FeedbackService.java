@@ -252,10 +252,10 @@ public class FeedbackService {
         searchUserById(feedBackDto.getTrainee());
         //checking trainee Completed course or not!!!
         int type = feedBackDto.getFeedbackType().charAt(0) - '0';
-//        if(type == 1)
-//            checkIfExists(feedBackDto.getTrainee(),1,feedBackDto.getPhase(),true);
-//        else if(type == 2)
-//            checkIfExists(feedBackDto.getTrainee(),2,feedBackDto.getMilestone(),true);
+        if(type == 1)
+            checkIfExists(feedBackDto.getTrainee(),1,feedBackDto.getPhase(),true);
+        else if(type == 2)
+            checkIfExists(feedBackDto.getTrainee(),2,feedBackDto.getMilestone(),true);
 
         //checking feedback exist in db!!!
         boolean flag = feedbackExist(feedBackDto,userId);

@@ -575,6 +575,7 @@ public class CustomObjectMapper {
                 } else if (task.getPlanType() != null && task.getPlanType() == 2) {
                     milestone = (testService.getTestByMilestoneIds((String) task.getPlan(), (List<Object>) task.getMilestones()));
                 }
+                System.out.println("Milestone : " + milestone);
                 String[] timeParts = task.getEstimatedTime().split(":");
                 if (timeParts.length == 1) {
                     phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
@@ -694,25 +695,27 @@ public class CustomObjectMapper {
                 for (Task task : phase.getTasks()) {
                     PlanDto planDto = null;
                     if (task.getPlanType() == 1) {
-
                         Course course = courseService.getCourseById(((AssignTaskPlanTrack) task.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
-                        for (Phase coursePhase : course.getPhases()) {
-                            boolean isMilestoneCompleted = false;
-                            for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
-                                if (assignTaskPlanTrack.get_id().equals(coursePhase.get_id())) {
-                                    isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
-                                    break;
+                        List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>)task.getMilestones();
+                        for(AssignTaskPlanTrack milestoneTrack : milestonesData) {
+                            for (Phase coursePhase : course.getPhases()) {
+                                if(milestoneTrack.get_id().equals(coursePhase.get_id())){
+                                boolean isMilestoneCompleted = false;
+                                for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                    if (assignTaskPlanTrack.get_id().equals(coursePhase.get_id())) {
+                                        isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
+                                        break;
+                                    }
                                 }
-                            }
-                            List<CourseTask> courseTasks = coursePhase.getTasks();
-                            for (CourseTask courseTask : courseTasks) {
-                                for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
+                                List<CourseTask> courseTasks = coursePhase.getTasks();
+                                for (CourseTask courseTask : courseTasks) {
+                                    for (CourseSubTask courseSubTask : courseTask.getSubtasks()) {
 
-                                    String subTaskId = courseSubTask.get_id();
-                                    System.out.println("subtask id = " + subTaskId);
+                                        String subTaskId = courseSubTask.get_id();
+                                        System.out.println("subtask id = " + subTaskId);
 
-                                    for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                        for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
 //                                        if (milestonePlan.get_id().equals(phase.get_id())) {
                                             for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
                                                 for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
@@ -725,21 +728,23 @@ public class CustomObjectMapper {
                                                 }
                                             }
 //                                        }
+                                        }
                                     }
-                                }
 
+                                }
+                                MilestoneDto milestoneDto = MilestoneDto.builder()
+                                        ._id(coursePhase.get_id())
+                                        .reviewers(task.getMentor())
+                                        .name(coursePhase.getName())
+                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
+                                        .isCompleted(isMilestoneCompleted)
+                                        .noOfTasks(coursePhase.getTasks().size())
+                                        .estimatedTime(coursePhase.getEstimatedTime())
+                                        .tasks(coursePhase.getTasks())
+                                        .build();
+                                milestoneDtos.add(milestoneDto);
                             }
-                            MilestoneDto milestoneDto = MilestoneDto.builder()
-                                    ._id(coursePhase.get_id())
-                                    .reviewers(task.getMentor())
-                                    .name(coursePhase.getName())
-                                    .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
-                                    .isCompleted(isMilestoneCompleted)
-                                    .noOfTasks(coursePhase.getTasks().size())
-                                    .estimatedTime(coursePhase.getEstimatedTime())
-                                    .tasks(coursePhase.getTasks())
-                                    .build();
-                            milestoneDtos.add(milestoneDto);
+                            }
                         }
                         planDto = PlanDto.builder()
                                 ._id(course.get_id())
@@ -761,48 +766,53 @@ public class CustomObjectMapper {
 
                         Test test = testService.getTestById(((AssignTaskPlanTrack) task.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
-                        for (Milestone milestone : test.getMilestones()) {
-                            boolean isMilestoneCompleted = false;
-                            for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
-                                if (assignTaskPlanTrack.get_id().equals(milestone.get_id())) {
-                                    isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
-                                    break;
+                        List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        for(AssignTaskPlanTrack milestoneTrack : milestonesData) {
+                            for (Milestone milestone : test.getMilestones()) {
+                                if(milestoneTrack.get_id().equals(milestone.get_id())){
+                                boolean isMilestoneCompleted = false;
+                                for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                    if (assignTaskPlanTrack.get_id().equals(milestone.get_id())) {
+                                        isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
+                                        break;
+                                    }
                                 }
-                            }
-                            List<TestTask> testTasks = milestone.getTasks();
-                            for (TestTask testTask : testTasks) {
-                                for (TestSubTask testSubTask : testTask.getSubtasks()) {
+                                List<TestTask> testTasks = milestone.getTasks();
+                                for (TestTask testTask : testTasks) {
+                                    for (TestSubTask testSubTask : testTask.getSubtasks()) {
 
-                                    String subTaskId = testSubTask.get_id();
-                                    one:
-                                    for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
-                                        if (milestonePlan.get_id().equals(milestone.get_id())) {
-                                            for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
-                                                for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
-                                                    if (milestoneSubTask.get_id().equals(subTaskId)) {
-                                                        testSubTask.setIsCompleted(milestoneSubTask.getIsCompleted());
-                                                        break one;
+                                        String subTaskId = testSubTask.get_id();
+                                        one:
+                                        for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                            if (milestonePlan.get_id().equals(milestone.get_id())) {
+                                                for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
+                                                    for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
+                                                        if (milestoneSubTask.get_id().equals(subTaskId)) {
+                                                            testSubTask.setIsCompleted(milestoneSubTask.getIsCompleted());
+                                                            break one;
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
+
                                 }
+                                MilestoneDto milestoneDto = MilestoneDto.builder()
+                                        ._id(milestone.get_id())
+                                        .reviewers(task.getMentor())
 
+                                        .name(milestone.getName())
+                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
+                                        .isCompleted(isMilestoneCompleted)
+                                        .noOfTasks(milestone.getTasks().size())
+                                        .estimatedTime(milestone.getEstimatedTime())
+                                        .tasks(milestone.getTasks())
+                                        .build();
+                                milestoneDtos.add(milestoneDto);
                             }
-                            MilestoneDto milestoneDto = MilestoneDto.builder()
-                                    ._id(milestone.get_id())
-                                    .reviewers(task.getMentor())
-
-                                    .name(milestone.getName())
-                                    .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
-                                    .isCompleted(isMilestoneCompleted)
-                                    .noOfTasks(milestone.getTasks().size())
-                                    .estimatedTime(milestone.getEstimatedTime())
-                                    .tasks(milestone.getTasks())
-                                    .build();
-                            milestoneDtos.add(milestoneDto);
                         }
+                    }
                         planDto = PlanDto.builder()
                                 ._id(test.get_id())
                                 .planType(task.getPlanType())
