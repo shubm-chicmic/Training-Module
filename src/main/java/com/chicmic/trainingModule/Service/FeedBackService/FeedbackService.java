@@ -109,6 +109,7 @@ public class FeedbackService {
         }
         return feedbackResponse1;
     }
+
     public List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse>
             addingPhaseAndTestNameInResponse(List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses){
         //fetch courseId and TestId
@@ -621,7 +622,7 @@ public class FeedbackService {
 
         return mongoTemplate.find(query,Feedback.class);
     }
-    public List<Document> calculateEmployeeRatingSummary(List<String> userIds) {
+    public List<Document> calculateEmployeeRatingSummary(Set<String> userIds) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeID").in(userIds)),
                 Aggregation.group("traineeID")
