@@ -27,5 +27,5 @@ public class SessionResponseDto {
     private int status;
     private boolean isDeleted = false;
     private boolean isApproved = false;
-    private List<MomMessageResponseDto> MOM;
+    private MomMessageResponseDto MOM;
 }

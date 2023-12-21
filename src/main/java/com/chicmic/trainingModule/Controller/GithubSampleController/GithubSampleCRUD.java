@@ -30,14 +30,15 @@ public class GithubSampleCRUD {
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
             @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
             @RequestParam(required = false) String githubSampleId,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     ) throws JsonProcessingException {
         if(githubSampleId == null || githubSampleId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = githubSampleService.countNonDeletedGithubSamples();
+            List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+            Long count = githubSampleService.countNonDeletedGithubSamples(searchString);
 
             List<GithubSampleResponseDto> githubSampleResponseDtoList = CustomObjectMapper.mapGithubSampleToResponseDto(githubSampleList);
             Collections.reverse(githubSampleResponseDtoList);

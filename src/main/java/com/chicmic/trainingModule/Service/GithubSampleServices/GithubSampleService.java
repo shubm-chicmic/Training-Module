@@ -35,16 +35,25 @@ public class GithubSampleService {
         return githubSample;
     }
 
-    public List<GithubSample> getAllGithubSamples(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
+    public List<GithubSample> getAllGithubSamples(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("projectName").regex(query, "i"))
-                .addCriteria(Criteria.where("isDeleted").is(false))
-                .with(pageable);
+        Criteria criteria = Criteria.where("projectName").regex(query, "i")
+                .and("isDeleted").is(false);
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                .and("createdBy").is(userId);
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria).with(pageable);
 
         List<GithubSample> githubSamples = mongoTemplate.find(searchQuery, GithubSample.class);
         if(!sortKey.isEmpty()) {
@@ -98,8 +107,10 @@ public class GithubSampleService {
         }
     }
 
-    public long countNonDeletedGithubSamples() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("isDeleted").is(false));
+    public long countNonDeletedGithubSamples(String query) {
+        MatchOperation matchStage = Aggregation.match(Criteria.where("projectName").regex(query, "i")
+                .and("isDeleted").is(false));
+
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<GithubSample> aggregationResults = mongoTemplate.aggregate(aggregation, "githubSample", GithubSample.class);
         return aggregationResults.getMappedResults().size();

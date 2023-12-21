@@ -69,7 +69,7 @@ public class TestService {
 
         return tests;
     }
-    public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
+    public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -85,7 +85,17 @@ public class TestService {
                 .with(pageable);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-
+        List<Test> finalTestList = new ArrayList<>();
+        for (Test test : tests){
+            if(test.getApproved()){
+                finalTestList.add(test);
+            }else {
+                if(test.getReviewers().contains(userId) || test.getCreatedBy().equals(userId)){
+                    finalTestList.add(test);
+                }
+            }
+        }
+        tests = finalTestList;
         if (!sortKey.isEmpty()) {
             Comparator<Test> testComparator = Comparator.comparing(test -> {
                 try {
@@ -160,8 +170,10 @@ public class TestService {
         }
     }
 
-    public long countNonDeletedTests() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("deleted").is(false));
+    public long countNonDeletedTests(String query) {
+        MatchOperation matchStage = Aggregation.match(Criteria.where("testName").regex(query, "i")
+                .and("deleted").is(false));
+
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Test> aggregationResults = mongoTemplate.aggregate(aggregation, "test", Test.class);
         return aggregationResults.getMappedResults().size();

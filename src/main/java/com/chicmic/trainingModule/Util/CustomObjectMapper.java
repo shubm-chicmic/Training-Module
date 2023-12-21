@@ -105,13 +105,15 @@ public class CustomObjectMapper {
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
+        MomMessageResponseDto Mommessage = null;
+        if(session.getMOM() != null){
+            Mommessage = MomMessageResponseDto.builder()
+                    ._id(session.getMOM().get_id())
+                    .message(session.getMOM().getMessage())
+                    .name(TrainingModuleApplication.searchNameById(session.getMOM().get_id()))
+                    .build();
+        }
 
-        List<MomMessageResponseDto> MommessageList = session.getMOM().stream()
-                .map(momMessage -> {
-                    String name = TrainingModuleApplication.searchNameById(momMessage.get_id());
-                    return new MomMessageResponseDto(momMessage.get_id(), name, momMessage.getMessage());
-                })
-                .collect(Collectors.toList());
         List<UserIdAndNameDto> approvedBy = session.getApprovedBy().stream()
                 .map(approverId -> {
                     String name = TrainingModuleApplication.searchNameById(approverId);
@@ -121,7 +123,7 @@ public class CustomObjectMapper {
         System.out.println("approvedBy: " + approvedBy);
         return SessionResponseDto.builder()
                 ._id(session.get_id())
-                .MOM(MommessageList)
+                .MOM(Mommessage)
                 .isDeleted(session.isDeleted())
                 .location(session.getLocation())
                 .locationName(TrainingModuleApplication.zoneCategoryMap.get(Integer.valueOf(session.getLocation())))
@@ -645,7 +647,11 @@ public class CustomObjectMapper {
 
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            return null;
+            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+
+            return AssignTaskResponseDto.builder()
+                    .trainee(trainee)
+                    .build();
         }
         List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
                 .map(reviewersIds -> reviewersIds.stream()
@@ -705,7 +711,7 @@ public class CustomObjectMapper {
 
                                     String subTaskId = courseSubTask.get_id();
                                     System.out.println("subtask id = " + subTaskId);
-                                    one:
+
                                     for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
 //                                        if (milestonePlan.get_id().equals(phase.get_id())) {
                                             for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
@@ -714,7 +720,7 @@ public class CustomObjectMapper {
                                                     if (milestoneSubTask.get_id().equals(subTaskId)) {
                                                         System.out.println("value of is complete = " + milestoneSubTask.getIsCompleted());
                                                         courseSubTask.setIsCompleted(milestoneSubTask.getIsCompleted());
-                                                        break one;
+
                                                     }
                                                 }
                                             }
@@ -742,13 +748,14 @@ public class CustomObjectMapper {
                                 .isCompleted(task.getIsCompleted())
 //                                .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), (String)task.getPlan(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
                                 .estimatedTime(task.getEstimatedTime())
-                                .noOfTopics(5)
+                                .noOfTopics(((List<AssignTaskPlanTrack>) task.getMilestones()).size())
                                 .isApproved(course.getIsApproved())
                                 .isDeleted(course.getIsDeleted())
                                 .milestones(milestoneDtos)
                                 .name(course.getName())
                                 .rating(0.0f)
-                                .reviewers(null)
+                                .reviewers(task.getMentor())
+
                                 .build();
                     } else if (task.getPlanType() == 2) {
 
@@ -785,7 +792,8 @@ public class CustomObjectMapper {
                             }
                             MilestoneDto milestoneDto = MilestoneDto.builder()
                                     ._id(milestone.get_id())
-                                    .reviewers(null)
+                                    .reviewers(task.getMentor())
+
                                     .name(milestone.getName())
                                     .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
                                     .isCompleted(isMilestoneCompleted)
@@ -802,20 +810,22 @@ public class CustomObjectMapper {
                                 .isCompleted(task.getIsCompleted())
 //                                .feedbackId("6581c5388096904d2af3204d")
                                 .estimatedTime(task.getEstimatedTime())
-                                .noOfTopics(5)
+                                .noOfTopics(((List<AssignTaskPlanTrack>) task.getMilestones()).size())
                                 .isApproved(test.getApproved())
                                 .isDeleted(test.getDeleted())
                                 .milestones(milestoneDtos)
                                 .name(test.getTestName())
                                 .rating(null)
-                                .reviewers(null)
+                                .reviewers(task.getMentor())
+
                                 .build();
                     } else if (task.getPlanType() == 4) {
                         Course course = courseService.getCourseById(((AssignTaskPlanTrack)task.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
                         MilestoneDto milestoneDto = MilestoneDto.builder()
                                 ._id(((AssignTaskPlanTrack) task.getPlan()).get_id())
-                                .reviewers(null)
+                                .reviewers(task.getMentor())
+
                                 .tasks(new ArrayList<>())
                                 .name(course.getName())
                                 .isCompleted(phase.getIsCompleted())
@@ -834,12 +844,13 @@ public class CustomObjectMapper {
                                 .isCompleted(phase.getIsCompleted())
                                 .feedbackId("6581c5388096904d2af3204d")
                                 .estimatedTime(task.getEstimatedTime())
-                                .noOfTopics(5)
+                                .noOfTopics(((List<AssignTaskPlanTrack>) task.getMilestones()).size())
                                 .isApproved(false)
                                 .isDeleted(false)
                                 .milestones(milestoneDtos)
                                 .rating(null)
-                                .reviewers(null)
+                                .reviewers(task.getMentor())
+
                                 .build();
                     }
                     plans.add(planDto);
@@ -859,6 +870,7 @@ public class CustomObjectMapper {
                 .deleted(assignTask.getDeleted())
                 .approvedBy(approvedBy)
                 .trainee(trainee)
+                .date(assignTask.getDate())
                 .build();
     }
 

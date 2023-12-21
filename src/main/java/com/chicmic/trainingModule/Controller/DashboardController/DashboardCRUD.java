@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/api/feedback/dashboard")
+@RequestMapping("/v1/training/dashboard")
 public class DashboardCRUD {
     private final DashboardService dashboardService;
 

@@ -33,12 +33,13 @@ public class TestCRUD {
             @RequestParam(required = false) String testId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     )  {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey);
-            Long count = testService.countNonDeletedTests();
+            Long count = testService.countNonDeletedTests(searchString);
             List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
@@ -47,9 +48,9 @@ public class TestCRUD {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Test> testList = testService.getAllTests(pageNumber, pageSize, searchString, sortDirection, sortKey);
+            List<Test> testList = testService.getAllTests(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             System.out.println(testList);
-            Long count = testService.countNonDeletedTests();
+            Long count = testService.countNonDeletedTests(searchString);
 
             List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);

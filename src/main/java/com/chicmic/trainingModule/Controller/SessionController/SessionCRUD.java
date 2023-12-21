@@ -33,14 +33,15 @@ public class SessionCRUD {
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
             @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
             @RequestParam(required = false) String sessionId,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     ) throws JsonProcessingException {
         if(sessionId == null || sessionId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = sessionService.countNonDeletedSessions();
+            List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+            Long count = sessionService.countNonDeletedSessions(searchString);
 
             List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
             Collections.reverse(sessionResponseDtoList);
@@ -59,6 +60,7 @@ public class SessionCRUD {
     public ApiResponse create(@RequestBody SessionDto sessionDto, Principal principal) {
         System.out.println("sessionDto = " + sessionDto);
         sessionDto.setCreatedBy(principal.getName());
+        sessionDto.setStatus(StatusConstants.PENDING);
         sessionDto = CustomObjectMapper.convert(sessionService.createSession(CustomObjectMapper.convert(sessionDto, Session.class)), SessionDto.class);
         return new ApiResponse(HttpStatus.CREATED.value(), "Session created successfully", sessionDto);
     }
@@ -97,6 +99,8 @@ public class SessionCRUD {
                 }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
+            sessionDto.setStatus(session.getStatus());
+
             SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {

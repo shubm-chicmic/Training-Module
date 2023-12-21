@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Plan.Phase;
 import com.chicmic.trainingModule.Entity.Plan.Plan;
 
@@ -43,12 +44,26 @@ public class PlanService {
     }
 
     public List<Plan> getAllPlans(String query, Integer sortDirection, String sortKey) {
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("planName").regex(query, "i"))
-                .addCriteria(Criteria.where("deleted").is(false));
+//        Query searchQuery = new Query()
+//                .addCriteria(Criteria.where("planName").regex(query, "i"))
+//                .addCriteria(Criteria.where("deleted").is(false));
+//
+//        List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
+        Criteria criteria = Criteria.where("planName").regex(query, "i")
+                .and("deleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+
+
+        // Combining the conditions
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria);
 
         List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
-
         if (!sortKey.isEmpty()) {
             Comparator<Plan> planComparator = Comparator.comparing(plan -> {
                 try {

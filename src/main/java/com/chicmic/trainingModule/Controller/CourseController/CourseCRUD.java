@@ -36,12 +36,13 @@ public class CourseCRUD {
             @RequestParam(required = false) String courseId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     )  {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Course> courseList = courseService.getAllCourses(searchString, sortDirection, sortKey);
-            Long count = courseService.countNonDeletedCourses();
+            Long count = courseService.countNonDeletedCourses(searchString);
             List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             Collections.reverse(courseResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
@@ -50,8 +51,8 @@ public class CourseCRUD {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = courseService.countNonDeletedCourses();
+            List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+            Long count = courseService.countNonDeletedCourses(searchString);
 
             List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             Collections.reverse(courseResponseDtoList);
@@ -104,6 +105,9 @@ public class CourseCRUD {
     @PutMapping
     public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
+        if (courseDto.getReviewers() != null && courseDto.getReviewers().size() == 0) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+        }
         if (course != null) {
             if (courseDto != null && courseDto.getApproved() == true) {
                 Set<String> approver = course.getReviewers();
