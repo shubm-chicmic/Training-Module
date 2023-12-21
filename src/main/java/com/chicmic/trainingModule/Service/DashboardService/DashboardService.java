@@ -1,31 +1,35 @@
 package com.chicmic.trainingModule.Service.DashboardService;
 
-import com.chicmic.trainingModule.Controller.DashboardController.DashboardCRUD;
 import com.chicmic.trainingModule.Dto.DashboardDto.CourseDto;
 import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
 import com.chicmic.trainingModule.Dto.DashboardDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserDto;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
+import com.chicmic.trainingModule.Entity.Plan.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan.Task;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-
-import static com.mongodb.client.model.Aggregates.group;
-import static com.mongodb.client.model.Aggregates.unwind;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
 
     private final FeedbackService feedbackService;
+    private final MongoTemplate mongoTemplate;
 
-    public DashboardService( FeedbackService feedbackService) {
+    public DashboardService(FeedbackService feedbackService, MongoTemplate mongoTemplate) {
         this.feedbackService = feedbackService;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public DashboardResponse getTraineeRatingSummary(String traineeId){
@@ -53,22 +57,41 @@ public class DashboardService {
                             .build()
             ));
         }
-        //computing course detail!!
-//        Aggregation aggregation = newAggregation(
-//                match(
-//                        where("userId").is("64e2e91decc13d506c72c267")
-//                                .and("plans.phases.tasks.planType").is(1)
-//                ),
-//                unwind("$plans"),
-//                unwind("$plans.phases"),
-//                unwind("$plans.phases.tasks"),
-//                group("$plans.phases.tasks.plan._id")
-//                        .count().as("totalCount")
-//                        .sum(
-//                                cond("$plans.phases.tasks.milestones.isCompleted").then(1).otherwise(0)
-//                        ).as("completedCount"),
-//                project("_id", "totalCount", "completedCount")
-//        );
+        //get
+        Criteria criteria = Criteria.where("userId").is(traineeId);
+        Query query = new Query(criteria);
+        AssignTask assignTask = mongoTemplate.findOne(query, AssignTask.class);
+        if(assignTask != null) {
+            List<Plan> plans = assignTask.getPlans();
+            HashMap<String, Integer> courseId = new HashMap<>();
+            List<CourseDto> courseDtos = new ArrayList<>();
+            List<String> courseIds = new ArrayList<>();
+            List<String> testIds = new ArrayList<>();
+            for (Plan plan : plans) {
+                for (Phase phase : plan.getPhases()) {
+                    for (Task task : phase.getTasks()) {
+                        String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
+
+                        int count = 0;
+                        List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        for (AssignTaskPlanTrack milestone : milestones) {
+                            if (milestone.getIsCompleted() == true)
+                                ++count;
+                        }
+                        courseIds.add(_id);
+                        courseDtos.add(new CourseDto(_id, milestones.size() * 100));
+                        // courseId.put(_id,count/ milestones.size() * 100);
+                    }
+                }
+            }
+            Map<String, Document> courseDetails = feedbackService.getCourseNameAndPhaseName(courseIds);
+            for (CourseDto courseDto : courseDtos) {
+                String _id = courseDto.getName();
+                String tp = (String) courseDetails.get(_id).get("name");
+                courseDto.setName(tp);
+            }
+            dashboardResponse.setCourses(courseDtos);
+        }
         return dashboardResponse;
     }
 }

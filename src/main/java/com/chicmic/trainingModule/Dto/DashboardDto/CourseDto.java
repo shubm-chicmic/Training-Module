@@ -9,4 +9,9 @@ import java.util.Date;
 public class CourseDto {
     private String name;
     private Integer progress;
+
+    public CourseDto(String name, Integer progress) {
+        this.name = name;
+        this.progress = progress;
+    }
 }
