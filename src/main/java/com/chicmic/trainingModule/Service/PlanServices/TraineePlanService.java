@@ -38,9 +38,9 @@ public class TraineePlanService {
     }
 
     public List<TraineePlanReponse> assignMultiplePlansToTrainees(PlanRequestDto planRequestDto, String createdBy){
-        AssignTaskDto assignTaskDto = new AssignTaskDto();
-        PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
-                .reviewers(assignTaskDto.getReviewers());
+//        AssignTaskDto assignTaskDto = new AssignTaskDto();
+//        PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
+//                .reviewers(assignTaskDto.getReviewers());
         List<UserPlan> userPlans = new ArrayList<>();
         for (String traineeId : planRequestDto.getTrainees()){
             TrainingModuleApplication.searchUserById(traineeId);

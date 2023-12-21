@@ -57,15 +57,16 @@ public class FeedbackCRUD {
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         if(feedbackType!=null && feedbackType == 3) _id = "adas";
         if(feedbackType == null || _id == null || _id.isBlank() || traineeId==null || traineeId.isBlank()) {
-            List<Feedback> feedbackList = feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            // List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
-            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
-            for (Feedback feedback : feedbackList) {
-                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
-            }
-            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
-            long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
-            return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+//            List<Feedback> feedbackList = feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+//            // List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
+//            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//            for (Feedback feedback : feedbackList) {
+//                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//            }
+//            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
+//            long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
+//            return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+            return feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
         if(feedbackType < 1 || feedbackType > 3)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
@@ -155,6 +156,10 @@ public class FeedbackCRUD {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse feedback(@Valid  @RequestBody FeedBackDto feedBackDto, Principal principal, @RequestParam(defaultValue = "0",required = false)Integer q){
         //System.out.println(principal.getName() + "///");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
 
         Feedback feedback = feedbackService.saveFeedbackInDB(feedBackDto, principal.getName());
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
@@ -172,6 +177,11 @@ public class FeedbackCRUD {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
 //        System.out.println(principal.getName() + "-----------------");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
+
         Feedback feedback = feedbackService.updateFeedback(feedBackDto,principal.getName());
         if(feedback == null)
             throw new ApiException(HttpStatus.UNAUTHORIZED,"Something Went Wrong");
@@ -190,7 +200,12 @@ public class FeedbackCRUD {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse deleteFeedbackById(@PathVariable String id,Principal principal){
-      //  System.out.println(principal.getName() + "???????????????????");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
+
+        //  System.out.println(principal.getName() + "???????????????????");
         feedbackService.deleteFeedbackById(id, principal.getName());
         return new ApiResponse(200,"Feedback Deleted Successfully!!",null);
     }

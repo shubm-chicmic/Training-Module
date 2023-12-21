@@ -76,6 +76,7 @@ public class TrainingModuleApplication {
 	public static String searchTeamById(String id) {
 		return teamIdAndNameMap.getOrDefault(id, "User not found");
 	}
+
 	public static void main(String[] args) throws JsonProcessingException {
 		findUsersAndMap();
 		findTeamsAndMap();
@@ -88,7 +89,6 @@ public class TrainingModuleApplication {
 		System.out.println("\u001B[31m VAlue =================== " + zoneCategoryMap.get(4) + "\u001B[0m");
 		SpringApplication.run(TrainingModuleApplication.class, args);
 //		ExcelPerformOperations.excelPerformOperations(excelFileName);
-
 	}
 
 	@Bean

@@ -36,6 +36,10 @@ public class ApiError {
         return this.messages;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
     public Instant getTimestamp() {
         return this.timestamp;
     }

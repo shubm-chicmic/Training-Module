@@ -514,7 +514,7 @@ public class FeedbackService {
         return feedbackRepo.findById(id);
     }
 
-    public List<Feedback> findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
+    public ApiResponse findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -531,7 +531,14 @@ public class FeedbackService {
         }
         Query query1 = new Query(criteria).with(pageable);
         query1.collation(Collation.of("en").strength(2));
-        return mongoTemplate.find(query1,Feedback.class);
+        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+        for (Feedback feedback : feedbackList) {
+            feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+        }
+        feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
+        long count = mongoTemplate.count(query1,Feedback.class);
+        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
         //return feedbackRepo.findAll(pageable);
     }
 
