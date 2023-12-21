@@ -55,7 +55,7 @@ public class FeedbackCRUD {
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
-        if(feedbackType == 3) _id = "adas";
+        if(feedbackType!=null && feedbackType == 3) _id = "adas";
         if(feedbackType == null || _id == null || _id.isBlank() || traineeId==null || traineeId.isBlank()) {
             List<Feedback> feedbackList = feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             // List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
@@ -218,4 +218,10 @@ public class FeedbackCRUD {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
+    @GetMapping("/ppt/{courseId}")
+    public ApiResponse getFeedbackByPptAndCourseId(@RequestParam String traineeId,@PathVariable String courseId) {
+        List<CourseResponse> courseResponseList = feedbackService.findFeedbacksForCourseByCourseIdAndTraineeId(courseId,traineeId);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
+    }
+
 }

@@ -421,7 +421,14 @@ public class FeedbackService {
         List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return testResponseList;
     }
-
+    public List<CourseResponse> findFeedbacksForCourseByCourseIdAndTraineeId(String courseId,String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3")
+                .and("rating.courseId").is(courseId);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        return testResponseList;
+    }
     public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback){
         PhaseResponse phaseResponse = PhaseResponse.builder()
                 .comment(feedback.getComment())
