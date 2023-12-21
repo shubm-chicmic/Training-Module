@@ -59,7 +59,14 @@ public class SessionService {
                 .and("isDeleted").is(false);
 
         Criteria approvedCriteria = Criteria.where("isApproved").is(true)
-                .and("trainees").in(userId);
+                .andOperator(
+                        new Criteria().orOperator(
+                                Criteria.where("createdBy").is(userId),
+                                Criteria.where("reviewers").in(userId),
+                                Criteria.where("trainees").in(userId)
+
+                        )
+                );
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
@@ -171,10 +178,9 @@ public class SessionService {
         MomMessage momMessage = new MomMessage();
         momMessage.set_id(userId);
         momMessage.setMessage(message);
-        List<MomMessage> momMessages = session.getMOM();
-        momMessages.add(momMessage);
+
         if (session != null) {
-            session.setMOM(momMessages);
+            session.setMOM(momMessage);
             sessionRepo.save(session);
             return session;
         } else {

@@ -105,6 +105,9 @@ public class CourseCRUD {
     @PutMapping
     public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
+        if (courseDto.getReviewers() != null && courseDto.getReviewers().size() == 0) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+        }
         if (course != null) {
             if (courseDto != null && courseDto.getApproved() == true) {
                 Set<String> approver = course.getReviewers();

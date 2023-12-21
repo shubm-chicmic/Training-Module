@@ -105,13 +105,15 @@ public class CustomObjectMapper {
                     return new UserIdAndNameDto(approverId, name);
                 })
                 .collect(Collectors.toList());
+        MomMessageResponseDto Mommessage = null;
+        if(session.getMOM() != null){
+            Mommessage = MomMessageResponseDto.builder()
+                    ._id(session.getMOM().get_id())
+                    .message(session.getMOM().getMessage())
+                    .name(TrainingModuleApplication.searchNameById(session.getMOM().get_id()))
+                    .build();
+        }
 
-        List<MomMessageResponseDto> MommessageList = session.getMOM().stream()
-                .map(momMessage -> {
-                    String name = TrainingModuleApplication.searchNameById(momMessage.get_id());
-                    return new MomMessageResponseDto(momMessage.get_id(), name, momMessage.getMessage());
-                })
-                .collect(Collectors.toList());
         List<UserIdAndNameDto> approvedBy = session.getApprovedBy().stream()
                 .map(approverId -> {
                     String name = TrainingModuleApplication.searchNameById(approverId);
@@ -121,7 +123,7 @@ public class CustomObjectMapper {
         System.out.println("approvedBy: " + approvedBy);
         return SessionResponseDto.builder()
                 ._id(session.get_id())
-                .MOM(MommessageList)
+                .MOM(Mommessage)
                 .isDeleted(session.isDeleted())
                 .location(session.getLocation())
                 .locationName(TrainingModuleApplication.zoneCategoryMap.get(Integer.valueOf(session.getLocation())))
@@ -645,7 +647,11 @@ public class CustomObjectMapper {
 
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            return null;
+            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+
+            return AssignTaskResponseDto.builder()
+                    .trainee(trainee)
+                    .build();
         }
         List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
                 .map(reviewersIds -> reviewersIds.stream()

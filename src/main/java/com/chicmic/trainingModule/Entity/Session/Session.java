@@ -30,6 +30,6 @@ public class Session {
     private int status = StatusConstants.PENDING;
     private boolean isDeleted = false;
     private boolean isApproved = false;
-    private List<MomMessage> MOM = new ArrayList<>();
+    private MomMessage MOM;
 
 }

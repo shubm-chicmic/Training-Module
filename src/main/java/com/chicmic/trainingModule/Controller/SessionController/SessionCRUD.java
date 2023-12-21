@@ -60,6 +60,7 @@ public class SessionCRUD {
     public ApiResponse create(@RequestBody SessionDto sessionDto, Principal principal) {
         System.out.println("sessionDto = " + sessionDto);
         sessionDto.setCreatedBy(principal.getName());
+        sessionDto.setStatus(StatusConstants.PENDING);
         sessionDto = CustomObjectMapper.convert(sessionService.createSession(CustomObjectMapper.convert(sessionDto, Session.class)), SessionDto.class);
         return new ApiResponse(HttpStatus.CREATED.value(), "Session created successfully", sessionDto);
     }
@@ -98,6 +99,8 @@ public class SessionCRUD {
                 }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
+            sessionDto.setStatus(session.getStatus());
+
             SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {

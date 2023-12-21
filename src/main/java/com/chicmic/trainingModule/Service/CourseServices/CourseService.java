@@ -55,9 +55,19 @@ public class CourseService {
     }
 
     public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("name").regex(query, "i"))
-                .addCriteria(Criteria.where("isDeleted").is(false));
+        Criteria criteria = Criteria.where("name").regex(query, "i")
+                .and("isDeleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+
+
+        // Combining the conditions
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria);
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
 
@@ -204,6 +214,15 @@ public class CourseService {
             }
             if (courseDto.getReviewers() != null) {
                 course.setReviewers(courseDto.getReviewers());
+                Integer count = 0;
+                for (String reviewer : course.getReviewers()){
+                    if(course.getApprovedBy().contains(reviewer)){
+                        count++;
+                    }
+                }
+                if(count == course.getReviewers().size()){
+                    course.setIsApproved(true);
+                }
             }
             if (!phases.isEmpty()) {
                 course.setPhases(phases);

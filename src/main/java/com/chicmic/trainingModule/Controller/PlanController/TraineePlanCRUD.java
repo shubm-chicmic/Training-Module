@@ -43,7 +43,7 @@ public class TraineePlanCRUD {
         List<TraineePlanReponse> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
         long count = 0;
         count  = mongoTemplate.count(new Query(), UserPlan.class);
-        return new ApiResponse(201,"Plan fetched successfully to user",documentList,count);
+        return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
     }
     @PostMapping
     public ApiResponse assignMultiplePlansToTrainees(@Valid @RequestBody PlanRequestDto planRequestDto,Principal principal){
