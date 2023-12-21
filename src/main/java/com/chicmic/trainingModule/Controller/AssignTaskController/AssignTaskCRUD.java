@@ -6,9 +6,12 @@ import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
+import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
+import com.chicmic.trainingModule.Dto.TraineePlanReponse;
 import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 @RestController
@@ -25,8 +29,14 @@ import java.util.List;
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
     private final CustomObjectMapper customObjectMapper;
+    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal) {
+//        trainePlanService.assignMultiplePlansToTrainees();
+        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
+                .reviewers(assignTaskDto.getReviewers()).build();
+        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
+
         System.out.println("assignTaskDto = " + assignTaskDto);
         for (String userId : assignTaskDto.getUsers()) {
             AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
