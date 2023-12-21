@@ -20,7 +20,7 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/feedback")
+@RequestMapping("/v1/training/feedback")
 public class FeedbackCRUD {
     private final FeedbackService feedbackService;
 

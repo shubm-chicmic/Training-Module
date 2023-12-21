@@ -19,13 +19,9 @@ import java.util.Set;
 public class AssignTask {
     @Id
     private String _id;
-    @NonNull
     private String userId;
-    @NonNull
     private LocalDateTime date;
-    @NonNull
     private List<Plan> plans;
-    @NonNull
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;

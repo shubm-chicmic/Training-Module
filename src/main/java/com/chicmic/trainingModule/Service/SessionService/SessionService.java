@@ -58,7 +58,8 @@ public class SessionService {
         Criteria criteria = Criteria.where("title").regex(query, "i")
                 .and("isDeleted").is(false);
 
-        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true)
+                .and("trainees").in(userId);
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
