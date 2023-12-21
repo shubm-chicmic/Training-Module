@@ -15,7 +15,7 @@ import java.util.List;
 public class Task {
     private String _id = String.valueOf(new ObjectId());
     private Integer planType = null;
-    private String plan;
+    private Object plan;
     private Object milestones;
     List<UserIdAndNameDto> mentor;
     private String estimatedTime;

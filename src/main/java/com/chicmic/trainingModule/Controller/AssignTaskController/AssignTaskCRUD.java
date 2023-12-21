@@ -4,10 +4,14 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
+import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
+import com.chicmic.trainingModule.Dto.TraineePlanReponse;
 import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 @RestController
@@ -24,10 +29,18 @@ import java.util.List;
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
     private final CustomObjectMapper customObjectMapper;
+    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal) {
+//        trainePlanService.assignMultiplePlansToTrainees();
+        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
+                .reviewers(assignTaskDto.getReviewers()).build();
+        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
+
         System.out.println("assignTaskDto = " + assignTaskDto);
-        AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, principal);
+        for (String userId : assignTaskDto.getUsers()) {
+            AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
+        }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
     }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
@@ -41,23 +54,24 @@ public class AssignTaskCRUD {
             @RequestParam(required = false) String traineeId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     )  {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<AssignTask> assignTaskList = assignTaskService.getAllAssignTasks(searchString, sortDirection, sortKey);
             Long count = assignTaskService.countNonDeletedAssignTasks();
-            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId);
+            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
             Collections.reverse(assignTaskResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
         }if (traineeId != null || !traineeId.isEmpty()){
             System.out.println("im in");
-            List<AssignTask> assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
-            System.out.println(assignTaskList.size());
+            AssignTask assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+//            System.out.println(assignTaskList.size());
 //            Long count = assignTaskService.countNonDeletedAssignTasksByTraineeId(traineeId);
-            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId);
-            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(assignTaskList.size(),HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
+            AssignTaskResponseDto assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
+//            Collections.reverse(assignTaskResponseDtoList);
+            return new ApiResponseWithCount(1,HttpStatus.OK.value(), assignTaskResponseDtoList + " AssignTasks retrieved", assignTaskResponseDtoList, response);
         }
         if(assignTaskId == null || assignTaskId.isEmpty()) {
             pageNumber /= pageSize;
@@ -66,7 +80,7 @@ public class AssignTaskCRUD {
             List<AssignTask> assignTaskList = assignTaskService.getAllAssignTasks(pageNumber, pageSize, searchString, sortDirection, sortKey);
             Long count = assignTaskService.countNonDeletedAssignTasks();
 
-            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId);
+            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
             Collections.reverse(assignTaskResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
         }
@@ -75,9 +89,16 @@ public class AssignTaskCRUD {
             if(assignTask == null){
                 return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "AssignTask not found", null, response);
             }
-            AssignTaskResponseDto assignTaskResponseDto = customObjectMapper.mapAssignTaskToResponseDto(assignTask, null);
+            AssignTaskResponseDto assignTaskResponseDto = customObjectMapper.mapAssignTaskToResponseDto(assignTask, null, principal);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "AssignTask retrieved successfully", assignTaskResponseDto, response);
         }
     }
+
+    @PostMapping("/complete")
+    public ApiResponse completeTask(@RequestBody TaskCompleteDto taskCompleteDto, Principal principal) {
+        AssignTask assignTask = assignTaskService.completeTask(taskCompleteDto, principal);
+        return new ApiResponse(HttpStatus.CREATED.value(), "Task completed successfully", assignTask);
+    }
+
 
 }

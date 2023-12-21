@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -38,12 +39,14 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").hasAnyAuthority("ADMIN","TL","PA"));
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
-        http.authorizeHttpRequests(requests -> requests.requestMatchers("/api/feedback","/api/feedback/**").authenticated());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
-        http.authorizeHttpRequests(requests->requests.anyRequest().permitAll());
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.PUT,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.DELETE,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/assignTask/complete").permitAll());
 
+        http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
+//        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
+        http.authorizeHttpRequests(requests->requests.anyRequest().permitAll());
 
         //adding filters
         http.addFilterBefore(new CustomAuthorizationFilter(userService), UsernamePasswordAuthenticationFilter.class);
@@ -51,7 +54,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();

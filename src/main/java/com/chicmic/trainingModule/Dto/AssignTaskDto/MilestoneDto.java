@@ -15,6 +15,7 @@ public class MilestoneDto {
     private String name;
     private String estimatedTime;
     private Integer noOfTasks;
+    private String feedbackId;
     private List<UserIdAndNameDto> reviewers;
     private Boolean isCompleted = false;
 

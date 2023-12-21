@@ -14,6 +14,7 @@ public class PlanDto {
     private Integer planType;
     private String name;
     private String _id;
+    private String assignPlanId;
     private List<UserIdAndNameDto> reviewers;
     private Integer noOfTopics;
     private String estimatedTime;

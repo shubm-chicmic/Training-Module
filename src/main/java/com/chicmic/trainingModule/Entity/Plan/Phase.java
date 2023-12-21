@@ -12,12 +12,13 @@ import java.util.List;
 @Builder
 public class Phase {
     private String _id = String.valueOf(new ObjectId());
+    private Boolean isCompleted = false;
     private String phaseName;
     @Transient
     private String estimatedTime;
     @Transient
     private Integer noOfTasks;
     private List<Task> tasks;
-    private Boolean isCompleted = false;
+
 
 }
