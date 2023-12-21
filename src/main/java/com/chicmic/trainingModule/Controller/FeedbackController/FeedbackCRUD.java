@@ -142,8 +142,8 @@ public class FeedbackCRUD {
 
     @GetMapping("/emp/{id}")
     public ApiResponse getAllFeedbacksOfEmployeeById(@PathVariable String id){
-        feedbackService.getCourseNameAndPhaseName(Arrays.asList("6579b4500cf9d953fe39e2a4"));
-        System.out.println("fsafsa");
+       // feedbackService.getCourseNameAndPhaseName(Arrays.asList("6579b4500cf9d953fe39e2a4"));
+        //System.out.println("fsafsa");
         List<Document> feedbackList = feedbackService.getAllFeedbacksOfEmployeeById(id);
 
         //List<FeedbackResponse> feedbackResponseList = new ArrayList<>();

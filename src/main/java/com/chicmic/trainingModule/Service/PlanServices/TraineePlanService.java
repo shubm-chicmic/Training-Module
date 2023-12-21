@@ -74,7 +74,7 @@ public class TraineePlanService {
             UserDto userDto = TrainingModuleApplication.searchUserById(_id);
             traineePlanReponseList.add(TraineePlanReponse.builder()
                             .team(userDto.getTeamName())
-                            .mentor("safafa")
+                            .mentor("N/A")
                             .name(userDto.getName())
                             .course(planDetails.get(userPlanId.get(_id)))
                             .employeeCode(userDto.getEmpCode())
@@ -110,7 +110,7 @@ public class TraineePlanService {
                 UserDto userDto = TrainingModuleApplication.searchUserById(_id);
                 traineePlanReponseList.add(TraineePlanReponse.builder()
                         .team(userDto.getTeamName())
-                        .mentor("safafa")
+                        .mentor("N/A")
                         .name(userDto.getName())
                         .course(planDetails.get(userPlanId.get(_id)))
                         .employeeCode(userDto.getEmpCode())
