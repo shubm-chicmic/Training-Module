@@ -79,6 +79,17 @@ public class SessionCRUD {
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
         if (session != null) {
+            if(sessionDto != null && sessionDto.getMessage() != null) {
+                if(sessionDto.getStatus() != StatusConstants.COMPLETED) {
+                    System.out.println("sessionDto = " + sessionDto);
+                    if (session.getSessionBy().contains(principal.getName())) {
+                        session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
+                    }
+                    else {
+                        return new ApiResponse(HttpStatus.FORBIDDEN.value(), "Posting Mom is not allowed when session is not completed", null, response);
+                    }
+                }
+            }
             if (sessionDto != null && sessionDto.getApproved() != null) {
                 List<String> approver = session.getApprover();
                 if (approver.contains(principal.getName())) {
@@ -108,10 +119,11 @@ public class SessionCRUD {
         }
     }
 
-    @PostMapping("/postMom/{sessionId}")
-    public ApiResponse postMOM(@PathVariable String sessionId, @RequestBody Mommessage message, Principal principal) {
-        Session session = sessionService.postMOM(sessionId, message.getMessage(), principal.getName());
-
-        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
-    }
+//    @PostMapping("/postMom/{sessionId}")
+//    public ApiResponse postMOM(@PathVariable String sessionId, @RequestBody Mommessage message, Principal principal) {
+//        Session session = sessionService.getSessionById(sessionId);
+//        session = sessionService.postMOM(sessionId, message.getMessage(), principal.getName());
+//
+//        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
+//    }
 }
