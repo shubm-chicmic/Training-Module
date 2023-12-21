@@ -55,24 +55,29 @@ public class FeedbackCRUD {
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
+        if(feedbackType!=null && feedbackType == 3) _id = "adas";
         if(feedbackType == null || _id == null || _id.isBlank() || traineeId==null || traineeId.isBlank()) {
-            List<Feedback> feedbackList = feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            // List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
-            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
-            for (Feedback feedback : feedbackList) {
-                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
-            }
-            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
-            long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
-            return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+//            List<Feedback> feedbackList = feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+//            // List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
+//            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//            for (Feedback feedback : feedbackList) {
+//                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//            }
+//            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
+//            long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
+//            return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+            return feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
-        if(feedbackType < 1 || feedbackType > 2)
+        if(feedbackType < 1 || feedbackType > 3)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
         List<Feedback> feedbackList;
         if(feedbackType == 1)
             feedbackList = feedbackService.findFeedbacksByCourseIdAndTraineeId(_id,traineeId,"1");
-        else
+        else if (feedbackType == 2)
             feedbackList = feedbackService.findFeedbacksByTestIdAndTraineeId(_id,traineeId,"2");
+        else
+            feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(traineeId,"3");
+
         List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
 
         return new ApiResponse(200,"List of All feedbacks",responseList);
@@ -151,6 +156,10 @@ public class FeedbackCRUD {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse feedback(@Valid  @RequestBody FeedBackDto feedBackDto, Principal principal, @RequestParam(defaultValue = "0",required = false)Integer q){
         //System.out.println(principal.getName() + "///");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
 
         Feedback feedback = feedbackService.saveFeedbackInDB(feedBackDto, principal.getName());
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
@@ -168,6 +177,11 @@ public class FeedbackCRUD {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
 //        System.out.println(principal.getName() + "-----------------");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
+
         Feedback feedback = feedbackService.updateFeedback(feedBackDto,principal.getName());
         if(feedback == null)
             throw new ApiException(HttpStatus.UNAUTHORIZED,"Something Went Wrong");
@@ -186,7 +200,12 @@ public class FeedbackCRUD {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse deleteFeedbackById(@PathVariable String id,Principal principal){
-      //  System.out.println(principal.getName() + "???????????????????");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        if(flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
+
+        //  System.out.println(principal.getName() + "???????????????????");
         feedbackService.deleteFeedbackById(id, principal.getName());
         return new ApiResponse(200,"Feedback Deleted Successfully!!",null);
     }
@@ -214,4 +233,10 @@ public class FeedbackCRUD {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
+    @GetMapping("/ppt/{courseId}")
+    public ApiResponse getFeedbackByPptAndCourseId(@RequestParam String traineeId,@PathVariable String courseId) {
+        List<CourseResponse> courseResponseList = feedbackService.findFeedbacksForCourseByCourseIdAndTraineeId(courseId,traineeId);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
+    }
+
 }

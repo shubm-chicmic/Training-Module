@@ -421,7 +421,14 @@ public class FeedbackService {
         List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return testResponseList;
     }
-
+    public List<CourseResponse> findFeedbacksForCourseByCourseIdAndTraineeId(String courseId,String traineeId){
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3")
+                .and("rating.courseId").is(courseId);
+        Query query = new Query(criteria);
+        List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
+        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        return testResponseList;
+    }
     public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback){
         PhaseResponse phaseResponse = PhaseResponse.builder()
                 .comment(feedback.getComment())
@@ -469,7 +476,7 @@ public class FeedbackService {
     public List<Feedback> findFeedbacksByPptIdAndTraineeId(String traineeId,String feedbackType){
         searchUserById(traineeId);
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3");
-        Query query = new Query();
+        Query query = new Query(criteria);
         return mongoTemplate.find(query,Feedback.class);
     }
 
@@ -507,7 +514,7 @@ public class FeedbackService {
         return feedbackRepo.findById(id);
     }
 
-    public List<Feedback> findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
+    public ApiResponse findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -524,7 +531,14 @@ public class FeedbackService {
         }
         Query query1 = new Query(criteria).with(pageable);
         query1.collation(Collation.of("en").strength(2));
-        return mongoTemplate.find(query1,Feedback.class);
+        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+        for (Feedback feedback : feedbackList) {
+            feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+        }
+        feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
+        long count = mongoTemplate.count(query1,Feedback.class);
+        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
         //return feedbackRepo.findAll(pageable);
     }
 

@@ -18,5 +18,6 @@ public class PlanRequestDto {
 
     @NotNull(message = "reviewers can't be null")
     private Set<String> reviewers;
+
 }
 
