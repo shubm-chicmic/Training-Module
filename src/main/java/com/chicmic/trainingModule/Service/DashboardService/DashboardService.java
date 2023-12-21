@@ -61,35 +61,37 @@ public class DashboardService {
         Criteria criteria = Criteria.where("userId").is(traineeId);
         Query query = new Query(criteria);
         AssignTask assignTask = mongoTemplate.findOne(query, AssignTask.class);
-        List<Plan> plans = assignTask.getPlans();
-        HashMap<String,Integer> courseId = new HashMap<>();
-        List<CourseDto> courseDtos = new ArrayList<>();
-        List<String> courseIds = new ArrayList<>();
-        List<String> testIds = new ArrayList<>();
-        for (Plan plan : plans) {
+        if(assignTask != null) {
+            List<Plan> plans = assignTask.getPlans();
+            HashMap<String, Integer> courseId = new HashMap<>();
+            List<CourseDto> courseDtos = new ArrayList<>();
+            List<String> courseIds = new ArrayList<>();
+            List<String> testIds = new ArrayList<>();
+            for (Plan plan : plans) {
                 for (Phase phase : plan.getPhases()) {
                     for (Task task : phase.getTasks()) {
-                        String _id = ((AssignTaskPlanTrack)task.getPlan()).get_id();
+                        String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
 
                         int count = 0;
                         List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
                         for (AssignTaskPlanTrack milestone : milestones) {
-                            if(milestone.getIsCompleted() == true)
+                            if (milestone.getIsCompleted() == true)
                                 ++count;
                         }
                         courseIds.add(_id);
-                        courseDtos.add(new CourseDto(_id,milestones.size() * 100));
-                       // courseId.put(_id,count/ milestones.size() * 100);
+                        courseDtos.add(new CourseDto(_id, milestones.size() * 100));
+                        // courseId.put(_id,count/ milestones.size() * 100);
                     }
                 }
+            }
+            Map<String, Document> courseDetails = feedbackService.getCourseNameAndPhaseName(courseIds);
+            for (CourseDto courseDto : courseDtos) {
+                String _id = courseDto.getName();
+                String tp = (String) courseDetails.get(_id).get("name");
+                courseDto.setName(tp);
+            }
+            dashboardResponse.setCourses(courseDtos);
         }
-        Map<String, Document> courseDetails = feedbackService.getCourseNameAndPhaseName(courseIds);
-        for (CourseDto courseDto : courseDtos){
-            String _id = courseDto.getName();
-            String tp = (String) courseDetails.get(_id).get("name");
-            courseDto.setName(tp);
-        }
-        dashboardResponse.setCourses(courseDtos);
         return dashboardResponse;
     }
 }
