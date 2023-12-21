@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
+import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
 import com.chicmic.trainingModule.Dto.TraineePlanReponse;
 import com.chicmic.trainingModule.Dto.UserDto;
@@ -17,10 +18,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
@@ -40,6 +38,9 @@ public class TraineePlanService {
     }
 
     public List<TraineePlanReponse> assignMultiplePlansToTrainees(PlanRequestDto planRequestDto, String createdBy){
+        AssignTaskDto assignTaskDto = new AssignTaskDto();
+        PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
+                .reviewers(assignTaskDto.getReviewers());
         List<UserPlan> userPlans = new ArrayList<>();
         for (String traineeId : planRequestDto.getTrainees()){
             TrainingModuleApplication.searchUserById(traineeId);
