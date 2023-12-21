@@ -622,7 +622,7 @@ public class FeedbackService {
 
         return mongoTemplate.find(query,Feedback.class);
     }
-    public List<Document> calculateEmployeeRatingSummary(List<String> userIds) {
+    public List<Document> calculateEmployeeRatingSummary(Set<String> userIds) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeID").in(userIds)),
                 Aggregation.group("traineeID")

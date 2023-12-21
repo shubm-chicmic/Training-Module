@@ -63,10 +63,10 @@ public class TraineePlanService {
         List<UserPlan> userDtos = mongoTemplate.find(new Query().with(PageRequest.of(0,10)), UserPlan.class);
         //fetch course name through plan----
         HashMap<String,String> userPlanId = new HashMap<>();
-        List<String> userIds = userDtos.stream().map((user)->{
+        Set<String> userIds = userDtos.stream().map((user)->{
             userPlanId.put(user.getTraineeId(),user.getPlanId());
             return user.getTraineeId();
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet());
         List<String> planIds = userDtos.stream().map(UserPlan::getPlanId).collect(Collectors.toList());
         List<Document> documentList = feedbackService.calculateEmployeeRatingSummary(userIds);
         List<TraineePlanReponse> traineePlanReponseList = new ArrayList<>();
@@ -104,32 +104,37 @@ public class TraineePlanService {
 
         List<UserPlan> userPlanList = mongoTemplate.find(query1.with(pageable), UserPlan.class);
         HashMap<String,String> userPlanId = new HashMap<>();
-        List<String> userIds = userPlanList.stream().map((user)->{
+        Set<String> userIds = userPlanList.stream().map((user)->{
             userPlanId.put(user.getTraineeId(),user.getPlanId());
             return user.getTraineeId();
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet());
+
         List<String> planIds = userPlanList.stream().map(UserPlan::getPlanId).collect(Collectors.toList());
         List<Document> documentList = feedbackService.calculateEmployeeRatingSummary(userIds);
         List<TraineePlanReponse> traineePlanReponseList = new ArrayList<>();
         HashMap<String, List<UserIdAndNameDto>> planDetails = planService.getPlanCourseByPlanIds(planIds);
-        if(documentList.size()==0){
-            for (UserPlan userPlan : userPlanList){
-                String _id = userPlan.get_id();
-                UserDto userDto = TrainingModuleApplication.searchUserById(_id);
-                traineePlanReponseList.add(TraineePlanReponse.builder()
-                        .team(userDto.getTeamName())
-                        .mentor("N/A")
-                        .name(userDto.getName())
-                        .course(planDetails.get(userPlanId.get(_id)))
-                        .employeeCode(userDto.getEmpCode())
-                        .rating(0f)
-                        ._id(_id)
-                        .build());
-            }
-        }
+
+//        if(documentList.size()==0){
+//            for (UserPlan userPlan : userPlanList){
+//                String _id = userPlan.get_id();
+//                UserDto userDto = TrainingModuleApplication.searchUserById(_id);
+//                traineePlanReponseList.add(TraineePlanReponse.builder()
+//                        .team(userDto.getTeamName())
+//                        .mentor("N/A")
+//                        .name(userDto.getName())
+//                        .course(planDetails.get(userPlanId.get(_id)))
+//                        .employeeCode(userDto.getEmpCode())
+//                        .rating(0f)
+//                        ._id(_id)
+//                        .build());
+//            }
+//        }
+
+        //few id's are present and few are not!!
         for (Document document : documentList){
             String _id = (String) document.get("_id");
             UserDto userDto = TrainingModuleApplication.searchUserById(_id);
+            userIds.remove(_id);
             traineePlanReponseList.add(TraineePlanReponse.builder()
                     .team(userDto.getTeamName())
                     .mentor("safafa")
@@ -137,6 +142,18 @@ public class TraineePlanService {
                     .course(planDetails.get(userPlanId.get(_id)))
                     .employeeCode(userDto.getEmpCode())
                     .rating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
+                    ._id(_id)
+                    .build());
+        }
+        for (String _id : userIds){
+            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
+            traineePlanReponseList.add(TraineePlanReponse.builder()
+                    .team(userDto.getTeamName())
+                    .mentor("N/A")
+                    .name(userDto.getName())
+                    .course(planDetails.get(userPlanId.get(_id)))
+                    .employeeCode(userDto.getEmpCode())
+                    .rating(0f)
                     ._id(_id)
                     .build());
         }
