@@ -74,9 +74,9 @@ public class DashboardService {
                 for (Phase phase : plan.getPhases()) {
                     for (Task task : phase.getTasks()) {
                         String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
-                        if(task.getPlanType() < 3)
+                        if(task.getPlanType() != 3)
                             planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(task.getIsCompleted())
-                                    .phase(_id).type(task.getPlanType()).build());
+                                .phase(_id).type(task.getPlanType()).build());
                         //AssignTaskPlanTrack assignTaskPlanTrack = ((AssignTaskPlanTrack) task.getPlan());
                         List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
                         if(task.getPlanType() == 2){
@@ -103,14 +103,21 @@ public class DashboardService {
                 String tp = (String) courseDetails.get(_id).get("name");
                 courseDto.setName(tp);
             }
-//            for(PlanDto planDto : planDtoList){
-//                String _id =
-//            }
+            for(PlanDto planDto : planDtoList){
+                String _id = planDto.getPhase();
+//                int type = Integer.min(3.planDt)
+                if(planDto.getType()==1||planDto.getType()==4){
+                    String tp = (String) courseDetails.get(_id).get("name");
+                    planDto.setPhase(tp);
+                }else if(planDto.getType()==2){
+                    String tp = (String) testDetails.get(_id).get("testName");
+                    planDto.setPhase(tp);
+                }
+            }
             Collections.sort(planDtoList);
             dashboardResponse.setCourses(courseDtos);
             dashboardResponse.setPlan(planDtoList);
             //---set plan details!!!
-
         }
         return dashboardResponse;
     }
