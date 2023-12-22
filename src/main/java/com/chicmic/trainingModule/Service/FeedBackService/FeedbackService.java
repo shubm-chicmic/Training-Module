@@ -784,7 +784,7 @@ public class FeedbackService {
         Map<String,String> phases =new HashMap<>();
         int count = 0;
         for (Document document : documentList){
-            String phaseId = (String) document.get("_id");
+            String phaseId = document.get("_id").toString();
             phases.put(phaseId,String.format("Phase - %s",++count));
         }
         return phases;
@@ -799,7 +799,7 @@ public class FeedbackService {
         Map<String,String> phases =new HashMap<>();
         int count = 0;
         for (Document document : documentList){
-            String phaseId = (String) document.get("_id");
+            String phaseId = document.get("_id").toString();
             phases.put(phaseId,String.format("Milestone - %s",++count));
         }
         return phases;

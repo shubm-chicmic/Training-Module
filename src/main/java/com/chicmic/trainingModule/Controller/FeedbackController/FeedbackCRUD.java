@@ -77,7 +77,7 @@ public class FeedbackCRUD {
         else
             feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(traineeId,"3");
 
-        List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> responseList = feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList,_id,feedbackType);
 
         return new ApiResponse(200,"List of All feedbacks",responseList);
     }
