@@ -39,7 +39,7 @@ public class DashboardService {
         dashboardResponse.setName(userDto.getName());
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         //fetch plans of user
-        if(dashboardResponse.getFeedbacks().size()>0) {
+        if(dashboardResponse.getFeedbacks().size()>=0) {
             dashboardResponse.setCourses(Arrays.asList(CourseDto.builder().name("ReactJs").progress(50).build(),
                     CourseDto.builder().name("VueJS").progress(53).build(),
                     CourseDto.builder().name("NodeJs").progress(63).build()));
