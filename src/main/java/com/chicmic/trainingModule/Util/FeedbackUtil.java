@@ -28,7 +28,8 @@ public class FeedbackUtil {
         return ids;
     }
     public static String getFeedbackMessageBasedOnOverallRating(Float overallRating){
-        if(overallRating < 1)
+        if(overallRating==0) return "";
+        else if(overallRating < 1 && overallRating > 0)
             return  "Considerable Work Required.";
         else if (overallRating < 2)
             return "Needs Significant Enhancement.";
