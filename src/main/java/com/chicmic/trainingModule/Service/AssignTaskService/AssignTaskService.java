@@ -107,30 +107,32 @@ public class AssignTaskService {
 
                         }else if(task.getPlanType() == 2){
                             Test test = testService.getTestById(planId);
-                            List<AssignTaskPlanTrack> assignTaskTest = new ArrayList<>();
-                            for (Milestone testMilestone : test.getMilestones()) {
-                                for (TestTask testTask : testMilestone.getTasks()){
-                                    List<AssignTaskPlanTrack> assignTaskTestSubTask = new ArrayList<>();
-                                    for (TestSubTask testSubTask : testTask.getSubtasks()){
-                                        assignTaskPlanTrack = AssignTaskPlanTrack.builder()
-                                                ._id(testSubTask.get_id())
+                            for (Milestone milestone1 : test.getMilestones()) {
+                                if (milestone1.get_id().equals(milestone)){
+                                    List<AssignTaskPlanTrack> assignTaskTest = new ArrayList<>();
+                                    for (TestTask testTask : milestone1.getTasks()) {
+                                        List<AssignTaskPlanTrack> assignTaskTestSubTask = new ArrayList<>();
+                                        for (TestSubTask testSubTask : testTask.getSubtasks()) {
+                                            AssignTaskPlanTrack subTasktemp = AssignTaskPlanTrack.builder()
+                                                    ._id(testSubTask.get_id())
+                                                    .isCompleted(false)
+                                                    .build();
+                                            assignTaskTestSubTask.add(subTasktemp);
+                                        }
+                                        AssignTaskPlanTrack taskTrackTemp = AssignTaskPlanTrack.builder()
+                                                ._id(testTask.get_id())
                                                 .isCompleted(false)
+                                                .subtasks(assignTaskTestSubTask)
                                                 .build();
-                                        assignTaskTestSubTask.add(assignTaskPlanTrack);
+                                        assignTaskTest.add(taskTrackTemp);
                                     }
                                     assignTaskPlanTrack = AssignTaskPlanTrack.builder()
-                                            ._id(testTask.get_id())
+                                            ._id(milestone)
                                             .isCompleted(false)
-                                            .subtasks(assignTaskTestSubTask)
+                                            .tasks(assignTaskTest)
                                             .build();
-                                    assignTaskTest.add(assignTaskPlanTrack);
                                 }
                             }
-                            assignTaskPlanTrack = AssignTaskPlanTrack.builder()
-                                    ._id(milestone)
-                                    .isCompleted(false)
-                                    .tasks(assignTaskTest)
-                                    .build();
                         }
                         milestones.add(assignTaskPlanTrack);
                     }

@@ -569,6 +569,7 @@ public class CustomObjectMapper {
                 newTask.setEstimatedTime(task.getEstimatedTime());
                 newTask.set_id(task.get_id());
                 Object milestone = null;
+                System.out.println("Plan type " +task.getPlanType());
                 if (task.getPlanType() != null && task.getPlanType() == 1) {
                     System.out.println("Milestone: fet " + task.getMilestones());
                     milestone = (courseService.getCourseByPhaseIds((String) task.getPlan(), (List<Object>) task.getMilestones()));
