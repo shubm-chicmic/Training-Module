@@ -44,7 +44,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
         http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.DELETE,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
 
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").authenticated());
+        http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
 //        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
         http.authorizeHttpRequests(requests->requests.anyRequest().permitAll());
 
