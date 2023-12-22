@@ -41,7 +41,7 @@ public class GithubSampleCRUD {
             Long count = githubSampleService.countNonDeletedGithubSamples(searchString);
 
             List<GithubSampleResponseDto> githubSampleResponseDtoList = CustomObjectMapper.mapGithubSampleToResponseDto(githubSampleList);
-            Collections.reverse(githubSampleResponseDtoList);
+//            Collections.reverse(githubSampleResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), githubSampleResponseDtoList.size() + " GithubSamples retrieved", githubSampleResponseDtoList, response);
         } else {
             System.out.println("i m called");

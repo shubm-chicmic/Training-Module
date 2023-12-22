@@ -1,10 +1,15 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
 import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan.Task;
 import com.chicmic.trainingModule.Repository.CourseRepo;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.mongodb.BasicDBObject;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -57,7 +62,7 @@ public class CourseService {
         return result;
     }
 
-    public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
+    public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey, String traineeId) {
         Criteria criteria = Criteria.where("name").regex(query, "i")
                 .and("isDeleted").is(false);
 
@@ -96,7 +101,26 @@ public class CourseService {
 //                courses.sort(courseComparator);
 //            }
 //        }
-
+        List<Course> finalCourseList = new ArrayList<>();
+        if(traineeId != null && !traineeId.isEmpty()) {
+            Query query1 = new Query(Criteria.where("userId").in(traineeId));
+            AssignTask assignTask = mongoTemplate.findOne(query1, AssignTask.class);
+//            AssignTask assignTask = AssignTaskService.getAllAssignTasksByTraineeId(traineeId);
+            for (Plan plan : assignTask.getPlans()){
+                for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()){
+                    for (Task task : phase.getTasks()) {
+                        if(task.getPlanType() == 1){
+                            for(Course course : courses){
+                                if(course.get_id().equals(((AssignTaskPlanTrack)task.getPlan()).get_id())){
+                                    finalCourseList.add(course);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return finalCourseList;
+        }
         return courses;
     }
 
@@ -203,6 +227,8 @@ public class CourseService {
                 }
                 if(count == course.getReviewers().size()){
                     course.setIsApproved(true);
+                }else {
+                    course.setIsApproved(false);
                 }
             }
             if (!phases.isEmpty()) {

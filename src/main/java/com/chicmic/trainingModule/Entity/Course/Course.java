@@ -24,6 +24,7 @@ public class Course {
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
+    private String createdByName;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;
     private LocalDateTime createdAt;

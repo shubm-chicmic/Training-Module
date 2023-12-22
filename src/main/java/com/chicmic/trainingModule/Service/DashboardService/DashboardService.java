@@ -39,28 +39,32 @@ public class DashboardService {
         dashboardResponse.setName(userDto.getName());
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         //fetch plans of user
-        if(dashboardResponse.getFeedbacks().size()>0) {
-            dashboardResponse.setCourses(Arrays.asList(CourseDto.builder().name("ReactJs").progress(50).build(),
-                    CourseDto.builder().name("VueJS").progress(53).build(),
-                    CourseDto.builder().name("NodeJs").progress(63).build()));
-            dashboardResponse.setPlan(Arrays.asList(PlanDto.builder()
-                            .name("Initial Plan")
-                            .date(formatter.format(new Date()))
-                            .phase("Planning")
-                            .isComplete(true)
-                            .build(),
-                    PlanDto.builder()
-                            .name("Implementation Plan")
-                            .date(formatter.format(new Date()))
-                            .phase("Implementation")
-                            .isComplete(false)
-                            .build()
-            ));
-        }
+//        if(dashboardResponse.getFeedbacks().size()>=0) {
+//            dashboardResponse.setCourses(Arrays.asList(CourseDto.builder().name("ReactJs").progress(50).build(),
+//                    CourseDto.builder().name("VueJS").progress(53).build(),
+//                    CourseDto.builder().name("NodeJs").progress(63).build()));
+//            dashboardResponse.setPlan(Arrays.asList(PlanDto.builder()
+//                            .name("Initial Plan")
+//                            .date(formatter.format(new Date()))
+//                            .phase("Planning")
+//                            .isComplete(true)
+//                            .build(),
+//                    PlanDto.builder()
+//                            .name("Implementation Plan")
+//                            .date(formatter.format(new Date()))
+//                            .phase("Implementation")
+//                            .isComplete(false)
+//                            .build()
+//            ));
+//        }
         //get
         Criteria criteria = Criteria.where("userId").is(traineeId);
         Query query = new Query(criteria);
         AssignTask assignTask = mongoTemplate.findOne(query, AssignTask.class);
+        Map<String,List<AssignTaskPlanTrack>> assignCourseMap  = new HashMap<>();
+        Map<String,List<AssignTaskPlanTrack>> assignTestMap = new HashMap<>();
+        List<PlanDto> planDtoList = new ArrayList<>();
+        Date date  = new Date();
         if(assignTask != null) {
             List<Plan> plans = assignTask.getPlans();
             List<CourseDto> courseDtos = new ArrayList<>();
@@ -70,25 +74,43 @@ public class DashboardService {
                 for (Phase phase : plan.getPhases()) {
                     for (Task task : phase.getTasks()) {
                         String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
-                        int count = 0;
+                        if(task.getPlanType() < 3)
+                            planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(task.getIsCompleted())
+                                    .phase(_id).type(task.getPlanType()).build());
+                        //AssignTaskPlanTrack assignTaskPlanTrack = ((AssignTaskPlanTrack) task.getPlan());
                         List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        if(task.getPlanType() == 2){
+                            assignTestMap.put(_id,milestones);
+                            testIds.add(_id);
+                        }
+                        if(task.getPlanType() != 1) continue;
+                        int count = 0;
                         for (AssignTaskPlanTrack milestone : milestones) {
                             if (milestone.getIsCompleted() == true)
                                 ++count;
                         }
                         courseIds.add(_id);
-                        courseDtos.add(new CourseDto(_id, count/milestones.size() * 100));
+                        courseDtos.add(new CourseDto(_id, count*100/Integer.max(1,milestones.size())));
+                        assignCourseMap.put(_id,milestones);
                         // courseId.put(_id,count/ milestones.size() * 100);
                     }
                 }
             }
             Map<String, Document> courseDetails = feedbackService.getCourseNameAndPhaseName(courseIds);
+            Map<String,Document> testDetails = feedbackService.getTestNameAndMilestoneName(testIds);
             for (CourseDto courseDto : courseDtos) {
                 String _id = courseDto.getName();
                 String tp = (String) courseDetails.get(_id).get("name");
                 courseDto.setName(tp);
             }
+//            for(PlanDto planDto : planDtoList){
+//                String _id =
+//            }
+            Collections.sort(planDtoList);
             dashboardResponse.setCourses(courseDtos);
+            dashboardResponse.setPlan(planDtoList);
+            //---set plan details!!!
+
         }
         return dashboardResponse;
     }

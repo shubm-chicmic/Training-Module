@@ -264,7 +264,7 @@ public class FeedbackService {
 
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
         //checking trainee exist in db!!!
-        //searchUserById(feedBackDto.getTrainee());
+        searchUserById(feedBackDto.getTrainee());
         //checking trainee Completed course or not!!!
         int type = feedBackDto.getFeedbackType().charAt(0) - '0';
         if(type == 1)

@@ -91,6 +91,7 @@ public class ExcelPerformOperations {
                 "61fba5d5f4f70d6c0b3eff3d"
         )));
         course.setCreatedBy("61fba5d5f4f70d6c0b3eff40");
+        course.setCreatedByName("Priti Mittal");
         course.setApprovedBy(new HashSet<>());
 
         return course;

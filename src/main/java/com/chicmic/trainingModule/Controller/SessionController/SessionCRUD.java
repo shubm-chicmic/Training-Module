@@ -44,7 +44,7 @@ public class SessionCRUD {
             Long count = sessionService.countNonDeletedSessions(searchString);
 
             List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
-            Collections.reverse(sessionResponseDtoList);
+//            Collections.reverse(sessionResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList, response);
         }else {
             Session session = sessionService.getSessionById(sessionId);
@@ -85,7 +85,7 @@ public class SessionCRUD {
                 if (approver.contains(principal.getName())) {
                     session =sessionService.approve(session, principal.getName(), sessionDto.getApproved());
                 } else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this session", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this session", null, response);
 
                 }
             }
@@ -96,7 +96,7 @@ public class SessionCRUD {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
                 }
                 if(!session.isApproved()) {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Session is not approved", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Can't update status since Session is not approved", null, response);
                 }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
@@ -107,18 +107,18 @@ public class SessionCRUD {
                     if (session.getSessionBy().contains(principal.getName())) {
                         session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
                     } else {
-                        return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Are Not Authorized to Post MOM", null, response);
+                        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Are Not Authorized to Post MOM", null, response);
                     }
                 }
                 else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "Posting Mom is not allowed when session is not completed", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Posting Mom is not allowed when session is not completed", null, response);
                 }
 
             }
             SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {
-                return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null, response);
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
         }
     }
 

@@ -48,7 +48,7 @@ public class PlanCRUD {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
             Long count = planService.countNonDeletedPlans(searchString);
             List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
-            Collections.reverse(planResponseDtoList);
+//            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         }
         if (planId == null || planId.isEmpty()) {
@@ -59,7 +59,7 @@ public class PlanCRUD {
             Long count = planService.countNonDeletedPlans(searchString);
 
             List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
-            Collections.reverse(planResponseDtoList);
+//            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         } else {
             Plan plan = planService.getPlanById(planId);

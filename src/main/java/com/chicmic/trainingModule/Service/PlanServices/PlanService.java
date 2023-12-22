@@ -179,6 +179,8 @@ public class PlanService {
             }
             if(count == plan.getApprover().size()){
                 plan.setApproved(true);
+            }else {
+                plan.setApproved(false);
             }
             plan.setUpdatedAt(LocalDateTime.now());
             planRepo.save(plan);

@@ -14,14 +14,14 @@ import lombok.Setter;
 @Setter
 public class ApiResponseWithCount {
     private long count;
-    private int statusCode;
+    private int status;
     private String message;
     private Object data;
-    public ApiResponseWithCount(long count,int statusCode, String message, Object data, HttpServletResponse response) {
+    public ApiResponseWithCount(long count, int status, String message, Object data, HttpServletResponse response) {
         this.count = count;
-        this.statusCode = statusCode;
+        this.status = status;
         this.message = message;
         this.data = data;
-        response.setStatus(statusCode);
+        response.setStatus(status);
     }
 }
