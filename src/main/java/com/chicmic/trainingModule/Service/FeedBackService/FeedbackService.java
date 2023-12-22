@@ -520,7 +520,8 @@ public class FeedbackService {
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query, Feedback.class);
 
-        List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+//        List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList,courseId,1);
         return courseResponseList;
     }
 
@@ -529,7 +530,8 @@ public class FeedbackService {
                 .and("rating.testId").is(testId).and("rating.milestoneId").is(milestoneid);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
-        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+//        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList,testId,2);
         return testResponseList;
     }
     public List<CourseResponse> findFeedbacksForCourseByCourseIdAndTraineeId(String courseId,String traineeId){
@@ -537,7 +539,8 @@ public class FeedbackService {
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
-        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+//        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList,"vsdv",3);
         return testResponseList;
     }
     public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback,Map<String,String> name){
