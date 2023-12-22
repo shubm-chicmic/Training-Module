@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,5 +32,7 @@ public class Session {
     private boolean isDeleted = false;
     private boolean isApproved = false;
     private MomMessage MOM;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }

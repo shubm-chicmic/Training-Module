@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,4 +31,6 @@ public class GithubSample {
     private String comment;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

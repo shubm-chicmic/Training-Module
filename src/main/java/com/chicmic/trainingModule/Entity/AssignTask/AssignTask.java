@@ -27,4 +27,6 @@ public class AssignTask {
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

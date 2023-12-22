@@ -20,6 +20,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,8 @@ public class SessionService {
 //        sessionRepo.deleteAll();
 //    }
     public Session createSession(Session session){
+        session.setCreatedAt(LocalDateTime.now());
+        session.setUpdatedAt(LocalDateTime.now());
         session = sessionRepo.save(session);
         return session;
     }

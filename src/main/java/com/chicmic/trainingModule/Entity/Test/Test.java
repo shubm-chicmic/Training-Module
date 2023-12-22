@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,8 @@ public class Test {
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     public Test() {
         Milestone.count = 0;
     }
