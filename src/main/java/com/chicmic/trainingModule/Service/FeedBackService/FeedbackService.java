@@ -22,6 +22,7 @@ import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -60,13 +61,15 @@ public class FeedbackService {
         Query query = new Query(Criteria.where("userId").is(userId)
                 .and("plans.phases.tasks").elemMatch(
                         Criteria.where("planType").is(planType)
-                                .and("plan._id").is(planId)
+                                .and("plan._id").is(new ObjectId(planId))
                                 .and("milestones").elemMatch(
-                                        Criteria.where("_id").is(milestoneId)
+                                        Criteria.where("_id").is(new ObjectId(milestoneId))
                                                 .and("isCompleted").is(isCompleted)
                                 )
                 )
         );
+
+       // return mongoTemplate.findOne(query, YourDocumentClass.class, "assignTask");
 
         boolean flag =  mongoTemplate.exists(query, "assignTask");
 //        Query query = new Query(Criteria.where("userId").is(userId)
@@ -261,7 +264,7 @@ public class FeedbackService {
 
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
         //checking trainee exist in db!!!
-        searchUserById(feedBackDto.getTrainee());
+        //searchUserById(feedBackDto.getTrainee());
         //checking trainee Completed course or not!!!
         int type = feedBackDto.getFeedbackType().charAt(0) - '0';
         if(type == 1)
