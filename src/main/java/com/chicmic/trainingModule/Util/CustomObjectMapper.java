@@ -700,7 +700,7 @@ public class CustomObjectMapper {
                         List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>)task.getMilestones();
                         for(AssignTaskPlanTrack milestoneTrack : milestonesData) {
                             for (Phase coursePhase : course.getPhases()) {
-                                if(milestoneTrack.get_id().equals(coursePhase.get_id())){
+                                if(milestoneTrack!=null && milestoneTrack.get_id().equals(coursePhase.get_id())){
                                 boolean isMilestoneCompleted = false;
                                 for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
                                     if (assignTaskPlanTrack.get_id().equals(coursePhase.get_id())) {
