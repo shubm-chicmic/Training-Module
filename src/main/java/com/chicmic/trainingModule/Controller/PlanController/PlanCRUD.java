@@ -103,6 +103,9 @@ public class PlanCRUD {
     @PutMapping
     public ApiResponse updatePlan(@RequestBody PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
+        if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+        }
         if (plan != null) {
             if (planDto != null && planDto.getApproved() == true) {
                 Set<String> approver = plan.getApprover();

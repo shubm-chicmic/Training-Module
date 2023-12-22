@@ -161,6 +161,18 @@ public class SessionService {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
             session = (Session) CustomObjectMapper.updateFields(sessionDto, session);
+            Integer count = 0;
+            for (String reviewer : session.getApprover()){
+                if(session.getApprovedBy().contains(reviewer)){
+                    count++;
+                }
+            }
+            if(count == session.getApprover().size()){
+                session.setApproved(true);
+            }else {
+                session.setApproved(false);
+            }
+            session.setUpdatedAt(LocalDateTime.now());
             sessionRepo.save(session);
             return session;
         } else {

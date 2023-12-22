@@ -103,6 +103,18 @@ public class GithubSampleService {
         GithubSample githubSample = githubSampleRepo.findById(githubSampleId).orElse(null);
         if (githubSample != null) {
             githubSample = (GithubSample) CustomObjectMapper.updateFields(githubSampleDto, githubSample);
+            Integer count = 0;
+            for (String reviewer : githubSample.getApprover()){
+                if(githubSample.getApprovedBy().contains(reviewer)){
+                    count++;
+                }
+            }
+            if(count == githubSample.getApprover().size()){
+                githubSample.setIsApproved(true);
+            }else {
+                githubSample.setIsApproved(false);
+            }
+            githubSample.setUpdatedAt(LocalDateTime.now());
             githubSampleRepo.save(githubSample);
             return githubSample;
         } else {

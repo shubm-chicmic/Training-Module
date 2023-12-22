@@ -120,7 +120,7 @@ public class CourseCRUD {
                 if (approver.contains(principal.getName())) {
                     course = courseService.approve(course, principal.getName());
                 } else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this course", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this course", null, response);
 
                 }
             }
@@ -129,7 +129,7 @@ public class CourseCRUD {
             CourseResponseDto courseResponseDto = CustomObjectMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);
         }else {
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Course not found", null, response);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course not found", null, response);
         }
     }
 }

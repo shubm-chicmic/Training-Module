@@ -106,13 +106,15 @@ public class CourseService {
             Query query1 = new Query(Criteria.where("userId").in(traineeId));
             AssignTask assignTask = mongoTemplate.findOne(query1, AssignTask.class);
 //            AssignTask assignTask = AssignTaskService.getAllAssignTasksByTraineeId(traineeId);
-            for (Plan plan : assignTask.getPlans()){
-                for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()){
-                    for (Task task : phase.getTasks()) {
-                        if(task.getPlanType() == 1){
-                            for(Course course : courses){
-                                if(course.get_id().equals(((AssignTaskPlanTrack)task.getPlan()).get_id())){
-                                    finalCourseList.add(course);
+            if(assignTask != null) {
+                for (Plan plan : assignTask.getPlans()) {
+                    for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
+                        for (Task task : phase.getTasks()) {
+                            if (task.getPlanType() == 1) {
+                                for (Course course : courses) {
+                                    if (course.get_id().equals(((AssignTaskPlanTrack) task.getPlan()).get_id())) {
+                                        finalCourseList.add(course);
+                                    }
                                 }
                             }
                         }

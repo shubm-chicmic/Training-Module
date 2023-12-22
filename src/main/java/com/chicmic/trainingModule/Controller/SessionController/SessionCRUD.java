@@ -78,6 +78,9 @@ public class SessionCRUD {
     @PutMapping
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
+        if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+        }
         if (session != null) {
 
             if (sessionDto != null && sessionDto.getApproved() != null) {

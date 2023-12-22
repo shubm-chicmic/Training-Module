@@ -182,6 +182,17 @@ public class TestService {
             }
             if (testDto.getReviewers() != null) {
                 test.setReviewers(testDto.getReviewers());
+                Integer count = 0;
+                for (String reviewer : test.getReviewers()){
+                    if(test.getApprovedBy().contains(reviewer)){
+                        count++;
+                    }
+                }
+                if(count == test.getReviewers().size()){
+                    test.setApproved(true);
+                }else {
+                    test.setApproved(false);
+                }
             }
             if (testDto.getTeams() != null) {
                 test.setTeams(testDto.getTeams());
