@@ -420,6 +420,8 @@ public class FeedbackService {
         Map<String,String> names = new HashMap<>();
         if(type == 1) names = getPhaseName(_id);
         else if (type == 2) names = getTestName(_id);
+        else if(type == 3) names = getCoursesName(feedbackList);
+
 
         HashMap<String,TraineeRating> dp = new HashMap<>();
 //        List<Reviewer> courseResponseList = new ArrayList<>();
@@ -562,7 +564,7 @@ public class FeedbackService {
         }else{
             Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
             phaseResponse.set_id(rating_ppt.getCourseId());
-            phaseResponse.setName(rating_ppt.getCourseId());
+            phaseResponse.setName(name.get(rating_ppt.getCourseId()));
             phaseResponse.setPresentationRating(rating_ppt.getPresentationRating());
             phaseResponse.setCommunicationRating(rating_ppt.getCommunicationRating());
             phaseResponse.setTechnicalRating(rating_ppt.getTechnicalRating());
@@ -765,16 +767,21 @@ public class FeedbackService {
 
         return coursesDetails;
     }
-//    public Map<String,String> getCourseName(List<String> _ids){
-//        Query query = Query.query(Criteria.where("_id").in(_ids));
-//        query.fields().include("_id","name");
-//        List<Document> documentList =  mongoTemplate.find(query, Document.class, "course");
-//        Map<String,String> coursesDetails = new HashMap<>();
-//        for (Document document : documentList){
-//            coursesDetails.put(document.get("_id").toString(),(String)document.get("name"));
-//        }
-//        return coursesDetails;
-//    }
+    public Map<String,String> getCoursesName(List<Feedback> feedbackList){
+        List<String> _ids = new ArrayList<>();
+        for (Feedback feedback : feedbackList){
+            Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
+            _ids.add(rating_ppt.getCourseId());
+        }
+        Query query = Query.query(Criteria.where("_id").in(_ids));
+        query.fields().include("_id","name");
+        List<Document> documentList =  mongoTemplate.find(query, Document.class, "course");
+        Map<String,String> coursesDetails = new HashMap<>();
+        for (Document document : documentList)
+            coursesDetails.put(document.get("_id").toString(),(String) document.get("name"));
+
+        return coursesDetails;
+    }
     public Map<String,String> getPhaseName(String _id){
         Query query = Query.query(Criteria.where("_id").is(_id));
         query.fields().include("name","phases._id");
