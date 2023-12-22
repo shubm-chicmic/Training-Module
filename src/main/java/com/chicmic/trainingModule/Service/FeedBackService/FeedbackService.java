@@ -124,6 +124,28 @@ public class FeedbackService {
         }
         return feedbackResponse1;
     }
+//    public List<CourseResponse> addingPhaseAndTestNameInCourseResponse(List<CourseResponse> courseResponseList){
+//        //fetch courseId and TestId
+//        List<String> courseId = new ArrayList<>();
+//        List<String> testId = new ArrayList<>();
+//        for (var courseResponse : courseResponseList) {
+//            for ()
+//        }
+////        for (var courseResponse : courseResponseList){
+////            int type = getTypeOfFeedbackResponse(feedbackResponse);
+////            if(type == 1){
+////                FeedbackResponse_COURSE feedbackResponseCourse = (FeedbackResponse_COURSE) feedbackResponse;
+////                courseId.add(feedbackResponseCourse.getTask().get_id());
+////            } else if (type == 2) {
+////                FeedbackResponse_TEST feedbackResponseTest = (FeedbackResponse_TEST) feedbackResponse;
+////                testId.add(feedbackResponseTest.getTask().get_id());
+////            } else if (type == 3) {
+////                FeedbackResponse_PPT feedbackResponsePpt = (FeedbackResponse_PPT) feedbackResponse;
+////                courseId.add(feedbackResponsePpt.getTask().get_id());
+////            }
+////        }
+//        return courseResponseList;
+//    }
 
     public List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse>
             addingPhaseAndTestNameInResponse(List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses){
@@ -394,7 +416,55 @@ public class FeedbackService {
         Query query = new Query(criteria);
         return mongoTemplate.count(query,Feedback.class);
     }
+    public List<CourseResponse> buildFeedbackResponseForCourseAndTest(List<Feedback> feedbackList,String _id,Integer type){
+        Map<String,String> names = new HashMap<>();
+        if(type == 1) names = getPhaseName(_id);
+        else if (type == 2) names = getTestName(_id);
 
+        HashMap<String,TraineeRating> dp = new HashMap<>();
+//        List<Reviewer> courseResponseList = new ArrayList<>();
+        List<CourseResponse> courseResponseList = new ArrayList<>();
+        for(Feedback feedback : feedbackList){
+            String reviewerId = feedback.getCreatedBy();
+            if(dp.get(reviewerId) == null) {//not present
+                UserDto reviewer = TrainingModuleApplication.searchUserById(reviewerId);
+
+                //creating a new element for reviewer
+                CourseResponse courseResponse = CourseResponse.builder()
+                        ._id(reviewerId)
+                        .reviewerName(reviewer.getName())
+                        .code(reviewer.getEmpCode())
+                        .overallRating(5.0f)
+                        .records(new ArrayList<>())
+                        .build();
+
+                PhaseResponse phaseResponse = buildPhaseResponseForCourseOrTest(feedback,names);
+                //adding the phase into it
+                courseResponse.getRecords().add(phaseResponse);
+                dp.put(reviewerId,new TraineeRating(courseResponseList.size(),feedback.getOverallRating(),1));
+//                courseResponseList.add(new Reviewer(courseResponse));
+                courseResponseList.add(courseResponse);
+            }else{
+                //int idx = dp.get(reviewerId).getIndex();
+                TraineeRating traineeRating = dp.get(reviewerId);
+                PhaseResponse phaseResponse = buildPhaseResponseForCourseOrTest(feedback);
+                //updating the count
+                traineeRating.incrRating(feedback.getOverallRating());
+                traineeRating.incrCount();
+//               courseResponseList.get(traineeRating.getIndex()).reviewer().getPhases().add(phaseResponse);
+                courseResponseList.get(traineeRating.getIndex()).getRecords().add(phaseResponse);
+                // courseResponseList.get(idx).reviewer().getPhases().add(phaseResponse);
+            }
+        }
+        //set overall rating in list
+        for (TraineeRating rating : dp.values()){
+            int index = rating.getIndex();
+//               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
+            courseResponseList.get(index).setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
+        }
+//        courseResponseList = addingPhaseAndTestNameInCourseResponse(courseResponseList);
+        return courseResponseList;
+    }
     public List<CourseResponse> buildFeedbackResponseForCourseAndTest(List<Feedback> feedbackList){
         HashMap<String,TraineeRating> dp = new HashMap<>();
 //        List<Reviewer> courseResponseList = new ArrayList<>();
@@ -437,8 +507,10 @@ public class FeedbackService {
 //               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
                courseResponseList.get(index).setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
         }
+//        courseResponseList = addingPhaseAndTestNameInCourseResponse(courseResponseList);
         return courseResponseList;
     }
+
     public List<CourseResponse> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,String phaseId,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("1")
                 .and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId);
@@ -465,6 +537,37 @@ public class FeedbackService {
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
         List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return testResponseList;
+    }
+    public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback,Map<String,String> name){
+        PhaseResponse phaseResponse = PhaseResponse.builder()
+                .comment(feedback.getComment())
+                .overallRating(feedback.getOverallRating())
+                .createdAt(feedback.getCreatedAt())
+                .build();
+
+        if(feedback.getType().equals("1")) {
+            Rating_COURSE ratingCourse = (Rating_COURSE) feedback.getRating();
+            phaseResponse.set_id(ratingCourse.getPhaseId());
+            phaseResponse.setName(name.get(ratingCourse.getPhaseId()));
+            phaseResponse.setTheoreticalRating(ratingCourse.getTheoreticalRating());
+            phaseResponse.setCommunicationRating(ratingCourse.getCommunicationRating());
+            phaseResponse.setTechnicalRating(ratingCourse.getTechnicalRating());
+        }else if(feedback.getType().equals("2")){
+            Rating_TEST ratingTest = (Rating_TEST) feedback.getRating();
+            phaseResponse.set_id(ratingTest.getMilestoneId());
+            phaseResponse.setName(name.get(ratingTest.getMilestoneId()));
+            phaseResponse.setTheoreticalRating(ratingTest.getTheoreticalRating());
+            phaseResponse.setCommunicationRating(ratingTest.getCommunicationRating());
+            phaseResponse.setCodingRating(ratingTest.getCodingRating());
+        }else{
+            Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
+            phaseResponse.set_id(rating_ppt.getCourseId());
+            phaseResponse.setName(rating_ppt.getCourseId());
+            phaseResponse.setPresentationRating(rating_ppt.getPresentationRating());
+            phaseResponse.setCommunicationRating(rating_ppt.getCommunicationRating());
+            phaseResponse.setTechnicalRating(rating_ppt.getTechnicalRating());
+        }
+        return phaseResponse;
     }
     public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback  feedback){
         PhaseResponse phaseResponse = PhaseResponse.builder()
@@ -519,7 +622,7 @@ public class FeedbackService {
 
     public List<Feedback> findFeedbacksByCourseIdAndTraineeId(String courseId,String traineeId,String feedbackType){
         searchUserById(traineeId);
-
+        //find courseName!!!
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(feedbackType)
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
@@ -661,6 +764,45 @@ public class FeedbackService {
             coursesDetails.put(document.get("_id").toString(),document);
 
         return coursesDetails;
+    }
+//    public Map<String,String> getCourseName(List<String> _ids){
+//        Query query = Query.query(Criteria.where("_id").in(_ids));
+//        query.fields().include("_id","name");
+//        List<Document> documentList =  mongoTemplate.find(query, Document.class, "course");
+//        Map<String,String> coursesDetails = new HashMap<>();
+//        for (Document document : documentList){
+//            coursesDetails.put(document.get("_id").toString(),(String)document.get("name"));
+//        }
+//        return coursesDetails;
+//    }
+    public Map<String,String> getPhaseName(String _id){
+        Query query = Query.query(Criteria.where("_id").is(_id));
+        query.fields().include("name","phases._id");
+        Document courseDetail = mongoTemplate.findOne(query,Document.class,"course");
+        if(courseDetail == null) throw new ApiException(HttpStatus.BAD_REQUEST,"This courseId doesn't exist");
+        List<Document> documentList = (List<Document>) courseDetail.get("phases");
+        Map<String,String> phases =new HashMap<>();
+        int count = 0;
+        for (Document document : documentList){
+            String phaseId = (String) document.get("_id");
+            phases.put(phaseId,String.format("Phase - %s",++count));
+        }
+        return phases;
+    }
+
+    public Map<String, String> getTestName(String _id){
+        Query query = Query.query(Criteria.where("_id").is(_id));
+        query.fields().include("name","milestones._id");
+        Document testDetail = mongoTemplate.findOne(query,Document.class,"test");
+        if(testDetail == null) throw new ApiException(HttpStatus.BAD_REQUEST,"This testId doesn't exist");
+        List<Document> documentList = (List<Document>) testDetail.get("milestones");
+        Map<String,String> phases =new HashMap<>();
+        int count = 0;
+        for (Document document : documentList){
+            String phaseId = (String) document.get("_id");
+            phases.put(phaseId,String.format("Milestone - %s",++count));
+        }
+        return phases;
     }
     //
     public Map<String,Document> getTestNameAndMilestoneName(List<String> _ids){
