@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Entity.Plan;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.bson.types.ObjectId;
 
@@ -15,7 +16,9 @@ import java.util.List;
 public class Task {
     private String _id = String.valueOf(new ObjectId());
     private Integer planType = null;
+    @NotNull(message = "Plan Id cannot be empty")
     private Object plan;
+    @NotNull(message = "Milestones cannot be Empty")
     private Object milestones;
     List<UserIdAndNameDto> mentor;
     private String estimatedTime;

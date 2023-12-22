@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,8 @@ public class CourseService {
     private final MongoTemplate mongoTemplate;
 
     public Course createCourse(Course course) {
+        course.setCreatedAt(LocalDateTime.now());
+        course.setUpdatedAt(LocalDateTime.now());
         course = courseRepo.save(course);
         return course;
     }
@@ -71,28 +74,28 @@ public class CourseService {
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
 
-        if (!sortKey.isEmpty()) {
-            Comparator<Course> courseComparator = Comparator.comparing(course -> {
-                try {
-                    Field field = Course.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(course);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection == 1) {
-                courses.sort(courseComparator.reversed());
-            } else {
-                courses.sort(courseComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Course> courseComparator = Comparator.comparing(course -> {
+//                try {
+//                    Field field = Course.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(course);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection == 1) {
+//                courses.sort(courseComparator.reversed());
+//            } else {
+//                courses.sort(courseComparator);
+//            }
+//        }
 
         return courses;
     }
@@ -107,29 +110,7 @@ public class CourseService {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-//        Query searchQuery = new Query()
-//                .addCriteria(Criteria.where("name").regex(query, "i"))
-//                .addCriteria(Criteria.where("isDeleted").is(false))
-//                .with(pageable);
-//
-//        List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
-//        List<Course> finalCourseList = new ArrayList<>();
-//        for (Course course : courses){
-//            System.out.println("course " + course.getName() + " approved " + course.getIsApproved());
-//            if(course.getIsApproved()){
-//                System.out.println("In 1");
-//                finalCourseList.add(course);
-//            }else {
-//                System.out.println("In 2");
-//                System.out.println("reviewers = " +course.getReviewers());
-//                System.out.println("createdBy = " + course.getCreatedBy());
-//                System.out.println("userId = " + userId);
-//                if(course.getReviewers().contains(userId) || course.getCreatedBy().equals(userId)){
-//                    finalCourseList.add(course);
-//                }
-//            }
-//        }
-//        courses = finalCourseList;
+
         Criteria criteria = Criteria.where("name").regex(query, "i")
                 .and("isDeleted").is(false);
 

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,7 @@ public class AssignTaskService {
     private final CourseService courseService;
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
+    //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
     public AssignTask createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
         AssignTask assignTask = getAllAssignTasksByTraineeId(userId);
         if(assignTask != null) {
@@ -134,8 +136,11 @@ public class AssignTaskService {
                 }
             }
         }
+
         assignTask = AssignTask.builder()
                 .createdBy(principal.getName())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .plans(plans)
                 .userId(userId)
                 .reviewers(assignTaskDto.getReviewers())

@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Service.TestServices;
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
 import com.chicmic.trainingModule.Entity.Test.Test;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
@@ -20,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,14 +35,26 @@ public class TestService {
     private final MongoTemplate mongoTemplate;
 
     public Test createTest(Test test) {
+        test.setCreatedAt(LocalDateTime.now());
+        test.setUpdatedAt(LocalDateTime.now());
         test = testRepo.save(test);
         return test;
     }
 
     public List<Test> getAllTests(String query, Integer sortDirection, String sortKey) {
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("testName").regex(query, "i"))
-                .addCriteria(Criteria.where("deleted").is(false));
+        Criteria criteria = Criteria.where("testName").regex(query, "i")
+                .and("deleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+
+
+        // Combining the conditions
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
 
@@ -78,24 +92,37 @@ public class TestService {
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
+        Criteria criteria = Criteria.where("testName").regex(query, "i")
+                .and("deleted").is(false);
 
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("testName").regex(query, "i"))
-                .addCriteria(Criteria.where("deleted").is(false))
-                .with(pageable);
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+        Criteria reviewersCriteria = Criteria.where("approved").is(false)
+                .and("reviewers").in(userId);
+        Criteria createdByCriteria = Criteria.where("approved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        Query searchQuery = new Query(finalCriteria).with(pageable);
+//        Query searchQuery = new Query()
+//                .addCriteria(Criteria.where("testName").regex(query, "i"))
+//                .addCriteria(Criteria.where("deleted").is(false))
+//                .with(pageable);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-        List<Test> finalTestList = new ArrayList<>();
-        for (Test test : tests){
-            if(test.getApproved()){
-                finalTestList.add(test);
-            }else {
-                if(test.getReviewers().contains(userId) || test.getCreatedBy().equals(userId)){
-                    finalTestList.add(test);
-                }
-            }
-        }
-        tests = finalTestList;
+//        List<Test> finalTestList = new ArrayList<>();
+//        for (Test test : tests){
+//            if(test.getApproved()){
+//                finalTestList.add(test);
+//            }else {
+//                if(test.getReviewers().contains(userId) || test.getCreatedBy().equals(userId)){
+//                    finalTestList.add(test);
+//                }
+//            }
+//        }
+//        tests = finalTestList;
         if (!sortKey.isEmpty()) {
             Comparator<Test> testComparator = Comparator.comparing(test -> {
                 try {

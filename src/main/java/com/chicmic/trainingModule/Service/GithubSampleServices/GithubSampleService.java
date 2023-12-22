@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +32,8 @@ public class GithubSampleService {
 //    }
 
     public GithubSample createGithubSample(GithubSample githubSample){
+        githubSample.setCreatedAt(LocalDateTime.now());
+        githubSample.setUpdatedAt(LocalDateTime.now());
         githubSample = githubSampleRepo.save(githubSample);
         return githubSample;
     }

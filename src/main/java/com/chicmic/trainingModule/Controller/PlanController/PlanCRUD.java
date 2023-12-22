@@ -36,16 +36,17 @@ public class PlanCRUD {
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
-            @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
+            @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
             @RequestParam(required = false) String planId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     ) {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
-            Long count = planService.countNonDeletedPlans();
+            Long count = planService.countNonDeletedPlans(searchString);
             List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
             Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
@@ -54,8 +55,8 @@ public class PlanCRUD {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = planService.countNonDeletedPlans();
+            List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+            Long count = planService.countNonDeletedPlans(searchString);
 
             List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
             Collections.reverse(planResponseDtoList);

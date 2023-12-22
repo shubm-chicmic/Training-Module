@@ -31,7 +31,7 @@ public class SessionCRUD {
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
-            @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
+            @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
             @RequestParam(required = false) String sessionId,
             HttpServletResponse response,
             Principal principal
@@ -79,17 +79,7 @@ public class SessionCRUD {
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
         if (session != null) {
-            if(sessionDto != null && sessionDto.getMessage() != null) {
-                if(sessionDto.getStatus() != StatusConstants.COMPLETED) {
-                    System.out.println("sessionDto = " + sessionDto);
-                    if (session.getSessionBy().contains(principal.getName())) {
-                        session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
-                    }
-                    else {
-                        return new ApiResponse(HttpStatus.FORBIDDEN.value(), "Posting Mom is not allowed when session is not completed", null, response);
-                    }
-                }
-            }
+
             if (sessionDto != null && sessionDto.getApproved() != null) {
                 List<String> approver = session.getApprover();
                 if (approver.contains(principal.getName())) {
@@ -111,7 +101,20 @@ public class SessionCRUD {
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
             sessionDto.setStatus(session.getStatus());
+            if(sessionDto != null && sessionDto.getMessage() != null && !sessionDto.getMessage().isEmpty()) {
+                if(session.getStatus() == StatusConstants.COMPLETED) {
+                    System.out.println("sessionDto = " + sessionDto);
+                    if (session.getSessionBy().contains(principal.getName())) {
+                        session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
+                    } else {
+                        return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Are Not Authorized to Post MOM", null, response);
+                    }
+                }
+                else {
+                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "Posting Mom is not allowed when session is not completed", null, response);
+                }
 
+            }
             SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {
