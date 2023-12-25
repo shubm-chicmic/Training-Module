@@ -26,10 +26,10 @@ import java.util.*;
 public class PlanCRUD {
     private final PlanService planService;
     private  final CustomObjectMapper customObjectMapper;
-    @GetMapping("/getting")
-    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
-       return planService.getPlanCourseByPlanIds(plansIds);
-    }
+//    @GetMapping("/getting")
+//    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
+//       return planService.getPlanCourseByPlanIds(plansIds);
+//    }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
