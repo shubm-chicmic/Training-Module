@@ -41,6 +41,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
@@ -311,7 +312,8 @@ public class FeedbackService {
             feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
         }
         feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
-        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,4l);
+        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
+        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
     }
     //method for finding feedbacks given to a trainee
 //    public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
@@ -951,8 +953,16 @@ public class FeedbackService {
             Query query = new Query(criteria);
             return mongoTemplate.exists(query,Feedback.class);
         }
+        // Get the current date
+        LocalDate currentDate = LocalDate.now();
+        // Get the current year
+        int currentYear = currentDate.getYear();
+        // Get the current month (as an integer)
+        int currentMonthValue = currentDate.getMonthValue();
+        String regexPattern = String.format("^%04d-%02d.*$", currentYear, currentMonthValue);
         Criteria criteria = Criteria.where("type").is("4").and("createdBy")
-                .is(reviewer).and("traineeID").is(feedBackDto.getTrainee());
+                .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
+                .and("createdAt").regex(regexPattern);
         Query query = new Query(criteria);
         return mongoTemplate.exists(query,Feedback.class);
     }
