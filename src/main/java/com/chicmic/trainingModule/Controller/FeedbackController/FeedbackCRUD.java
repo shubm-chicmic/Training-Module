@@ -204,7 +204,7 @@ public class FeedbackCRUD {
         Float overallRating = feedbackService.getOverallRatingOfTrainee(traineeId);
         HashMap<String,Float> mp = new HashMap<>();
         mp.put("overallRating",overallRating);
-        return new ApiResponse(200,"Feedback Deleted Successfully!!",overallRating);
+        return new ApiResponse(200,"Feedback Deleted Successfully!!",mp);
     }
 
     @GetMapping("/course")
