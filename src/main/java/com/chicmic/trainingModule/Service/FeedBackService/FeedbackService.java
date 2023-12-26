@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -41,12 +42,17 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.getTypeOfFeedbackResponse;
+import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
+import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.filter;
 
 @Service
 public class FeedbackService {
@@ -708,25 +714,56 @@ public class FeedbackService {
 
     public List<Document> getAllFeedbacksOfEmployeeById(String traineeId){
         // Define your match criteria
-        AggregationOperation addFieldsOperation = context -> {
-            Document condExpr = new Document();
-            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
-                String traineeID = entry.getKey();
-                String teamName = entry.getValue().getTeamName();
-                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+//        AggregationOperation addFieldsOperation = context -> {
+//            Document condExpr = new Document();
+//            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
+//                String traineeID = entry.getKey();
+//                String teamName = entry.getValue().getTeamName();
 //                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
-//                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
-            }
-            return new Document("$addFields", new Document("teamName", condExpr));
-        };
+////                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+////                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+//            }
+//            return new Document("$addFields", new Document("teamName", condExpr));
+//        };
+//
+//        Aggregation aggregation = Aggregation.newAggregation(
+//                addFieldsOperation,
+//                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
+//                // Add other stages as needed
+//        );
+//        List<UserDto> userDetails = new ArrayList<>(idUserMap.values());
+        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+                        new Document("name",userDto.getName()).append("team",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
+                                .append("id",userDto.get_id()))
+                .toList();
 
-        Aggregation aggregation = Aggregation.newAggregation(
-                addFieldsOperation,
-                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
-                // Add other stages as needed
+        System.out.println(userDatasDocuments.size() + "///");
+        Aggregation aggregation = newAggregation(
+                context -> new Document("$match", new Document()), // Your match criteria here
+//                context -> new Document("$addFields", new Document("person", new Document("name", "runjan").append("age", 50))),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$sort", new Document("userData.name", 1))
         );
-        return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+
+        // Execute the aggregation
+        List<Document> results = mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//          return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//        System.out.println(results.get(0).get("_id") + "/////");
+        return results;
     }
+    
 
     public boolean feedbackExist(FeedBackDto feedBackDto,String reviewer){
         String feedback = feedBackDto.getFeedbackType();
