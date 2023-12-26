@@ -121,14 +121,7 @@ public class FeedbackCRUD {
 
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
-        Optional<Feedback> feedbackOptional = feedbackService.getFeedbackById(id);
-        if(feedbackOptional.isEmpty()){
-            throw new ApiException(HttpStatus.NOT_FOUND,"No Feedback exist with this Id.");
-        }
-        Feedback feedback = feedbackOptional.get();
-        if(feedback == null)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedback id.");
-//        FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponse(feedback);
+        Feedback feedback = feedbackService.getFeedbackById(id);
         FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         //com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =

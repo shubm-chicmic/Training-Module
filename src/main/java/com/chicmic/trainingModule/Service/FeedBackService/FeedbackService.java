@@ -266,7 +266,8 @@ public class FeedbackService {
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
-        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false);
 
         //temporary search query!!!
         if(query!=null && !query.isBlank()) {
@@ -518,6 +519,7 @@ public class FeedbackService {
 
     public List<CourseResponse> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,String phaseId,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("1")
+                .and("isDeleted").is(false)
                 .and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId);
 //        criteria.elemMatch(new Criteria().and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId));
         Query query = new Query(criteria);
@@ -530,6 +532,7 @@ public class FeedbackService {
 
     public List<CourseResponse> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String milestoneid,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
+                .and("isDeleted").is(false)
                 .and("rating.testId").is(testId).and("rating.milestoneId").is(milestoneid);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
@@ -539,6 +542,7 @@ public class FeedbackService {
     }
     public List<CourseResponse> findFeedbacksForCourseByCourseIdAndTraineeId(String courseId,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3")
+                .and("isDeleted").is(false)
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
@@ -616,6 +620,7 @@ public class FeedbackService {
         searchUserById(traineeId);
 
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
+                .and("isDeleted").is(false)
                 .and("rating.testId").is(testId);
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Feedback.class);
@@ -623,7 +628,9 @@ public class FeedbackService {
 
     public List<Feedback> findFeedbacksByPptIdAndTraineeId(String traineeId,String feedbackType){
         searchUserById(traineeId);
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3");
+        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false)
+                .and("type").is("3");
         Query query = new Query(criteria);
         return mongoTemplate.find(query,Feedback.class);
     }
@@ -631,7 +638,9 @@ public class FeedbackService {
     public List<Feedback> findFeedbacksByCourseIdAndTraineeId(String courseId,String traineeId,String feedbackType){
         searchUserById(traineeId);
         //find courseName!!!
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(feedbackType)
+        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false)
+                .and("type").is(feedbackType)
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
 
@@ -658,8 +667,14 @@ public class FeedbackService {
                 .comment(feedback.getComment())
                 .build();
     }
-    public Optional<Feedback> getFeedbackById(String id){
-        return feedbackRepo.findById(id);
+    public Feedback getFeedbackById(String id){
+        Criteria criteria = Criteria.where("id").is(id).and("isDeleted").is(false);
+        Query query = new Query(criteria);
+        Feedback feedback = mongoTemplate.findOne(query,Feedback.class);
+        if (feedback == null)
+            throw new ApiException(HttpStatus.valueOf(404),"Please enter valid feedback id.");
+        return feedback;
+        //return feedbackRepo.findById(id);
     }
 
     public ApiResponse findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
@@ -672,7 +687,8 @@ public class FeedbackService {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-        Criteria criteria = Criteria.where("createdBy").is(reviewer);
+        Criteria criteria = Criteria.where("createdBy").is(reviewer)
+                .and("isDeleted").is(false);
         //temporary search query!!!
         if(query!=null && !query.isBlank()) {
             criteria.and("traineeID").in(searchNameAndEmployeeCode(query));
@@ -742,6 +758,7 @@ public class FeedbackService {
 
     public List<Feedback> getAllFeedbacksOfTraineeOnCourseWithId(String traineeId,String courseId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false)
                 .and("type").is("1")
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
@@ -750,7 +767,7 @@ public class FeedbackService {
     }
     public List<Document> calculateEmployeeRatingSummary(Set<String> userIds) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeID").in(userIds)),
+                Aggregation.match(Criteria.where("traineeID").in(userIds).and("isDeleted").is(false)),
                 Aggregation.group("traineeID")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
