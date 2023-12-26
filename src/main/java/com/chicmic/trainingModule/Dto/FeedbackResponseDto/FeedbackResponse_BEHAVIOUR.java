@@ -27,6 +27,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private String comment;
     private Float teamSpiritRating;
     private Float attitudeRating;
+    private Float overallRating;
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getRating();
         UserDto trainee = searchUserById(feedback.getTraineeID());

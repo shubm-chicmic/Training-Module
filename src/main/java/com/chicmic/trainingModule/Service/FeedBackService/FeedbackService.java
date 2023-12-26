@@ -439,6 +439,9 @@ public class FeedbackService {
                 .comment(feedback.getComment())
             .build();
     }
+//    public Float getOverallRatingOfTrainee(String traineeId){
+//        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+//    }
     public HashMap<String,Object> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
 //        MatchOperation matchOperation = new MatchOperation(Criteria.where("traineeID").is(traineeId)
 //                .and("type").is("1").and("courseId").is(courseId)

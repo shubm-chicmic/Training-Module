@@ -157,6 +157,7 @@ public class FeedbackCRUD {
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
                 com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(Arrays.asList(feedbackResponse)).get(0);
+        feedbackResponse.setOverallRating(feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee()));
         if(q==0)
             return new ApiResponse(201, "Feedback successfully given to a user", feedbackResponse);
 
@@ -181,6 +182,7 @@ public class FeedbackCRUD {
         com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
                 com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(Arrays.asList(feedbackResponse)).get(0);
+        feedbackResponse.setOverallRating(feedbackService.getOverallRatingOfTrainee(feedBackDto.getTrainee()));
         if(q==0)
             return new ApiResponse(200,"FeedBack updated successfully",feedbackResponse);
 
@@ -195,7 +197,7 @@ public class FeedbackCRUD {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You can't delete this feedback.");
 
         //  System.out.println(principal.getName() + "???????????????????");
         feedbackService.deleteFeedbackById(id, principal.getName());

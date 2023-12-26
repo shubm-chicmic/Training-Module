@@ -27,6 +27,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private Date createdOn;
     private Float rating;
     private String comment;
+    private Float overallRating;
 
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         Rating_COURSE rating_course = (Rating_COURSE) feedback.getRating();

@@ -28,6 +28,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
     private Date createdOn;
     private Float rating;
     private String comment;
+    private Float overallRating;
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         System.out.println("inside feedback response............");
         Rating_TEST rating_test = (Rating_TEST) feedback.getRating();
