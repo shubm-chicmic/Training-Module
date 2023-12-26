@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Dto.FeedbackResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
+import org.bson.Document;
 import org.springframework.http.HttpStatus;
 
 public interface FeedbackResponse {
@@ -20,6 +21,22 @@ public interface FeedbackResponse {
         }
         throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
     }
+
+//    public static FeedbackResponse buildFeedbackResponse(Document document){
+//        String type = (String) document.get("type");
+//        switch (type){
+//            case "1" :
+//                return FeedbackResponse_COURSE.buildFeedbackResponse(document);
+//            case "2" :
+//                return FeedbackResponse_TEST.buildFeedbackResponse(document);
+//            case "3" :
+//                return FeedbackResponse_PPT.buildFeedbackResponse(document);
+//            case "4":
+//                return FeedbackResponse_BEHAVIOUR.buildFeedbackResponse(document);
+//        }
+//        throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
+//    }
+
     public static Integer getTypeOfFeedbackResponse(FeedbackResponse feedbackResponse){
         if(feedbackResponse instanceof FeedbackResponse_COURSE)
             return 1;

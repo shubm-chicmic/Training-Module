@@ -21,6 +21,7 @@ import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -40,12 +42,17 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.getTypeOfFeedbackResponse;
+import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
+import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.filter;
 
 @Service
 public class FeedbackService {
@@ -255,34 +262,86 @@ public class FeedbackService {
         }
         return roundOff_Rating(totalRating/feedbackList.size());
     }
-    //method for finding feedbacks given to a trainee
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
-        if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
-        }
-        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+                        new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
+                                .append("id",userDto.get_id()))
+                .toList();
 
-        //temporary search query!!!
-        if(query!=null && !query.isBlank()) {
-            criteria.and("createdBy").in(searchNameAndEmployeeCode(query));
-        }
-        //get the count of trainee as well
-        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
-        Query query1 = new Query(criteria).with(pageable);
-        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+        System.out.println(userDatasDocuments.size() + "///");
+        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false);
+
+        //searching!!!
+        if(query==null || query.isBlank()) query = ".*";
+        int skipValue = (pageNumber - 1) * pageSize;
+
+        System.out.println(userDatasDocuments.size() + "///");
+        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
+        Aggregation aggregation = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", Arrays.asList(
+                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+                        new Document("userData.reviewerTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),
+                context -> new Document("$sort", new Document(sortKey, sortDirection)),
+                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
+                context -> new Document("$limit", pageSize)
+        );
+
+        // Execute the aggregation
+        List<Feedback> feedbackList = mongoTemplate.aggregate(aggregation, "feedback", Feedback.class).getMappedResults();
 
         List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
         for (Feedback feedback : feedbackList) {
             feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
         }
         feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
-        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,4l);
     }
+    //method for finding feedbacks given to a trainee
+//    public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
+//        Pageable pageable;
+//        if (!sortKey.isEmpty()) {
+//            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
+//            Sort sort = Sort.by(direction, sortKey);
+//            pageable = PageRequest.of(pageNumber, pageSize, sort);
+//        } else {
+//            pageable = PageRequest.of(pageNumber, pageSize);
+//        }
+//        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+//                .and("isDeleted").is(false);
+//
+//        //temporary search query!!!
+//        if(query!=null && !query.isBlank()) {
+//            criteria.and("createdBy").in(searchNameAndEmployeeCode(query));
+//        }
+//        //get the count of trainee as well
+//        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
+//        Query query1 = new Query(criteria).with(pageable);
+//        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+//
+//        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//        for (Feedback feedback : feedbackList) {
+//            feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//        }
+//        feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
+//        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+//    }
 
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
         //checking trainee exist in db!!!
@@ -319,8 +378,10 @@ public class FeedbackService {
     public void deleteFeedbackById(String id,String userId){
         Criteria criteria = Criteria.where("id").is(id).and("createdBy").is(userId);
         Query query = new Query(criteria);
-        DeleteResult deleteResult = mongoTemplate.remove(query,Feedback.class);
-        if(deleteResult.getDeletedCount() == 0) throw new ApiException(HttpStatus.valueOf(401),"Something went wrong!!");
+        Update update = new Update().set("isDeleted",true);
+//        DeleteResult deleteResult = mongoTemplate.remove(query,Feedback.class);
+        UpdateResult updateResult = mongoTemplate.updateFirst(query,update,Feedback.class);
+        if(updateResult.getModifiedCount() == 0) throw new ApiException(HttpStatus.valueOf(400),"Something went wrong!!");
     }
 
     public Feedback updateFeedback(FeedBackDto feedBackDto,String userId){
@@ -515,6 +576,7 @@ public class FeedbackService {
 
     public List<CourseResponse> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,String phaseId,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("1")
+                .and("isDeleted").is(false)
                 .and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId);
 //        criteria.elemMatch(new Criteria().and("rating.courseId").is(courseId).and("rating.phaseId").is(phaseId));
         Query query = new Query(criteria);
@@ -527,6 +589,7 @@ public class FeedbackService {
 
     public List<CourseResponse> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String milestoneid,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
+                .and("isDeleted").is(false)
                 .and("rating.testId").is(testId).and("rating.milestoneId").is(milestoneid);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
@@ -536,6 +599,7 @@ public class FeedbackService {
     }
     public List<CourseResponse> findFeedbacksForCourseByCourseIdAndTraineeId(String courseId,String traineeId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3")
+                .and("isDeleted").is(false)
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
@@ -613,6 +677,7 @@ public class FeedbackService {
         searchUserById(traineeId);
 
         Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("2")
+                .and("isDeleted").is(false)
                 .and("rating.testId").is(testId);
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Feedback.class);
@@ -620,7 +685,9 @@ public class FeedbackService {
 
     public List<Feedback> findFeedbacksByPptIdAndTraineeId(String traineeId,String feedbackType){
         searchUserById(traineeId);
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is("3");
+        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false)
+                .and("type").is("3");
         Query query = new Query(criteria);
         return mongoTemplate.find(query,Feedback.class);
     }
@@ -628,7 +695,9 @@ public class FeedbackService {
     public List<Feedback> findFeedbacksByCourseIdAndTraineeId(String courseId,String traineeId,String feedbackType){
         searchUserById(traineeId);
         //find courseName!!!
-        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("type").is(feedbackType)
+        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false)
+                .and("type").is(feedbackType)
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
 
@@ -655,59 +724,210 @@ public class FeedbackService {
                 .comment(feedback.getComment())
                 .build();
     }
-    public Optional<Feedback> getFeedbackById(String id){
-        return feedbackRepo.findById(id);
+    public Feedback getFeedbackById(String id){
+        Criteria criteria = Criteria.where("id").is(id).and("isDeleted").is(false);
+        Query query = new Query(criteria);
+        Feedback feedback = mongoTemplate.findOne(query,Feedback.class);
+        if (feedback == null)
+            throw new ApiException(HttpStatus.valueOf(404),"Please enter valid feedback id.");
+        return feedback;
+        //return feedbackRepo.findById(id);
     }
+    public ApiResponse findFeedbacksGivenByEmployee(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
+        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+                        new Document("name",userDto.getName()).append("teamName",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
+                                .append("id",userDto.get_id()))
+                .toList();
 
+        System.out.println(userDatasDocuments.size() + "///");
+        Criteria criteria = Criteria.where("createdBy").is(reviewer)
+                .and("isDeleted").is(false);
+
+//        //searching!!!
+        if(query==null || query.isBlank()) {
+            query = ".*";
+        }
+
+        final String key;
+        //sorting!!!
+        if(sortKey.equals("name")||sortKey.equals("empCode")||sortKey.equals("teamName")){
+            key = String.format("userData.%s",sortKey);
+        }else
+            key = sortKey;
+
+        System.out.println(userDatasDocuments.size() + "///");
+        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
+        Aggregation aggregation = newAggregation(
+                match(criteria),
+//                context -> new Document("$match", new Document()), // Your match criteria here
+//                context -> new Document("$addFields", new Document("person", new Document("name", "runjan").append("age", 50))),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", Arrays.asList(
+                        new Document("userData.name", new Document("$regex", namePattern)),
+                        new Document("userData.team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),
+                context -> new Document("$sort", new Document(key, -1))
+        );
+
+        // Execute the aggregation
+        List<Document> results = mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//          return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//        System.out.println(results.get(0).get("_id") + "/////");
+       // return results;
+        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
+        return new ApiResponse(200,"List of All feedbacks",results);
+    }
+//    public ApiResponse findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
+//        Pageable pageable;
+//        if (!sortKey.isEmpty()) {
+//            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
+//            Sort sort = Sort.by(direction, sortKey);
+//            pageable = PageRequest.of(pageNumber, pageSize, sort);
+//        } else {
+//            pageable = PageRequest.of(pageNumber, pageSize);
+//        }
+//
+//        Criteria criteria = Criteria.where("createdBy").is(reviewer)
+//                .and("isDeleted").is(false);
+//        //temporary search query!!!
+//        if(query!=null && !query.isBlank()) {
+//            criteria.and("traineeID").in(searchNameAndEmployeeCode(query));
+//        }
+//        Query query1 = new Query(criteria).with(pageable);
+//        query1.collation(Collation.of("en").strength(2));
+//        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+//        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//        for (Feedback feedback : feedbackList) {
+//            feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//        }
+//        feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
+//        long count = mongoTemplate.count(query1,Feedback.class);
+//        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+//        //return feedbackRepo.findAll(pageable);
+//    }
     public ApiResponse findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
         Pageable pageable;
-        if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
-        }
+        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+                        new Document("traineeName",userDto.getName()).append("traineeTeam",userDto.getTeamName()).append("traineeCode",userDto.getEmpCode())
+                                .append("id",userDto.get_id()))
+                .toList();
 
-        Criteria criteria = Criteria.where("createdBy").is(reviewer);
-        //temporary search query!!!
-        if(query!=null && !query.isBlank()) {
-            criteria.and("traineeID").in(searchNameAndEmployeeCode(query));
-        }
-        Query query1 = new Query(criteria).with(pageable);
-        query1.collation(Collation.of("en").strength(2));
-        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+        System.out.println(userDatasDocuments.size() + "///");
+        Criteria criteria = Criteria.where("createdBy").is(reviewer)
+                .and("isDeleted").is(false);
+
+       //searching!!!
+        if(query==null || query.isBlank()) query = ".*";
+        int skipValue = (pageNumber - 1) * pageSize;
+
+        System.out.println(userDatasDocuments.size() + "///");
+        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
+        Aggregation aggregation = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", Arrays.asList(
+                        new Document("userData.traineeName", new Document("$regex", namePattern)),
+                        new Document("userData.traineeTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),
+                context -> new Document("$sort", new Document(sortKey, sortDirection)),
+                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
+                context -> new Document("$limit", pageSize)
+        );
+
+        // Execute the aggregation
+        List<Feedback> feedbackList = mongoTemplate.aggregate(aggregation, "feedback", Feedback.class).getMappedResults();
+//        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
         List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
         for (Feedback feedback : feedbackList) {
             feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
         }
         feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
-        long count = mongoTemplate.count(query1,Feedback.class);
+        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
         return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
         //return feedbackRepo.findAll(pageable);
     }
 
     public List<Document> getAllFeedbacksOfEmployeeById(String traineeId){
         // Define your match criteria
-        AggregationOperation addFieldsOperation = context -> {
-            Document condExpr = new Document();
-            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
-                String traineeID = entry.getKey();
-                String teamName = entry.getValue().getTeamName();
-                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+//        AggregationOperation addFieldsOperation = context -> {
+//            Document condExpr = new Document();
+//            for (Map.Entry<String, UserDto> entry : TrainingModuleApplication.idUserMap.entrySet()) {
+//                String traineeID = entry.getKey();
+//                String teamName = entry.getValue().getTeamName();
 //                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
-//                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
-            }
-            return new Document("$addFields", new Document("teamName", condExpr));
-        };
+////                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+////                condExpr.put(traineeID, new Document("$cond", List.of(new Document("$eq", List.of("$traineeID", traineeID)), teamName, "$$REMOVE")));
+//            }
+//            return new Document("$addFields", new Document("teamName", condExpr));
+//        };
+//
+//        Aggregation aggregation = Aggregation.newAggregation(
+//                addFieldsOperation,
+//                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
+//                // Add other stages as needed
+//        );
+//        List<UserDto> userDetails = new ArrayList<>(idUserMap.values());
+        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+                        new Document("name",userDto.getName()).append("team",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
+                                .append("id",userDto.get_id()))
+                .toList();
 
-        Aggregation aggregation = Aggregation.newAggregation(
-                addFieldsOperation,
-                Aggregation.match(Criteria.where("traineeID").exists(true)) // Match traineeID field
-                // Add other stages as needed
+        System.out.println(userDatasDocuments.size() + "///");
+        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(".*", java.util.regex.Pattern.CASE_INSENSITIVE);
+        Aggregation aggregation = newAggregation(
+                context -> new Document("$match", new Document()), // Your match criteria here
+//                context -> new Document("$addFields", new Document("person", new Document("name", "runjan").append("age", 50))),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", Arrays.asList(
+                        new Document("userData.name", new Document("$regex", namePattern)),
+                        new Document("userData.team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),
+                context -> new Document("$sort", new Document("userData.name", -1))
         );
-        return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+
+        // Execute the aggregation
+        List<Document> results = mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//          return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+//        System.out.println(results.get(0).get("_id") + "/////");
+        return results;
     }
+    
 
     public boolean feedbackExist(FeedBackDto feedBackDto,String reviewer){
         String feedback = feedBackDto.getFeedbackType();
@@ -739,6 +959,7 @@ public class FeedbackService {
 
     public List<Feedback> getAllFeedbacksOfTraineeOnCourseWithId(String traineeId,String courseId){
         Criteria criteria = Criteria.where("traineeID").is(traineeId)
+                .and("isDeleted").is(false)
                 .and("type").is("1")
                 .and("rating.courseId").is(courseId);
         Query query = new Query(criteria);
@@ -747,7 +968,7 @@ public class FeedbackService {
     }
     public List<Document> calculateEmployeeRatingSummary(Set<String> userIds) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeID").in(userIds)),
+                Aggregation.match(Criteria.where("traineeID").in(userIds).and("isDeleted").is(false)),
                 Aggregation.group("traineeID")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")

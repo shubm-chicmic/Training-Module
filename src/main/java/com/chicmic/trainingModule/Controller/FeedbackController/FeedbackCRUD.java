@@ -30,8 +30,8 @@ public class FeedbackCRUD {
     @GetMapping
     public ApiResponse getFeedbacks(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                     @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
-                                    @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
-                                    @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
+                                    @RequestParam(value = "searchString", defaultValue = ".*", required = false) String searchString,
+                                    @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
                                     @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                     @RequestParam(value = "_id",defaultValue = "",required = false) String _id,
                                     @RequestParam(value = "feedbackType",defaultValue = "",required = false) Integer feedbackType,
@@ -40,7 +40,11 @@ public class FeedbackCRUD {
                                     ){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        sortDirection = (sortDirection!=1)?-1:1;
         if(flag){//trainee
+            if(sortKey.equals("reviewerName")||sortKey.equals("reviewerCode")||sortKey.equals("reviewerTeam"))
+                sortKey = String.format("userData.%s",sortKey);
+
 //            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,principal.getName());
 //            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
 //            for (Feedback feedback : feedbackList) {
@@ -56,15 +60,8 @@ public class FeedbackCRUD {
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         if(feedbackType!=null && feedbackType == 3) _id = "adas";
         if(feedbackType == null || _id == null || _id.isBlank() || traineeId==null || traineeId.isBlank()) {
-//            List<Feedback> feedbackList = feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-//            // List<FeedbackResponse> feedbackResponseList = new ArrayList<>();
-//            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
-//            for (Feedback feedback : feedbackList) {
-//                feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
-//            }
-//            feedbackResponses = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponses);
-//            long count = feedbackService.countDocuments(Criteria.where("createdBy").is(principal.getName()));
-//            return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+            if(sortKey.equals("traineeName")||sortKey.equals("traineeCode")||sortKey.equals("traineeTeam"))
+                sortKey = String.format("userData.%s",sortKey);
             return feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
         if(feedbackType < 1 || feedbackType > 3)
@@ -121,14 +118,7 @@ public class FeedbackCRUD {
 
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
-        Optional<Feedback> feedbackOptional = feedbackService.getFeedbackById(id);
-        if(feedbackOptional.isEmpty()){
-            throw new ApiException(HttpStatus.NOT_FOUND,"No Feedback exist with this Id.");
-        }
-        Feedback feedback = feedbackOptional.get();
-        if(feedback == null)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedback id.");
-//        FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponse(feedback);
+        Feedback feedback = feedbackService.getFeedbackById(id);
         FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         //com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
