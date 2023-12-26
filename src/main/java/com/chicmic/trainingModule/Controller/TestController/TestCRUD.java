@@ -103,9 +103,10 @@ public class TestCRUD {
     @PutMapping
     public ApiResponse updateTest(@RequestBody TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
         Test test = testService.getTestById(testId);
-        if (testDto.getReviewers() != null && testDto.getReviewers().size() == 0) {
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
-        }
+        System.out.println("testDto = " + testDto.getReviewers());
+//        if (testDto.getReviewers() != null && testDto.getReviewers().size() == 0) {
+//            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+//        }
         if (test != null) {
             if (testDto != null && testDto.getApproved() == true) {
                 Set<String> approver = test.getReviewers();
