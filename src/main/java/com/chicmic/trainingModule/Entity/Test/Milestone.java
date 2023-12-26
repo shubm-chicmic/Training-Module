@@ -15,7 +15,7 @@ import java.util.List;
 public class Milestone {
     public static int count = 0;
     @Id
-    private String _id = String.valueOf(new ObjectId());
+    private String _id;
     @Transient
     private String name;
     @Transient

@@ -18,6 +18,7 @@ public class Task {
     private Integer planType = null;
     @NotNull(message = "Plan Id cannot be empty")
     private Object plan;
+    private String planName;
     @NotNull(message = "Milestones cannot be Empty")
     private Object milestones;
     List<UserIdAndNameDto> mentor;

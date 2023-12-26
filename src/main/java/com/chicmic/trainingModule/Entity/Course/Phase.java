@@ -17,7 +17,7 @@ import java.util.List;
 public class Phase {
     public static int count = 0;
     @Id
-    private String _id = String.valueOf(new ObjectId());
+    private String _id;
     @Transient
     private String name;
     @Transient
@@ -28,6 +28,7 @@ public class Phase {
     public Phase() {
         count++;
         this.name = "Phase " + count;
+//        this._id = String.valueOf(new ObjectId());
     }
 
     public String getEstimatedTime() {

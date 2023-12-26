@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Entity.Test.Test;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Repository.TestRepo;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -167,14 +168,38 @@ public class TestService {
     public Test updateTest(TestDto testDto, String testId) {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
-            List<Milestone> milestones = new ArrayList<>();
             if (testDto.getMilestones() != null) {
-                for (List<TestTask> testTasks : testDto.getMilestones()) {
-                    Milestone milestone = Milestone.builder()
-                            .tasks(testTasks)
-                            .build();
+                List<Milestone> milestones = new ArrayList<>();
+                int i = 0, j = 0;
+                System.out.println("TEst Phase size = " + test.getMilestones().size());
+                System.out.println("TEstDto Phase size = " + testDto.getMilestones().size());
+
+                while(i < test.getMilestones().size() && j < testDto.getMilestones().size()){
+                    Milestone milestone = test.getMilestones().get(i);
+                    milestone.setTasks(testDto.getMilestones().get(j));
+                    i++;
+                    j++;
                     milestones.add(milestone);
                 }
+//                while(i < course.getPhases().size()){
+//                    phases.add(course.getPhases().get(i));
+//                    i++;
+//                }
+                while(j < testDto.getMilestones().size()){
+                    Milestone milestone = Milestone.builder()
+                            ._id(String.valueOf(new ObjectId()))
+                            .tasks(testDto.getMilestones().get(j))
+                            .build();
+                    milestones.add(milestone);
+                    j++;
+                }
+                test.setMilestones(milestones);
+//                for (List<TestTask> testTasks : testDto.getMilestones()) {
+//                    Milestone milestone = Milestone.builder()
+//                            .tasks(testTasks)
+//                            .build();
+//                    milestones.add(milestone);
+//                }
             }
             // Only update properties from the DTO if they are not null
             if (testDto.getTestName() != null) {
@@ -193,13 +218,18 @@ public class TestService {
                 }else {
                     test.setApproved(false);
                 }
+                Set<String> approvedBy = new HashSet<>();
+                for (String approver : test.getApprovedBy()){
+                    if(test.getReviewers().contains(approver)){
+                        approvedBy.add(approver);
+                    }
+                }
+                test.setApprovedBy(approvedBy);
             }
             if (testDto.getTeams() != null) {
                 test.setTeams(testDto.getTeams());
             }
-            if (!milestones.isEmpty()) {
-                test.setMilestones(milestones);
-            }
+
             // Saving the updated test
             testRepo.save(test);
             return test;

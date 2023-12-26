@@ -182,6 +182,13 @@ public class PlanService {
             }else {
                 plan.setApproved(false);
             }
+            Set<String> approvedBy = new HashSet<>();
+            for (String approver : plan.getApprovedBy()){
+                if(plan.getApprover().contains(approver)){
+                    approvedBy.add(approver);
+                }
+            }
+            plan.setApprovedBy(approvedBy);
             plan.setUpdatedAt(LocalDateTime.now());
             planRepo.save(plan);
             return plan;

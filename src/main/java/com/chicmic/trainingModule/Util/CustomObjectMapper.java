@@ -565,6 +565,12 @@ public class CustomObjectMapper {
                 Task newTask = new Task();
                 newTask.setPlanType(task.getPlanType());
                 newTask.setPlan(task.getPlan());
+                if(task.getPlanType() == 1) {
+                    newTask.setPlanName(courseService.getCourseById((String) task.getPlan()).getName());
+                }
+                else if(task.getPlanType() == 2){
+                    newTask.setPlanName(testService.getTestById((String) task.getPlan()).getTestName());
+                }
                 newTask.setIsCompleted(task.getIsCompleted());
                 newTask.setEstimatedTime(task.getEstimatedTime());
                 newTask.set_id(task.get_id());

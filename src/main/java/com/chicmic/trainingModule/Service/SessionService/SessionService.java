@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -167,11 +168,18 @@ public class SessionService {
                     count++;
                 }
             }
-            if(count == session.getApprover().size()){
+            if(count > 0){
                 session.setApproved(true);
             }else {
                 session.setApproved(false);
             }
+            Set<String> approvedBy = new HashSet<>();
+            for (String approver : session.getApprovedBy()){
+                if(session.getApprover().contains(approver)){
+                    approvedBy.add(approver);
+                }
+            }
+            session.setApprovedBy(approvedBy);
             session.setUpdatedAt(LocalDateTime.now());
             sessionRepo.save(session);
             return session;
