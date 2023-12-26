@@ -960,15 +960,15 @@ public class FeedbackService {
             return mongoTemplate.exists(query,Feedback.class);
         }
         // Get the current date
-        LocalDate currentDate = LocalDate.now();
-        // Get the current year
-        int currentYear = currentDate.getYear();
-        // Get the current month (as an integer)
-        int currentMonthValue = currentDate.getMonthValue();
-        String regexPattern = String.format("^%04d-%02d.*$", currentYear, currentMonthValue);
+//        LocalDate currentDate = LocalDate.now();
+//        // Get the current year
+//        int currentYear = currentDate.getYear();
+//        // Get the current month (as an integer)
+//        int currentMonthValue = currentDate.getMonthValue();
+//        String regexPattern = String.format("^%04d-%02d.*$", currentYear, currentMonthValue);
         Criteria criteria = Criteria.where("type").is("4").and("createdBy")
-                .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
-                .and("createdAt").regex(regexPattern);
+                .is(reviewer).and("traineeID").is(feedBackDto.getTrainee());
+//                .and("createdAt").regex(regexPattern);
         Query query = new Query(criteria);
         return mongoTemplate.exists(query,Feedback.class);
     }
