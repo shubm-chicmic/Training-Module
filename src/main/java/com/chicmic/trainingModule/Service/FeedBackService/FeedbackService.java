@@ -254,7 +254,7 @@ public class FeedbackService {
         return ((float) temp) / 100;
     }
     public Float getOverallRatingOfTrainee(String traineeId){
-        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+        Criteria criteria = Criteria.where("traineeID").is(traineeId).and("isDeleted").is(false);
         Query query = new Query(criteria);
         List<Feedback> feedbackList = mongoTemplate.find(query,Feedback.class);
         float totalRating = 0;
@@ -377,13 +377,16 @@ public class FeedbackService {
         return feedbackRepo.save(feedback);
     }
 
-    public void deleteFeedbackById(String id,String userId){
+    public String deleteFeedbackById(String id,String userId){
         Criteria criteria = Criteria.where("id").is(id).and("createdBy").is(userId);
         Query query = new Query(criteria);
         Update update = new Update().set("isDeleted",true);
 //        DeleteResult deleteResult = mongoTemplate.remove(query,Feedback.class);
-        UpdateResult updateResult = mongoTemplate.updateFirst(query,update,Feedback.class);
-        if(updateResult.getModifiedCount() == 0) throw new ApiException(HttpStatus.valueOf(400),"Something went wrong!!");
+//        UpdateResult updateResult = mongoTemplate.updateFirst(query,update,Feedback.class);
+            Feedback feedback = mongoTemplate.findAndModify(query,update,Feedback.class);
+            if(feedback == null)  throw new ApiException(HttpStatus.valueOf(400),"Invalid traineeId");
+            return feedback.getTraineeID();
+//        if(updateResult.getModifiedCount() == 0) throw new ApiException(HttpStatus.valueOf(400),"Something went wrong!!");
     }
 
     public Feedback updateFeedback(FeedBackDto feedBackDto,String userId){
@@ -439,6 +442,9 @@ public class FeedbackService {
                 .comment(feedback.getComment())
             .build();
     }
+//    public Float getOverallRatingOfTrainee(String traineeId){
+//        Criteria criteria = Criteria.where("traineeID").is(traineeId);
+//    }
     public HashMap<String,Object> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
 //        MatchOperation matchOperation = new MatchOperation(Criteria.where("traineeID").is(traineeId)
 //                .and("type").is("1").and("courseId").is(courseId)

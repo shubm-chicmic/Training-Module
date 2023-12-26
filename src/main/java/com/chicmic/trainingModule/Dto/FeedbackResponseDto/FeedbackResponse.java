@@ -7,6 +7,7 @@ import org.bson.Document;
 import org.springframework.http.HttpStatus;
 
 public interface FeedbackResponse {
+    public float overallRating = 0;
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         String type = feedback.getType();
         switch (type){
@@ -21,7 +22,7 @@ public interface FeedbackResponse {
         }
         throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
     }
-
+    public void setOverallRating(Float overallRating);
 //    public static FeedbackResponse buildFeedbackResponse(Document document){
 //        String type = (String) document.get("type");
 //        switch (type){

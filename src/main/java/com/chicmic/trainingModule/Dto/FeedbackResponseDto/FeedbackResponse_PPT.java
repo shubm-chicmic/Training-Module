@@ -30,6 +30,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     private Float communicationRating;
     private Float technicalRating;
     private Float presentationRating;
+    private Float overallRating;
 
     public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
         Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
