@@ -338,6 +338,7 @@ public class AssignTaskService {
                     for (Phase phase : plan.getPhases()) {
                         for (Task task : phase.getTasks()) {
                             List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                            Integer countMilestoneComplete = 0;
                             for (AssignTaskPlanTrack milestone : milestones) {
                                 if (milestone.get_id().equals(milestoneId)) {
                                     milestone.setIsCompleted(true);
@@ -347,8 +348,15 @@ public class AssignTaskService {
                                             milestoneSubTask.setIsCompleted(true);
                                         }
                                     }
-                                    break one;
+//                                    break one;
                                 }
+                                if(milestone.getIsCompleted()) {
+                                    countMilestoneComplete++;
+                                }
+                            }
+                            if(countMilestoneComplete == milestones.size()){
+                                ((AssignTaskPlanTrack)task.getPlan()).setIsCompleted(true);
+                                break one;
                             }
                         }
                     }
@@ -380,6 +388,7 @@ public class AssignTaskService {
                     for (Phase phase : plan.getPhases()) {
                         for (Task task : phase.getTasks()) {
                             List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                            Integer countMilestoneComplete = 0;
                             for (AssignTaskPlanTrack milestone : milestones) {
                                 if (milestone.get_id().equals(milestoneId)) {
                                     Integer countMainTaskComplete = 0;
@@ -407,9 +416,17 @@ public class AssignTaskService {
                                     }
                                     if(countMainTaskComplete == milestone.getTasks().size()){
                                         milestone.setIsCompleted(true);
-                                        break one;
+//                                        break one;
                                     }
+
                                 }
+                                if(milestone.getIsCompleted()) {
+                                    countMilestoneComplete++;
+                                }
+                            }
+                            if(countMilestoneComplete == milestones.size()){
+                                ((AssignTaskPlanTrack)task.getPlan()).setIsCompleted(true);
+                                break one;
                             }
                         }
                     }
