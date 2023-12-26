@@ -21,6 +21,7 @@ import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
@@ -319,8 +320,10 @@ public class FeedbackService {
     public void deleteFeedbackById(String id,String userId){
         Criteria criteria = Criteria.where("id").is(id).and("createdBy").is(userId);
         Query query = new Query(criteria);
-        DeleteResult deleteResult = mongoTemplate.remove(query,Feedback.class);
-        if(deleteResult.getDeletedCount() == 0) throw new ApiException(HttpStatus.valueOf(401),"Something went wrong!!");
+        Update update = new Update().set("isDeleted",true);
+//        DeleteResult deleteResult = mongoTemplate.remove(query,Feedback.class);
+        UpdateResult updateResult = mongoTemplate.updateFirst(query,update,Feedback.class);
+        if(updateResult.getModifiedCount() == 0) throw new ApiException(HttpStatus.valueOf(400),"Something went wrong!!");
     }
 
     public Feedback updateFeedback(FeedBackDto feedBackDto,String userId){
