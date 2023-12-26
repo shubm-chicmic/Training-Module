@@ -83,7 +83,7 @@ public class FeedbackCRUD {
     public ApiResponse findCourseAndTestFeedbacksForTrainee(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                                             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
                                                             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
-                                                            @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
+                                                            @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
                                                             @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                                             @PathVariable String userId,@RequestParam(required = false) String _id,
                                                             @RequestParam(required = false) Integer type){
