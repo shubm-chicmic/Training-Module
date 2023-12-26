@@ -91,7 +91,10 @@ public class FeedbackCRUD {
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
 
+        sortDirection = (sortDirection!=1)?-1:1;
         if(_id == null &&  type == null){
+            if(sortKey.equals("reviewerName")||sortKey.equals("reviewerCode")||sortKey.equals("reviewerTeam"))
+                sortKey = String.format("userData.%s",sortKey);
 //            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,userId);
 //            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
 //            for (Feedback feedback : feedbackList) {
