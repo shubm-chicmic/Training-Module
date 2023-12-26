@@ -264,31 +264,54 @@ public class FeedbackService {
     }
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
-        if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
-        }
+        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+                        new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
+                                .append("id",userDto.get_id()))
+                .toList();
+
+        System.out.println(userDatasDocuments.size() + "///");
         Criteria criteria = Criteria.where("traineeID").is(traineeId)
                 .and("isDeleted").is(false);
 
-        //temporary search query!!!
-        if(query!=null && !query.isBlank()) {
-            criteria.and("createdBy").in(searchNameAndEmployeeCode(query));
-        }
-        //get the count of trainee as well
-        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
-        Query query1 = new Query(criteria).with(pageable);
-        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+        //searching!!!
+        if(query==null || query.isBlank()) query = ".*";
+        int skipValue = (pageNumber - 1) * pageSize;
+
+        System.out.println(userDatasDocuments.size() + "///");
+        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
+        Aggregation aggregation = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", Arrays.asList(
+                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+                        new Document("userData.reviewerTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),
+                context -> new Document("$sort", new Document(sortKey, sortDirection)),
+                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
+                context -> new Document("$limit", pageSize)
+        );
+
+        // Execute the aggregation
+        List<Feedback> feedbackList = mongoTemplate.aggregate(aggregation, "feedback", Feedback.class).getMappedResults();
 
         List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
         for (Feedback feedback : feedbackList) {
             feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
         }
         feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
-        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,4l);
     }
     //method for finding feedbacks given to a trainee
 //    public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
