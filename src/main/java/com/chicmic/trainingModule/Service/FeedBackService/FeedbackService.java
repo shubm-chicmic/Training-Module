@@ -262,7 +262,6 @@ public class FeedbackService {
         }
         return roundOff_Rating(totalRating/feedbackList.size());
     }
-    //method for finding feedbacks given to a trainee
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
         if (!sortKey.isEmpty()) {
@@ -291,6 +290,35 @@ public class FeedbackService {
         feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
         return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
     }
+    //method for finding feedbacks given to a trainee
+//    public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
+//        Pageable pageable;
+//        if (!sortKey.isEmpty()) {
+//            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
+//            Sort sort = Sort.by(direction, sortKey);
+//            pageable = PageRequest.of(pageNumber, pageSize, sort);
+//        } else {
+//            pageable = PageRequest.of(pageNumber, pageSize);
+//        }
+//        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+//                .and("isDeleted").is(false);
+//
+//        //temporary search query!!!
+//        if(query!=null && !query.isBlank()) {
+//            criteria.and("createdBy").in(searchNameAndEmployeeCode(query));
+//        }
+//        //get the count of trainee as well
+//        long count = mongoTemplate.count(new Query(criteria),Feedback.class);
+//        Query query1 = new Query(criteria).with(pageable);
+//        List<Feedback> feedbackList =  mongoTemplate.find(query1,Feedback.class);
+//
+//        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
+//        for (Feedback feedback : feedbackList) {
+//            feedbackResponses.add(com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback));
+//        }
+//        feedbackResponses = addingPhaseAndTestNameInResponse(feedbackResponses);
+//        return new ApiResponse(200, "List of All feedbacks", feedbackResponses,count);
+//    }
 
     public Feedback saveFeedbackInDB(FeedBackDto feedBackDto, String userId){
         //checking trainee exist in db!!!
@@ -769,7 +797,7 @@ public class FeedbackService {
     public ApiResponse findFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
         Pageable pageable;
         List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
-                        new Document("name",userDto.getName()).append("teamName",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
+                        new Document("traineeName",userDto.getName()).append("traineeTeam",userDto.getTeamName()).append("traineeCode",userDto.getEmpCode())
                                 .append("id",userDto.get_id()))
                 .toList();
 
@@ -777,15 +805,9 @@ public class FeedbackService {
         Criteria criteria = Criteria.where("createdBy").is(reviewer)
                 .and("isDeleted").is(false);
 
-////        //searching!!!
+       //searching!!!
         if(query==null || query.isBlank()) query = ".*";
-
-//        final String key;
-//        //sorting!!!
-//        if(sortKey.equals("name")||sortKey.equals("empCode")||sortKey.equals("teamName")){
-//            key = String.format("userData.%s",sortKey);
-//        }else
-//            key = sortKey;
+        int skipValue = (pageNumber - 1) * pageSize;
 
         System.out.println(userDatasDocuments.size() + "///");
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
@@ -805,10 +827,12 @@ public class FeedbackService {
                 ),
                 context -> new Document("$project", new Document("userDatas", 0)),
                 context -> new Document("$match", new Document("$or", Arrays.asList(
-                        new Document("userData.name", new Document("$regex", namePattern)),
-                        new Document("userData.team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                        new Document("userData.traineeName", new Document("$regex", namePattern)),
+                        new Document("userData.traineeTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
                 ))),
-                context -> new Document("$sort", new Document(sortKey, sortDirection))
+                context -> new Document("$sort", new Document(sortKey, sortDirection)),
+                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
+                context -> new Document("$limit", pageSize)
         );
 
         // Execute the aggregation

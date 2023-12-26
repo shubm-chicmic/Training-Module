@@ -40,7 +40,11 @@ public class FeedbackCRUD {
                                     ){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        sortDirection = (sortDirection!=1)?-1:1;
         if(flag){//trainee
+            if(sortKey.equals("reviewerName")||sortKey.equals("reviewerCode")||sortKey.equals("reviewerTeam"))
+                sortKey = String.format("userData.%s",sortKey);
+
 //            List<Feedback> feedbackList = feedbackService.findTraineeFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey,principal.getName());
 //            List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponses = new ArrayList<>();
 //            for (Feedback feedback : feedbackList) {
@@ -56,10 +60,8 @@ public class FeedbackCRUD {
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         if(feedbackType!=null && feedbackType == 3) _id = "adas";
         if(feedbackType == null || _id == null || _id.isBlank() || traineeId==null || traineeId.isBlank()) {
-            if(sortKey.equals("name")||sortKey.equals("empCode")||sortKey.equals("team"))
+            if(sortKey.equals("traineeName")||sortKey.equals("traineeCode")||sortKey.equals("traineeTeam"))
                 sortKey = String.format("userData.%s",sortKey);
-
-            sortDirection = (sortDirection!=1)?-1:1;
             return feedbackService.findFeedbacks(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
         if(feedbackType < 1 || feedbackType > 3)
