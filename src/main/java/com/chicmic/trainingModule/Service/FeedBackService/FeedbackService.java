@@ -287,7 +287,7 @@ public class FeedbackService {
                         new Document("$filter",
                                 new Document("input", "$userDatas")
                                         .append("as", "user")
-                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
+                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$createdBy")))
                         )
                 )),
                 context -> new Document("$unwind",
