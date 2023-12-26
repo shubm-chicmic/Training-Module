@@ -200,8 +200,11 @@ public class FeedbackCRUD {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You can't delete this feedback.");
 
         //  System.out.println(principal.getName() + "???????????????????");
-        feedbackService.deleteFeedbackById(id, principal.getName());
-        return new ApiResponse(200,"Feedback Deleted Successfully!!",null);
+        String traineeId = feedbackService.deleteFeedbackById(id, principal.getName());
+        Float overallRating = feedbackService.getOverallRatingOfTrainee(traineeId);
+        HashMap<String,Float> mp = new HashMap<>();
+        mp.put("overallRating",overallRating);
+        return new ApiResponse(200,"Feedback Deleted Successfully!!",overallRating);
     }
 
     @GetMapping("/course")
