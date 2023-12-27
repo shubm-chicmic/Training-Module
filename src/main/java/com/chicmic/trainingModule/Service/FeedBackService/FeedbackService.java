@@ -358,7 +358,7 @@ public class FeedbackService {
 
         //checking feedback exist in db!!!
         boolean flag = feedbackExist(feedBackDto,userId);
-        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"You already give feedback on this topic!!!");
+        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
 
         Rating rating = Rating.getRating(feedBackDto);
         Float overallRating = Rating.computeOverallRating(feedBackDto);
