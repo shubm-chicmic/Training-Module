@@ -14,5 +14,5 @@ public class TraineePlanReponse {
     private String team;
     private String mentor;
     private Float rating;
-    private List<UserIdAndNameDto> course;
+    private List<UserIdAndNameDto> plan;
 }

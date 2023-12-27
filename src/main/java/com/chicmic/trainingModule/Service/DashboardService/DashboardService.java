@@ -12,6 +12,7 @@ import com.chicmic.trainingModule.Entity.Plan.Task;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.bson.Document;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -58,6 +59,7 @@ public class DashboardService {
 //            ));
 //        }
         //get
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Criteria criteria = Criteria.where("userId").is(traineeId);
         Query query = new Query(criteria);
         AssignTask assignTask = mongoTemplate.findOne(query, AssignTask.class);

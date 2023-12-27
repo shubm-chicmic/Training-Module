@@ -39,7 +39,7 @@ public class TraineePlanCRUD {
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
-
+        System.out.println("request reaches here!!");
         List<TraineePlanReponse> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
         long count = 0;
         count  = mongoTemplate.count(new Query(), UserPlan.class);
@@ -47,7 +47,6 @@ public class TraineePlanCRUD {
     }
     @PostMapping
     public ApiResponse assignMultiplePlansToTrainees(@Valid @RequestBody PlanRequestDto planRequestDto,Principal principal){
-//        System.out.println("FGafgasa");
         List<TraineePlanReponse> documentList = traineePlanService.assignMultiplePlansToTrainees(planRequestDto,principal.getName());
 
         return new ApiResponse(201,"Plan assigned successfully to user",documentList);

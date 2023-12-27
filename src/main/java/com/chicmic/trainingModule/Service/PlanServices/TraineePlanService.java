@@ -1,6 +1,5 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
-import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
 import com.chicmic.trainingModule.Dto.TraineePlanReponse;
 import com.chicmic.trainingModule.Dto.UserDto;
@@ -9,7 +8,6 @@ import com.chicmic.trainingModule.Entity.Plan.UserPlan;
 import com.chicmic.trainingModule.Repository.UserPlanRepo;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -78,7 +76,7 @@ public class TraineePlanService {
                             .team(userDto.getTeamName())
                             .mentor("N/A")
                             .name(userDto.getName())
-                            .course(planDetails.get(userPlanId.get(_id)))
+                            .plan(planDetails.get(userPlanId.get(_id)))
                             .employeeCode(userDto.getEmpCode())
                             .rating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
                             ._id(_id)
@@ -139,7 +137,7 @@ public class TraineePlanService {
                     .team(userDto.getTeamName())
                     .mentor("N/A")
                     .name(userDto.getName())
-                    .course(planDetails.get(userPlanId.get(_id)))
+                    .plan(planDetails.get(userPlanId.get(_id)))
                     .employeeCode(userDto.getEmpCode())
                     .rating(roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")))
                     ._id(_id)
@@ -151,7 +149,7 @@ public class TraineePlanService {
                     .team(userDto.getTeamName())
                     .mentor("N/A")
                     .name(userDto.getName())
-                    .course(planDetails.get(userPlanId.get(_id)))
+                    .plan(planDetails.get(userPlanId.get(_id)))
                     .employeeCode(userDto.getEmpCode())
                     .rating(0f)
                     ._id(_id)
