@@ -13,6 +13,7 @@ import java.util.List;
 public class Phase {
     private String _id = String.valueOf(new ObjectId());
     private Boolean isCompleted = false;
+
     private String phaseName;
     @Transient
     private String estimatedTime;

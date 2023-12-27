@@ -137,7 +137,7 @@ public class TraineePlanService {
             userIds.remove(_id);
             traineePlanReponseList.add(TraineePlanReponse.builder()
                     .team(userDto.getTeamName())
-                    .mentor("safafa")
+                    .mentor("N/A")
                     .name(userDto.getName())
                     .course(planDetails.get(userPlanId.get(_id)))
                     .employeeCode(userDto.getEmpCode())
