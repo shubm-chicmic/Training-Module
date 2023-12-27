@@ -79,7 +79,7 @@ public class DashboardService {
                             planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(isCompleted)
                                 .phase(_id).type(task.getPlanType()).build());
                         //AssignTaskPlanTrack assignTaskPlanTrack = ((AssignTaskPlanTrack) task.getPlan());
-                        List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        List<AssignTaskPlanTrack> milestones =  (List<AssignTaskPlanTrack>) task.getMilestones();
                         if(task.getPlanType() == 2){
                             assignTestMap.put(_id,milestones);
                             testIds.add(_id);
