@@ -102,7 +102,7 @@ public class CourseService {
 //                courses.sort(courseComparator);
 //            }
 //        }
-        List<Course> finalCourseList = new ArrayList<>();
+        Set<Course> finalCourseList = new HashSet<>();
         if(traineeId != null && !traineeId.isEmpty()) {
             Query query1 = new Query(Criteria.where("userId").in(traineeId));
             AssignTask assignTask = mongoTemplate.findOne(query1, AssignTask.class);
@@ -122,7 +122,10 @@ public class CourseService {
                     }
                 }
             }
-            return finalCourseList;
+            List<Course> finalCourseListAsList = new ArrayList<>(finalCourseList);
+            return finalCourseListAsList;
+
+//            return finalCourseList;
         }
         return courses;
     }

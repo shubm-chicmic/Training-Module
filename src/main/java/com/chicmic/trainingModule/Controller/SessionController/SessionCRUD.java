@@ -101,6 +101,9 @@ public class SessionCRUD {
                 if(!session.isApproved()) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Can't update status since Session is not approved", null, response);
                 }
+                if(sessionDto.getStatus() == StatusConstants.COMPLETED && !session.getSessionBy().contains(principal.getName())){
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Can't Complete the Session", null, response);
+                }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
             sessionDto.setStatus(session.getStatus());
