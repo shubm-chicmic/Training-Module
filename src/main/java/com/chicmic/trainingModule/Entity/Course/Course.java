@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Entity.Course;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,8 @@ public class Course {
     private String name;
     private String figmaLink;
     private String guidelines;
+
+    @DBRef
     private List<Phase> phases;
     private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();

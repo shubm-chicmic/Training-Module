@@ -7,6 +7,7 @@ import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.List;
 @Getter
@@ -24,6 +25,7 @@ public class Phase {
     private String estimatedTime;
     @Transient
     private Integer noOfTasks;
+    @DBRef
     private List<CourseTask> tasks;
     public Phase() {
         count++;
