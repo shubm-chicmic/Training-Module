@@ -263,6 +263,7 @@ public class FeedbackService {
         }
         return roundOff_Rating(totalRating/feedbackList.size());
     }
+
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String traineeId){
         Pageable pageable;
         List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
@@ -390,6 +391,8 @@ public class FeedbackService {
     }
 
     public Feedback updateFeedback(FeedBackDto feedBackDto,String userId){
+        searchUserById(feedBackDto.getTrainee());
+
         String _id = feedBackDto.get_id();
         Rating rating = Rating.getRating(feedBackDto);
         Float overallRating = Rating.computeOverallRating(feedBackDto);
