@@ -1,13 +1,19 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
+import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
 import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan.Task;
 import com.chicmic.trainingModule.Repository.CourseRepo;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.mongodb.BasicDBObject;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,6 +27,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,6 +40,8 @@ public class CourseService {
     private final MongoTemplate mongoTemplate;
 
     public Course createCourse(Course course) {
+        course.setCreatedAt(LocalDateTime.now());
+        course.setUpdatedAt(LocalDateTime.now());
         course = courseRepo.save(course);
         return course;
     }
@@ -54,7 +63,7 @@ public class CourseService {
         return result;
     }
 
-    public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey) {
+    public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey, String traineeId) {
         Criteria criteria = Criteria.where("name").regex(query, "i")
                 .and("isDeleted").is(false);
 
@@ -71,29 +80,50 @@ public class CourseService {
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
 
-        if (!sortKey.isEmpty()) {
-            Comparator<Course> courseComparator = Comparator.comparing(course -> {
-                try {
-                    Field field = Course.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(course);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Course> courseComparator = Comparator.comparing(course -> {
+//                try {
+//                    Field field = Course.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(course);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection == 1) {
+//                courses.sort(courseComparator.reversed());
+//            } else {
+//                courses.sort(courseComparator);
+//            }
+//        }
+        List<Course> finalCourseList = new ArrayList<>();
+        if(traineeId != null && !traineeId.isEmpty()) {
+            Query query1 = new Query(Criteria.where("userId").in(traineeId));
+            AssignTask assignTask = mongoTemplate.findOne(query1, AssignTask.class);
+//            AssignTask assignTask = AssignTaskService.getAllAssignTasksByTraineeId(traineeId);
+            if(assignTask != null) {
+                for (Plan plan : assignTask.getPlans()) {
+                    for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
+                        for (Task task : phase.getTasks()) {
+                            if (task.getPlanType() == 1) {
+                                for (Course course : courses) {
+                                    if (course.get_id().equals(((AssignTaskPlanTrack) task.getPlan()).get_id())) {
+                                        finalCourseList.add(course);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
                 }
-            });
-
-            if (sortDirection == 1) {
-                courses.sort(courseComparator.reversed());
-            } else {
-                courses.sort(courseComparator);
             }
+            return finalCourseList;
         }
-
         return courses;
     }
 
@@ -107,29 +137,7 @@ public class CourseService {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-//        Query searchQuery = new Query()
-//                .addCriteria(Criteria.where("name").regex(query, "i"))
-//                .addCriteria(Criteria.where("isDeleted").is(false))
-//                .with(pageable);
-//
-//        List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
-//        List<Course> finalCourseList = new ArrayList<>();
-//        for (Course course : courses){
-//            System.out.println("course " + course.getName() + " approved " + course.getIsApproved());
-//            if(course.getIsApproved()){
-//                System.out.println("In 1");
-//                finalCourseList.add(course);
-//            }else {
-//                System.out.println("In 2");
-//                System.out.println("reviewers = " +course.getReviewers());
-//                System.out.println("createdBy = " + course.getCreatedBy());
-//                System.out.println("userId = " + userId);
-//                if(course.getReviewers().contains(userId) || course.getCreatedBy().equals(userId)){
-//                    finalCourseList.add(course);
-//                }
-//            }
-//        }
-//        courses = finalCourseList;
+
         Criteria criteria = Criteria.where("name").regex(query, "i")
                 .and("isDeleted").is(false);
 
@@ -193,14 +201,47 @@ public class CourseService {
     public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
-            List<Phase> phases = new ArrayList<>();
+//            List<Phase> phases = new ArrayList<>();
             if (courseDto.getPhases() != null) {
-                for (List<CourseTask> courseTasks : courseDto.getPhases()) {
-                    Phase phase = Phase.builder()
-                            .tasks(courseTasks)
-                            .build();
+                List<Phase> phases = new ArrayList<>();
+                int i = 0, j = 0;
+                System.out.println("Course Phase size = " + course.getPhases().size());
+                System.out.println("CourseDto Phase size = " + courseDto.getPhases().size());
+
+                while(i < course.getPhases().size() && j < courseDto.getPhases().size()){
+                    Phase phase = course.getPhases().get(i);
+                    phase.setTasks(courseDto.getPhases().get(j));
+                    i++;
+                    j++;
                     phases.add(phase);
                 }
+//                while(i < course.getPhases().size()){
+//                    phases.add(course.getPhases().get(i));
+//                    i++;
+//                }
+                while(j < courseDto.getPhases().size()){
+                    Phase phase = Phase.builder()
+                            ._id(String.valueOf(new ObjectId()))
+                            .tasks(courseDto.getPhases().get(j))
+                            .build();
+                    phases.add(phase);
+                    j++;
+                }
+                course.setPhases(phases);
+//                for (int i = 0; i < courseDto.getPhases().size(); i++) {
+//                    Phase phase = course.getPhases().get(i);
+//                    phase.setTasks(courseDto.getPhases().get(i));
+//                }
+//                for (List<CourseTask> courseTasks : courseDto.getPhases()) {
+//                    for (Phase phase : course.getPhases()) {
+//                        phase.setTasks(courseTasks);
+//                    }
+//                    }
+//                    Phase phase = Phase.builder()
+//                            .tasks(courseTasks)
+//                            .build();
+//                    phases.add(phase);
+
             }
             // Only update properties from the DTO if they are not null
             if (courseDto.getName() != null) {
@@ -222,11 +263,21 @@ public class CourseService {
                 }
                 if(count == course.getReviewers().size()){
                     course.setIsApproved(true);
+                }else {
+                    course.setIsApproved(false);
                 }
+
+                Set<String> approvedBy = new HashSet<>();
+                for (String approver : course.getApprovedBy()){
+                    if(course.getReviewers().contains(approver)){
+                       approvedBy.add(approver);
+                    }
+                }
+                course.setApprovedBy(approvedBy);
             }
-            if (!phases.isEmpty()) {
-                course.setPhases(phases);
-            }
+//            if (!phases.isEmpty()) {
+//                course.setPhases(phases);
+//            }
             // Saving the updated course
             courseRepo.save(course);
             return course;
@@ -257,14 +308,29 @@ public class CourseService {
 
     public List<Phase> getCourseByPhaseIds(String courseId, List<Object> phaseIds) {
         System.out.println("course id = " + courseId + " " + phaseIds );
-        List<String> phasesIds = phaseIds.stream().map(Object::toString).collect(Collectors.toList());
-        Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").in(phasesIds));
-        Course course = mongoTemplate.findOne(courseQuery, Course.class);
+        Course course = mongoTemplate.findById(courseId, Course.class); // Retrieve course by ID
+        System.out.println("course Id = " + course.get_id());
         System.out.println(course);
+        for (Phase phase : course.getPhases()) {
+            System.out.println("phaseId = " + phase.get_id());
+        }
         if (course != null) {
-            List<Phase> phases = course.getPhases().stream()
-                    .filter(phase -> phaseIds.contains(phase.get_id()))
-                    .collect(Collectors.toList());
+            List<Phase> phases = new ArrayList<>();
+
+            for (Object phaseId : phaseIds) {
+                String strPhaseId = phaseId.toString();
+
+                // Find phase by ID and add it to the list if found in the course's phases
+                Phase foundPhase = course.getPhases().stream()
+                        .filter(phase -> strPhaseId.equals(phase.get_id()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (foundPhase != null) {
+                    phases.add(foundPhase);
+                }
+            }
+
             return phases;
         } else {
             return Collections.emptyList();

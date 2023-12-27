@@ -3,11 +3,13 @@ package com.chicmic.trainingModule.Service.TestServices;
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Entity.Course.Course;
 import com.chicmic.trainingModule.Entity.Course.Phase;
+import com.chicmic.trainingModule.Entity.Plan.Plan;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
 import com.chicmic.trainingModule.Entity.Test.Test;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Repository.TestRepo;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,14 +36,26 @@ public class TestService {
     private final MongoTemplate mongoTemplate;
 
     public Test createTest(Test test) {
+        test.setCreatedAt(LocalDateTime.now());
+        test.setUpdatedAt(LocalDateTime.now());
         test = testRepo.save(test);
         return test;
     }
 
     public List<Test> getAllTests(String query, Integer sortDirection, String sortKey) {
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("testName").regex(query, "i"))
-                .addCriteria(Criteria.where("deleted").is(false));
+        Criteria criteria = Criteria.where("testName").regex(query, "i")
+                .and("deleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+
+
+        // Combining the conditions
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria)
+        );
+
+        Query searchQuery = new Query(finalCriteria);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
 
@@ -78,24 +93,37 @@ public class TestService {
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
+        Criteria criteria = Criteria.where("testName").regex(query, "i")
+                .and("deleted").is(false);
 
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("testName").regex(query, "i"))
-                .addCriteria(Criteria.where("deleted").is(false))
-                .with(pageable);
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+        Criteria reviewersCriteria = Criteria.where("approved").is(false)
+                .and("reviewers").in(userId);
+        Criteria createdByCriteria = Criteria.where("approved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        Query searchQuery = new Query(finalCriteria).with(pageable);
+//        Query searchQuery = new Query()
+//                .addCriteria(Criteria.where("testName").regex(query, "i"))
+//                .addCriteria(Criteria.where("deleted").is(false))
+//                .with(pageable);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-        List<Test> finalTestList = new ArrayList<>();
-        for (Test test : tests){
-            if(test.getApproved()){
-                finalTestList.add(test);
-            }else {
-                if(test.getReviewers().contains(userId) || test.getCreatedBy().equals(userId)){
-                    finalTestList.add(test);
-                }
-            }
-        }
-        tests = finalTestList;
+//        List<Test> finalTestList = new ArrayList<>();
+//        for (Test test : tests){
+//            if(test.getApproved()){
+//                finalTestList.add(test);
+//            }else {
+//                if(test.getReviewers().contains(userId) || test.getCreatedBy().equals(userId)){
+//                    finalTestList.add(test);
+//                }
+//            }
+//        }
+//        tests = finalTestList;
         if (!sortKey.isEmpty()) {
             Comparator<Test> testComparator = Comparator.comparing(test -> {
                 try {
@@ -140,14 +168,38 @@ public class TestService {
     public Test updateTest(TestDto testDto, String testId) {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
-            List<Milestone> milestones = new ArrayList<>();
             if (testDto.getMilestones() != null) {
-                for (List<TestTask> testTasks : testDto.getMilestones()) {
-                    Milestone milestone = Milestone.builder()
-                            .tasks(testTasks)
-                            .build();
+                List<Milestone> milestones = new ArrayList<>();
+                int i = 0, j = 0;
+                System.out.println("TEst Phase size = " + test.getMilestones().size());
+                System.out.println("TEstDto Phase size = " + testDto.getMilestones().size());
+
+                while(i < test.getMilestones().size() && j < testDto.getMilestones().size()){
+                    Milestone milestone = test.getMilestones().get(i);
+                    milestone.setTasks(testDto.getMilestones().get(j));
+                    i++;
+                    j++;
                     milestones.add(milestone);
                 }
+//                while(i < course.getPhases().size()){
+//                    phases.add(course.getPhases().get(i));
+//                    i++;
+//                }
+                while(j < testDto.getMilestones().size()){
+                    Milestone milestone = Milestone.builder()
+                            ._id(String.valueOf(new ObjectId()))
+                            .tasks(testDto.getMilestones().get(j))
+                            .build();
+                    milestones.add(milestone);
+                    j++;
+                }
+                test.setMilestones(milestones);
+//                for (List<TestTask> testTasks : testDto.getMilestones()) {
+//                    Milestone milestone = Milestone.builder()
+//                            .tasks(testTasks)
+//                            .build();
+//                    milestones.add(milestone);
+//                }
             }
             // Only update properties from the DTO if they are not null
             if (testDto.getTestName() != null) {
@@ -155,13 +207,29 @@ public class TestService {
             }
             if (testDto.getReviewers() != null) {
                 test.setReviewers(testDto.getReviewers());
+                Integer count = 0;
+                for (String reviewer : test.getReviewers()){
+                    if(test.getApprovedBy().contains(reviewer)){
+                        count++;
+                    }
+                }
+                if(count == test.getReviewers().size()){
+                    test.setApproved(true);
+                }else {
+                    test.setApproved(false);
+                }
+                Set<String> approvedBy = new HashSet<>();
+                for (String approver : test.getApprovedBy()){
+                    if(test.getReviewers().contains(approver)){
+                        approvedBy.add(approver);
+                    }
+                }
+                test.setApprovedBy(approvedBy);
             }
             if (testDto.getTeams() != null) {
                 test.setTeams(testDto.getTeams());
             }
-            if (!milestones.isEmpty()) {
-                test.setMilestones(milestones);
-            }
+
             // Saving the updated test
             testRepo.save(test);
             return test;

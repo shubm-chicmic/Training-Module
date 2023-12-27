@@ -31,7 +31,7 @@ public class SessionCRUD {
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
-            @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
+            @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
             @RequestParam(required = false) String sessionId,
             HttpServletResponse response,
             Principal principal
@@ -44,7 +44,7 @@ public class SessionCRUD {
             Long count = sessionService.countNonDeletedSessions(searchString);
 
             List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
-            Collections.reverse(sessionResponseDtoList);
+//            Collections.reverse(sessionResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList, response);
         }else {
             Session session = sessionService.getSessionById(sessionId);
@@ -78,13 +78,17 @@ public class SessionCRUD {
     @PutMapping
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
+        if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+        }
         if (session != null) {
+
             if (sessionDto != null && sessionDto.getApproved() != null) {
                 List<String> approver = session.getApprover();
                 if (approver.contains(principal.getName())) {
                     session =sessionService.approve(session, principal.getName(), sessionDto.getApproved());
                 } else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this session", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this session", null, response);
 
                 }
             }
@@ -95,23 +99,37 @@ public class SessionCRUD {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
                 }
                 if(!session.isApproved()) {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You Can't update status since Session is not approved", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Can't update status since Session is not approved", null, response);
                 }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
             sessionDto.setStatus(session.getStatus());
+            if(sessionDto != null && sessionDto.getMessage() != null && !sessionDto.getMessage().isEmpty()) {
+                if(session.getStatus() == StatusConstants.COMPLETED) {
+                    System.out.println("sessionDto = " + sessionDto);
+                    if (session.getSessionBy().contains(principal.getName())) {
+                        session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
+                    } else {
+                        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Are Not Authorized to Post MOM", null, response);
+                    }
+                }
+                else {
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Posting Mom is not allowed when session is not completed", null, response);
+                }
 
+            }
             SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {
-                return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Session not found", null, response);
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
         }
     }
 
-    @PostMapping("/postMom/{sessionId}")
-    public ApiResponse postMOM(@PathVariable String sessionId, @RequestBody Mommessage message, Principal principal) {
-        Session session = sessionService.postMOM(sessionId, message.getMessage(), principal.getName());
-
-        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
-    }
+//    @PostMapping("/postMom/{sessionId}")
+//    public ApiResponse postMOM(@PathVariable String sessionId, @RequestBody Mommessage message, Principal principal) {
+//        Session session = sessionService.getSessionById(sessionId);
+//        session = sessionService.postMOM(sessionId, message.getMessage(), principal.getName());
+//
+//        return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", session);
+//    }
 }

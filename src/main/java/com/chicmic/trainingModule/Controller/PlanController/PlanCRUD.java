@@ -26,39 +26,40 @@ import java.util.*;
 public class PlanCRUD {
     private final PlanService planService;
     private  final CustomObjectMapper customObjectMapper;
-    @GetMapping("/getting")
-    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
-       return planService.getPlanCourseByPlanIds(plansIds);
-    }
+//    @GetMapping("/getting")
+//    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
+//       return planService.getPlanCourseByPlanIds(plansIds);
+//    }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
-            @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
+            @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
             @RequestParam(required = false) String planId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Principal principal
     ) {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
-            Long count = planService.countNonDeletedPlans();
+            Long count = planService.countNonDeletedPlans(searchString);
             List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
-            Collections.reverse(planResponseDtoList);
+//            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         }
         if (planId == null || planId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
-            List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = planService.countNonDeletedPlans();
+            List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+            Long count = planService.countNonDeletedPlans(searchString);
 
             List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
-            Collections.reverse(planResponseDtoList);
+//            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         } else {
             Plan plan = planService.getPlanById(planId);
@@ -102,6 +103,9 @@ public class PlanCRUD {
     @PutMapping
     public ApiResponse updatePlan(@RequestBody PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
+        if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+        }
         if (plan != null) {
             if (planDto != null && planDto.getApproved() == true) {
                 Set<String> approver = plan.getApprover();

@@ -29,7 +29,7 @@ public class TestCRUD {
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
-            @RequestParam(value = "sortKey", defaultValue = "", required = false) String sortKey,
+            @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
             @RequestParam(required = false) String testId,
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
@@ -103,6 +103,10 @@ public class TestCRUD {
     @PutMapping
     public ApiResponse updateTest(@RequestBody TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
         Test test = testService.getTestById(testId);
+        System.out.println("testDto = " + testDto.getReviewers());
+//        if (testDto.getReviewers() != null && testDto.getReviewers().size() == 0) {
+//            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
+//        }
         if (test != null) {
             if (testDto != null && testDto.getApproved() == true) {
                 Set<String> approver = test.getReviewers();

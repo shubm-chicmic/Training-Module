@@ -20,7 +20,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +39,8 @@ public class SessionService {
 //        sessionRepo.deleteAll();
 //    }
     public Session createSession(Session session){
+        session.setCreatedAt(LocalDateTime.now());
+        session.setUpdatedAt(LocalDateTime.now());
         session = sessionRepo.save(session);
         return session;
     }
@@ -158,6 +162,25 @@ public class SessionService {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
             session = (Session) CustomObjectMapper.updateFields(sessionDto, session);
+            Integer count = 0;
+            for (String reviewer : session.getApprover()){
+                if(session.getApprovedBy().contains(reviewer)){
+                    count++;
+                }
+            }
+            if(count > 0){
+                session.setApproved(true);
+            }else {
+                session.setApproved(false);
+            }
+            Set<String> approvedBy = new HashSet<>();
+            for (String approver : session.getApprovedBy()){
+                if(session.getApprover().contains(approver)){
+                    approvedBy.add(approver);
+                }
+            }
+            session.setApprovedBy(approvedBy);
+            session.setUpdatedAt(LocalDateTime.now());
             sessionRepo.save(session);
             return session;
         } else {

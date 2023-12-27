@@ -31,7 +31,7 @@ public class AssignTaskCRUD {
     private final CustomObjectMapper customObjectMapper;
     private final TraineePlanService trainePlanService;
     @PostMapping
-    public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal) {
+    public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
 //        trainePlanService.assignMultiplePlansToTrainees();
         PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
                 .reviewers(assignTaskDto.getReviewers()).build();
@@ -40,6 +40,9 @@ public class AssignTaskCRUD {
         System.out.println("assignTaskDto = " + assignTaskDto);
         for (String userId : assignTaskDto.getUsers()) {
             AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
+            if(assignTask == null){
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan is Already Assigned", null, response);
+            }
         }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
     }

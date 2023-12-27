@@ -90,7 +90,7 @@ public class PlanService {
         return plans;
     }
 
-    public List<Plan> getAllPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
+    public List<Plan> getAllPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -100,13 +100,28 @@ public class PlanService {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-        Query searchQuery = new Query()
-                .addCriteria(Criteria.where("planName").regex(query, "i"))
-                .addCriteria(Criteria.where("deleted").is(false))
-                .with(pageable);
+//        Query searchQuery = new Query()
+//                .addCriteria(Criteria.where("planName").regex(query, "i"))
+//                .addCriteria(Criteria.where("deleted").is(false))
+//                .with(pageable);
+//
+//        List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
+//
+        Criteria criteria = Criteria.where("planName").regex(query, "i")
+                .and("deleted").is(false);
 
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+        Criteria reviewersCriteria = Criteria.where("approved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("approved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        Query searchQuery = new Query(finalCriteria).with(pageable);
         List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
-
         if (!sortKey.isEmpty()) {
             Comparator<Plan> planComparator = Comparator.comparing(plan -> {
                 try {
@@ -156,6 +171,24 @@ public class PlanService {
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
             plan = (Plan) CustomObjectMapper.updateFields(planDto, plan);
+            Integer count = 0;
+            for (String reviewer : plan.getApprover()){
+                if(plan.getApprovedBy().contains(reviewer)){
+                    count++;
+                }
+            }
+            if(count == plan.getApprover().size()){
+                plan.setApproved(true);
+            }else {
+                plan.setApproved(false);
+            }
+            Set<String> approvedBy = new HashSet<>();
+            for (String approver : plan.getApprovedBy()){
+                if(plan.getApprover().contains(approver)){
+                    approvedBy.add(approver);
+                }
+            }
+            plan.setApprovedBy(approvedBy);
             plan.setUpdatedAt(LocalDateTime.now());
             planRepo.save(plan);
             return plan;
@@ -187,8 +220,9 @@ public class PlanService {
     }
 
 
-    public long countNonDeletedPlans() {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("deleted").is(false));
+    public long countNonDeletedPlans(String query) {
+        MatchOperation matchStage = Aggregation.match(Criteria.where("planName").regex(query, "i")
+                .and("deleted").is(false));
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         return mongoTemplate.aggregate(aggregation, "plan", Plan.class).getMappedResults().size();
     }
