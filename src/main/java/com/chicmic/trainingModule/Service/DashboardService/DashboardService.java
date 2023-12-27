@@ -74,8 +74,9 @@ public class DashboardService {
                 for (Phase phase : plan.getPhases()) {
                     for (Task task : phase.getTasks()) {
                         String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
+                        Boolean isCompleted = ((AssignTaskPlanTrack) task.getPlan()).getIsCompleted();
                         if(task.getPlanType() != 3)
-                            planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(task.getIsCompleted())
+                            planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(isCompleted)
                                 .phase(_id).type(task.getPlanType()).build());
                         //AssignTaskPlanTrack assignTaskPlanTrack = ((AssignTaskPlanTrack) task.getPlan());
                         List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();

@@ -57,6 +57,31 @@ public class TrainingModuleApplication {
 			teamIdAndNameMap.put(userId, userName);
 		}
 	}
+
+	//fetching trainee list
+	private static HashMap<String, UserDto> findTraineeAndMap() throws JsonProcessingException {
+		String apiUrl = "https://timedragon.staging.chicmic.co.in/v1/dropdown/user?designation=Trainee";
+		RestTemplate restTemplate = new RestTemplate();
+		String apiResponse = restTemplate.getForObject(apiUrl, String.class);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode responseNode = mapper.readTree(apiResponse);
+		JsonNode dataArray = responseNode.get("data");
+
+		HashMap<String,UserDto> idTraineeMap = new HashMap<>();
+		for (JsonNode node : dataArray) {
+			UserDto userDto = UserDto.builder()
+					.token(null)
+					._id(node.get("_id").asText())
+					.name(node.get("name").asText())
+					.empCode(node.get("employeeId").asText())
+					.teamId((node.get("teams").asText()))
+					.teamName((node.get("teamNames").asText()))
+					.build();
+			idTraineeMap.put(userDto.get_id(), userDto);
+		}
+		return idTraineeMap;
+	}
+
 	public static String searchNameById(String userId) {
 		UserDto userDto = idUserMap.get(userId);
 		if(userId == null || userId.isEmpty() || userDto == null) {
