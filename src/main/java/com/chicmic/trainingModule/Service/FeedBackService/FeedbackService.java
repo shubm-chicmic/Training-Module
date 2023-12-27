@@ -358,7 +358,7 @@ public class FeedbackService {
 
         //checking feedback exist in db!!!
         boolean flag = feedbackExist(feedBackDto,userId);
-        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"You already give feedback on this topic!!!");
+        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
 
         Rating rating = Rating.getRating(feedBackDto);
         Float overallRating = Rating.computeOverallRating(feedBackDto);
@@ -391,7 +391,18 @@ public class FeedbackService {
     }
 
     public Feedback updateFeedback(FeedBackDto feedBackDto,String userId){
+        //checking trainee exist in db!!!
         searchUserById(feedBackDto.getTrainee());
+        //checking trainee Completed course or not!!!
+        int type = feedBackDto.getFeedbackType().charAt(0) - '0';
+        if(type == 1)
+            checkIfExists(feedBackDto.getTrainee(),1,feedBackDto.getCourse(),feedBackDto.getPhase(),true);
+        else if(type == 2)
+            checkIfExists(feedBackDto.getTrainee(),2,feedBackDto.getTest(),feedBackDto.getMilestone(),true);
+
+        //checking feedback exist in db!!!
+        boolean flag = feedbackExist(feedBackDto,userId);
+        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
 
         String _id = feedBackDto.get_id();
         Rating rating = Rating.getRating(feedBackDto);
