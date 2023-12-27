@@ -357,8 +357,8 @@ public class FeedbackService {
             checkIfExists(feedBackDto.getTrainee(),2,feedBackDto.getTest(),feedBackDto.getMilestone(),true);
 
         //checking feedback exist in db!!!
-        boolean flag = feedbackExist(feedBackDto,userId);
-        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
+        Feedback feedback1 = feedbackExist(feedBackDto,userId);
+        if(feedback1 != null) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
 
         Rating rating = Rating.getRating(feedBackDto);
         Float overallRating = Rating.computeOverallRating(feedBackDto);
@@ -401,8 +401,15 @@ public class FeedbackService {
             checkIfExists(feedBackDto.getTrainee(),2,feedBackDto.getTest(),feedBackDto.getMilestone(),true);
 
         //checking feedback exist in db!!!
-        boolean flag = feedbackExist(feedBackDto,userId);
-        if(flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
+       Feedback feedback1 = feedbackExist(feedBackDto,userId);
+//        Optional<Feedback> feedbackOptional = feedbackRepo.findById(feedBackDto.get_id());
+        Criteria criteria1 = Criteria.where("id").is(feedBackDto.get_id()).and("createdBy").is(userId);
+        boolean flag = mongoTemplate.exists(new Query(criteria1),Feedback.class);
+        if(!flag)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You can't update this feedback!");
+
+        if(feedback1 != null && !feedback1.getId().equals(feedBackDto.get_id()))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!");
 
         String _id = feedBackDto.get_id();
         Rating rating = Rating.getRating(feedBackDto);
@@ -951,27 +958,30 @@ public class FeedbackService {
     }
     
 
-    public boolean feedbackExist(FeedBackDto feedBackDto,String reviewer){
+    public Feedback feedbackExist(FeedBackDto feedBackDto,String reviewer){
         String feedback = feedBackDto.getFeedbackType();
         if(feedback.equals("1")){
             Criteria criteria = Criteria.where("type").is("1").and("createdBy")
                     .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
-                    .and("rating.phaseId").is(feedBackDto.getPhase()).and("rating.courseId").is(feedBackDto.getCourse());
+                    .and("rating.phaseId").is(feedBackDto.getPhase()).and("rating.courseId").is(feedBackDto.getCourse())
+                    .and("isDeleted").is(false);
             Query query = new Query(criteria);
-            return mongoTemplate.exists(query,Feedback.class);
+            return mongoTemplate.findOne(query,Feedback.class);
         }else if(feedback.equals("2")){
             Criteria criteria = Criteria.where("type").is("2").and("createdBy")
                     .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
-                    .and("rating.milestoneId").is(feedBackDto.getMilestone()).and("rating.testId").is(feedBackDto.getTest());;
+                    .and("rating.milestoneId").is(feedBackDto.getMilestone()).and("rating.testId").is(feedBackDto.getTest())
+                    .and("isDeleted").is(false);
             Query query = new Query(criteria);
-            return mongoTemplate.exists(query,Feedback.class);
+            return mongoTemplate.findOne(query,Feedback.class);
         }else if(feedback.equals("3")){
             Criteria criteria = Criteria.where("type").is("3").and("createdBy")
                     .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
-                    .and("rating.courseId").is(feedBackDto.getCourse());
+                    .and("rating.courseId").is(feedBackDto.getCourse())
+                    .and("isDeleted").is(false);
 
             Query query = new Query(criteria);
-            return mongoTemplate.exists(query,Feedback.class);
+            return mongoTemplate.findOne(query,Feedback.class);
         }
         // Get the current date
 //        LocalDate currentDate = LocalDate.now();
@@ -981,10 +991,11 @@ public class FeedbackService {
 //        int currentMonthValue = currentDate.getMonthValue();
 //        String regexPattern = String.format("^%04d-%02d.*$", currentYear, currentMonthValue);
         Criteria criteria = Criteria.where("type").is("4").and("createdBy")
-                .is(reviewer).and("traineeID").is(feedBackDto.getTrainee());
+                .is(reviewer).and("traineeID").is(feedBackDto.getTrainee())
+                .and("isDeleted").is(false);
 //                .and("createdAt").regex(regexPattern);
         Query query = new Query(criteria);
-        return mongoTemplate.exists(query,Feedback.class);
+        return mongoTemplate.findOne(query,Feedback.class);
     }
 
     public List<Feedback> getAllFeedbacksOfTraineeOnCourseWithId(String traineeId,String courseId){
