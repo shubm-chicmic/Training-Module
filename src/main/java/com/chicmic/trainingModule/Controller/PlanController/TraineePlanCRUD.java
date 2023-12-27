@@ -47,7 +47,6 @@ public class TraineePlanCRUD {
     }
     @PostMapping
     public ApiResponse assignMultiplePlansToTrainees(@Valid @RequestBody PlanRequestDto planRequestDto,Principal principal){
-//        System.out.println("FGafgasa");
         List<TraineePlanReponse> documentList = traineePlanService.assignMultiplePlansToTrainees(planRequestDto,principal.getName());
 
         return new ApiResponse(201,"Plan assigned successfully to user",documentList);
