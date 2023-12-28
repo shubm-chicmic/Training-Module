@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.GithubSampleDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 @Getter
@@ -10,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class GithubSampleResponseDto {
-    private String _id;
+    private ObjectId _id;
     private String projectName;
     private String url;
     private List<UserIdAndNameDto> repoCreatedBy;

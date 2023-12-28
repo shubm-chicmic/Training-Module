@@ -1,9 +1,12 @@
 package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Util.ConversionUtility;
 import com.chicmic.trainingModule.annotation.CascadeSave;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -34,7 +37,21 @@ public class Course {
     private Boolean isApproved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @Transient
+    private Integer totalEstimateTime;
+    @Transient
+    private Integer totalSubTasks;
 //    public Course() {
 //        Phase.count = 0;
 //    }
+    public List<UserIdAndNameDto> getApproverDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.approver);
+    }
+
+    public List<UserIdAndNameDto> getApprovedByDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
+    public Integer getTotalSubTasks(){
+        return this.phases.size() * phases.getTotalTasks;
+    }
 }

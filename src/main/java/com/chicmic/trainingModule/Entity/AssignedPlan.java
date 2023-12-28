@@ -1,5 +1,7 @@
 package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Util.ConversionUtility;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -31,4 +33,11 @@ public class AssignedPlan {
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public List<UserIdAndNameDto> getApproverDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.approver);
+    }
+
+    public List<UserIdAndNameDto> getApprovedByDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
 }

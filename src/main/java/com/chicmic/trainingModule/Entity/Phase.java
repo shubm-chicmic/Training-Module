@@ -24,9 +24,21 @@ public class Phase {
     @Transient
     private String estimatedTime;
     @Transient
-    private Integer noOfTasks;
+    private Integer totalSubTasks;
     @DBRef
     @CascadeSave
     private List<Task> tasks;
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+        updateTotalSubTasks();
+    }
+
+    private void updateTotalSubTasks() {
+        if (tasks != null) {
+            totalSubTasks = tasks.stream()
+                    .mapToInt(task -> task.getSubtasks().size())
+                    .sum();
+        }
+    }
 
 }

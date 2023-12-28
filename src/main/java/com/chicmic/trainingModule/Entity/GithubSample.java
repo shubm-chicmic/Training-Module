@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.ConversionUtility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,35 +35,18 @@ public class GithubSample {
     private Boolean isApproved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    public List<UserIdAndNameDto> getTeamMembers() {
-        return this.teams.stream()
-                .map(createdById -> {
-                    String name = TrainingModuleApplication.searchTeamById(createdById);
-                    return new UserIdAndNameDto(createdById, name);
-                })
-                .collect(Collectors.toList());
-    }
     public List<UserIdAndNameDto> getApproverDetails() {
-        return Optional.ofNullable(this.approver)
-                .map(approverIds -> approverIds.stream()
-                        .map(approverId -> {
-                            String name = TrainingModuleApplication.searchNameById(approverId);
-                            return new UserIdAndNameDto(approverId, name);
-                        })
-                        .collect(Collectors.toList())
-                )
-                .orElse(null);
+        return ConversionUtility.convertToUserIdAndName(this.approver);
     }
+
     public List<UserIdAndNameDto> getApprovedByDetails() {
-        return Optional.ofNullable(this.approvedBy)
-                .map(ids -> ids.stream()
-                        .map(id -> {
-                            String name = TrainingModuleApplication.searchNameById(id);
-                            return new UserIdAndNameDto(id, name);
-                        })
-                        .collect(Collectors.toList())
-                )
-                .orElse(null);
+        return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
+    public List<UserIdAndNameDto> getTeamMembers() {
+        return ConversionUtility.convertToTeamIdAndName(this.teams);
+    }
+    public List<UserIdAndNameDto> getRepoCreatedByDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.repoCreatedBy);
     }
 
 }

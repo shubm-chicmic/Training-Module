@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Util.ConversionUtility;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -26,6 +27,9 @@ public class PlanTask {
     private List<Phase> phases;
     private List<String> mentor;
     private String estimatedTime;
+    public List<UserIdAndNameDto> getMentorDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.mentor);
+    }
     public String getEstimatedTime() {
         int hours = 0;
         int minutes = 0;

@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Dto.CourseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Course123.Phase;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CourseResponseDto {
-    private String _id;
+    private ObjectId _id;
     private String courseName;
     private String estimatedTime;
     private int noOfTopics;
-    private List<UserIdAndNameDto> reviewers;
+    private List<UserIdAndNameDto> approver;
     private String figmaLink;
     private String guidelines;
     private int totalPhases;
