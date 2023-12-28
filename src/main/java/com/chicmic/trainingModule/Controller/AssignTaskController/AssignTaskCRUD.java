@@ -33,10 +33,6 @@ public class AssignTaskCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
 //        trainePlanService.assignMultiplePlansToTrainees();
-        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
-                .reviewers(assignTaskDto.getReviewers()).build();
-        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
-
         System.out.println("assignTaskDto = " + assignTaskDto);
         for (String userId : assignTaskDto.getUsers()) {
             AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
