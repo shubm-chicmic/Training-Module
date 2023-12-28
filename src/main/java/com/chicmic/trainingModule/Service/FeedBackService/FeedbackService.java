@@ -20,8 +20,12 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.MergeOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
@@ -29,10 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -43,13 +44,13 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
+
+import static com.chicmic.trainingModule.TrainingModuleApplication.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.getTypeOfFeedbackResponse;
-import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
-import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
@@ -920,41 +921,35 @@ public class FeedbackService {
 //                // Add other stages as needed
 //        );
 //        List<UserDto> userDetails = new ArrayList<>(idUserMap.values());
-        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
-                        new Document("name",userDto.getName()).append("team",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
-                                .append("id",userDto.get_id()))
-                .toList();
+        List<Document> userDatasDocuments = findTraineeAndMap().values().stream().map(userDto ->
+                            new Document("name",userDto.getName()).append("team",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
+                                    .append("_id",userDto.get_id()))
+                    .toList();
 
-        System.out.println(userDatasDocuments.size() + "///");
-        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(".*", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+        System.out.println(userDatasDocuments.size());
         Aggregation aggregation = newAggregation(
-                context -> new Document("$match", new Document()), // Your match criteria here
-//                context -> new Document("$addFields", new Document("person", new Document("name", "runjan").append("age", 50))),
-                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
-                context -> new Document("$addFields", new Document("userData",
-                        new Document("$filter",
-                                new Document("input", "$userDatas")
-                                        .append("as", "user")
-                                        .append("cond", new Document("$eq", Arrays.asList("$$user.id", "$traineeID")))
-                        )
+                context -> new Document("$addFields", new Document("userDatas",
+                        userDatasDocuments
                 )),
-                context -> new Document("$unwind",
-                        new Document("path", "$userData")
-                                .append("preserveNullAndEmptyArrays", true)
-                ),
-                context -> new Document("$project", new Document("userDatas", 0)),
-                context -> new Document("$match", new Document("$or", Arrays.asList(
-                        new Document("userData.name", new Document("$regex", namePattern)),
-                        new Document("userData.team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
-                ))),
-                context -> new Document("$sort", new Document("userData.name", -1))
+                context -> new Document("$unwind", new Document("path", "$userDatas").append("preserveNullAndEmptyArrays", true)),
+                context -> new Document("$group", new Document("_id", "$userDatas._id")
+                        .append("name", new Document("$first", "$userDatas.name"))
+                        .append("team", new Document("$first", "$userDatas.team"))
+                        .append("employeeCode", new Document("$first", "$userDatas.empCode"))
+                        .append("plan", new Document("$addToSet",
+                                new Document("$cond", Arrays.asList(
+                                        new Document("$eq", Arrays.asList("$userId", "$userDatas._id")),
+                                        new Document("name", new Document("$arrayElemAt", Arrays.asList("$plans.planName", 0)))
+                                                .append("_id", new Document("$arrayElemAt", Arrays.asList("$plans._id", 0))),
+                                        "$$REMOVE"
+                                ))
+                        ))
+                )
         );
-
-        // Execute the aggregation
-        List<Document> results = mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
-//          return mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
+            return mongoTemplate.aggregate(aggregation, "assignTask", Document.class).getMappedResults();
 //        System.out.println(results.get(0).get("_id") + "/////");
-        return results;
+//        return null;
     }
     
 
