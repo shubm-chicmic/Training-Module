@@ -115,7 +115,7 @@ public class TraineePlanService {
                                 new Document("$cond", Arrays.asList(
                                         new Document("$eq", Arrays.asList("$userId", "$userDatas._id")),
                                         new Document("name", new Document("$arrayElemAt", Arrays.asList("$plans.planName", 0)))
-                                                .append("_id", new Document("$arrayElemAt", Arrays.asList("$plans._id", 0))),
+                                                .append("_id", new Document("$toString",new Document("$arrayElemAt", Arrays.asList("$plans._id", 0)))),
                                         "$$REMOVE"
                                 ))
                         ))
