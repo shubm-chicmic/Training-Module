@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-//@RequestMapping("/v1/training/traineeList")
 @RequestMapping("/v1/training/traineeList")
 @RestController
 public class TraineePlanCRUD {

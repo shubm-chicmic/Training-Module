@@ -19,22 +19,13 @@ import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.FeedbackRepo;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.FeedbackUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.MergeOptions;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
-import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -42,19 +33,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.*;
 
-import static com.chicmic.trainingModule.TrainingModuleApplication.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-
-import java.util.stream.Collectors;
-
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.getTypeOfFeedbackResponse;
+import static com.chicmic.trainingModule.TrainingModuleApplication.*;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
-import static com.chicmic.trainingModule.Util.FeedbackUtil.searchNameAndEmployeeCode;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
-import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.filter;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 @Service
 public class FeedbackService {
@@ -81,14 +67,6 @@ public class FeedbackService {
        // return mongoTemplate.findOne(query, YourDocumentClass.class, "assignTask");
 
         boolean flag =  mongoTemplate.exists(query, "assignTask");
-//        Query query = new Query(Criteria.where("userId").is(userId)
-//                .and("plans.phases.tasks").elemMatch(
-//                        Criteria.where("planType").is(planType)
-//                                .and("milestones._id").is(planId)
-//                                .and("milestones.isCompleted").is(isCompleted)
-//                )
-//        );
-//        boolean flag =  mongoTemplate.exists(query, "assignTask");
         if(!flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Trainee is still working on it!!!");
         return true;
@@ -433,46 +411,9 @@ public class FeedbackService {
     }
 
 
-    public FeedbackResponse buildFeedbackResponse(Feedback feedback){
-        String taskName = null,subTask = null;
-        int feedbackTypeId = feedback.getType().charAt(0) - '1';
-        if(feedbackTypeId == 0){
-            Rating_COURSE ratingCourse = (Rating_COURSE) feedback.getRating();
-            taskName = ratingCourse.getCourseId();
-            subTask = ratingCourse.getPhaseId();
-        }else if(feedbackTypeId == 1){
-            Rating_TEST ratingTest = (Rating_TEST) feedback.getRating();
-            taskName = ratingTest.getTestId();
-            subTask = ratingTest.getMilestoneId();
-        }
-//        System.out.println(FeedbackUtil.FEEDBACK_TYPE_CATEGORY[feedbackTypeId] + "PPPPPPPPPP");
-        //UserDto userDto = UserDto.builder().name("Naman").teamId("Angular").empCode("CHM/2023/567").build();//searchUserById(feedback.getTraineeID());
-        UserDto userDto = searchUserById(feedback.getTraineeID());
-        return FeedbackResponse.builder().
-                _id(feedback.getId())
-               // .reviewer("Ankit Sir")
-                .reviewer(TrainingModuleApplication.searchNameById(feedback.getCreatedBy()))
-                .createdOn(feedback.getCreatedAt())
-                .team(userDto.getTeamName())
-                .type(FeedbackUtil.FEEDBACK_TYPE_CATEGORY[feedbackTypeId])
-                .feedbackType(feedbackTypeId + 1)
-                .employeeFullName(userDto.getName())
-                .employeeCode(userDto.getEmpCode())
-                .taskName(taskName)
-                .subTask(subTask)
-                .rating(feedback.getOverallRating())
-                .comment(feedback.getComment())
-            .build();
-    }
-//    public Float getOverallRatingOfTrainee(String traineeId){
-//        Criteria criteria = Criteria.where("traineeID").is(traineeId);
-//    }
+
+
     public HashMap<String,Object> getOverallRatingOfTrainee(String traineeId,String courseId,String phaseId){
-//        MatchOperation matchOperation = new MatchOperation(Criteria.where("traineeID").is(traineeId)
-//                .and("type").is("1").and("courseId").is(courseId)
-//        );
-//        Aggregation aggregation = newAggregation(matchOperation,);
-//        mongoTemplate.aggregate(aggregation, "feedback", Document.class).getMappedResults();
         Criteria criteria = Criteria.where("traineeID").is(traineeId);
 //                .and("type").is("1").and("courseId").is(courseId);
         Query query = new Query(criteria);
