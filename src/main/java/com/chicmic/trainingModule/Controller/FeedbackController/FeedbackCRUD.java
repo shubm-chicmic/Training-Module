@@ -124,11 +124,6 @@ public class FeedbackCRUD {
         Feedback feedback = feedbackService.getFeedbackById(id);
         FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
-        //com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
-         //       com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
-        //FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
-        //int pos = (feedback.getFeedbackType().charAt(0) - '1');
-        //feedback.setFeedbackType(FeedbackUtil.FEEDBACK_TYPE_CATEGORY[pos]);
         return new ApiResponse(200,"Feedback fetched successfully",feedbackResponse);
     }
 
