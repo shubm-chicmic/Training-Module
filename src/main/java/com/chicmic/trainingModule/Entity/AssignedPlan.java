@@ -1,8 +1,9 @@
-package com.chicmic.trainingModule.Entity.Plan;
+package com.chicmic.trainingModule.Entity;
 
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -16,14 +17,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Plan {
+public class AssignedPlan {
     @Id
-    private String _id;
-    private String planName;
-    private String description;
-    private Boolean isCompleted = false;
-    private Set<String> approver;
-    private List<Phase> phases;
+    private ObjectId _id;
+    private String userId;
+    private LocalDateTime date;
+    @DBRef
+    private List<Plan> plans;
+    private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;

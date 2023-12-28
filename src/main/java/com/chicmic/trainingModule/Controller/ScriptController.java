@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.Controller;
 
-import com.chicmic.trainingModule.Entity.Course.Course;
+import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.ExcelPerformOperations;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import lombok.AllArgsConstructor;

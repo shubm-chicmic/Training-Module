@@ -3,7 +3,7 @@ package com.chicmic.trainingModule.Service.GithubSampleServices;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleDto;
 import com.chicmic.trainingModule.Repository.GithubSampleRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.chicmic.trainingModule.Entity.GithubSample.GithubSample;
+import com.chicmic.trainingModule.Entity.GithubSample;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

@@ -1,8 +1,9 @@
-package com.chicmic.trainingModule.Entity.Course;
+package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -13,26 +14,21 @@ import java.util.Set;
 @Document
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Course {
+public class Plan {
     @Id
-    private String _id;
-    private String name;
-    private String figmaLink;
-    private String guidelines;
-
-    @DBRef
+    private ObjectId _id;
+    private String planName;
+    private String description;
+    private Boolean isCompleted = false;
     private List<Phase> phases;
-    private Set<String> reviewers = new HashSet<>();
+    private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
-    private String createdByName;
-    private Boolean isDeleted = false;
-    private Boolean isApproved = false;
+    private Boolean deleted = false;
+    private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    public Course() {
-        Phase.count = 0;
-    }
 }

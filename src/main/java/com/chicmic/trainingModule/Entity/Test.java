@@ -1,6 +1,7 @@
-package com.chicmic.trainingModule.Entity.Test;
+package com.chicmic.trainingModule.Entity;
 
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,16 +13,16 @@ import java.util.Set;
 @Document
 @Getter
 @Setter
-
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Test {
     @Id
-    private String _id;
+    private ObjectId _id;
     private String testName;
     private List<String> teams;
-    private List<Milestone> milestones;
-    private Set<String> reviewers = new HashSet<>();
+    private List<Phase> milestones;
+    private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;

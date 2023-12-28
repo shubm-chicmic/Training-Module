@@ -1,15 +1,13 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
-import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
 import com.chicmic.trainingModule.Dto.TraineePlanReponse;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan.UserPlan;
+import com.chicmic.trainingModule.Entity.Plan33.UserPlan;
 import com.chicmic.trainingModule.Repository.UserPlanRepo;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

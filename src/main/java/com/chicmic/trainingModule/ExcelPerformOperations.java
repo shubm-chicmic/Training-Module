@@ -1,9 +1,9 @@
 package com.chicmic.trainingModule;
 
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.Phase;
-import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
-import com.chicmic.trainingModule.Entity.Course.CourseTask;
+import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.Course123.Phase;
+import com.chicmic.trainingModule.Entity.Course123.CourseSubTask;
+import com.chicmic.trainingModule.Entity.Course123.CourseTask;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 

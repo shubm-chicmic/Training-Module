@@ -1,24 +1,24 @@
-package com.chicmic.trainingModule.Entity.Session;
+package com.chicmic.trainingModule.Entity;
 
-import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
 @Document(collection = "session")
 public class Session {
     @Id
-    private String _id;
+    private ObjectId _id;
     private String title;
     private List<String> teams;
     private List<String> trainees;

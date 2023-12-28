@@ -2,11 +2,10 @@ package com.chicmic.trainingModule.Controller.SessionController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
-import com.chicmic.trainingModule.Dto.SessionDto.Mommessage;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
-import com.chicmic.trainingModule.Entity.Session.Session;
-import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.Session;
+import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;

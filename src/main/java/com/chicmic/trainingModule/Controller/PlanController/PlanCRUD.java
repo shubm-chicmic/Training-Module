@@ -4,16 +4,14 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan33.Phase;
+import com.chicmic.trainingModule.Entity.Plan;
 
-import com.chicmic.trainingModule.Entity.Plan.Task;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,14 +74,14 @@ public class PlanCRUD {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
         for (Phase phase : planDto.getPhases()){
-            for(Task task : phase.getTasks()) {
-                System.out.println("Test = " + task.getMilestones());
+            for(PlanTask planTask : phase.getTasks()) {
+                System.out.println("Test = " + planTask.getPhases());
             }
         }
         Plan plan = planService.createPlan(customObjectMapper.convert(planDto, Plan.class), principal);
         for (Phase phase : plan.getPhases()){
-            for(Task task : phase.getTasks()) {
-                System.out.println("plan = " + task.getMilestones());
+            for(PlanTask planTask : phase.getTasks()) {
+                System.out.println("plan = " + planTask.getPhases());
             }
         }
 

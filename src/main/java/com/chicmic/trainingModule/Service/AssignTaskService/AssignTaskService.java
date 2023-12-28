@@ -3,16 +3,16 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
-import com.chicmic.trainingModule.Entity.Course.CourseTask;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
-import com.chicmic.trainingModule.Entity.Plan.Task;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.AssignTasktem.AssignTaskPlanTrack;
+import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.Course123.CourseSubTask;
+import com.chicmic.trainingModule.Entity.Course123.CourseTask;
+import com.chicmic.trainingModule.Entity.Plan33.Phase;
+import com.chicmic.trainingModule.Entity.Plan;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
-import com.chicmic.trainingModule.Entity.Test.Test;
+import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Entity.Test.TestSubTask;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Repository.AssignTaskRepo;
@@ -47,22 +47,22 @@ public class AssignTaskService {
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
     //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
-    public AssignTask createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
-        AssignTask assignTask = getAllAssignTasksByTraineeId(userId);
+    public AssignedPlan createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
+        AssignedPlan assignTask = getAllAssignTasksByTraineeId(userId);
         if(assignTask != null) {
             return null;
         }
         List<Plan> plans = planService.getPlanByIds(assignTaskDto.getPlanIds());
         for (Plan plan : plans) {
             for (Phase phase : plan.getPhases()){
-                for (Task task : phase.getTasks()) {
-                    String planId = (String)task.getPlan();
+                for (PlanTask planTask : phase.getTasks()) {
+                    String planId = (String) planTask.getPlan();
                     AssignTaskPlanTrack modifiedPlan = AssignTaskPlanTrack.builder()
                             .isCompleted(false)
                             ._id(planId)
                             .build();
-                    System.out.println(task.getMilestones());
-                    Object milestonesObject = task.getMilestones();
+                    System.out.println(planTask.getPhases());
+                    Object milestonesObject = planTask.getPhases();
                     List<String> milestoneList;
                     if (milestonesObject instanceof String) {
                         milestoneList = new ArrayList<>();
@@ -76,9 +76,9 @@ public class AssignTaskService {
                     List<AssignTaskPlanTrack> milestones = new ArrayList<>();
                     for (String milestone : milestonesId){
                         AssignTaskPlanTrack assignTaskPlanTrack = null;
-                        if(task.getPlanType() == 1) {
+                        if(planTask.getPlanType() == 1) {
                             Course course = courseService.getCourseById(planId);
-                            for (com.chicmic.trainingModule.Entity.Course.Phase coursePhase : course.getPhases()) {
+                            for (com.chicmic.trainingModule.Entity.Course123.Phase coursePhase : course.getPhases()) {
                                 if (coursePhase.get_id().equals(milestone)){
                                     List<AssignTaskPlanTrack> assignTaskCourse = new ArrayList<>();
                                     for (CourseTask courseTask : coursePhase.getTasks()) {
@@ -105,7 +105,7 @@ public class AssignTaskService {
                                 }
                             }
 
-                        }else if(task.getPlanType() == 2){
+                        }else if(planTask.getPlanType() == 2){
                             Test test = testService.getTestById(planId);
                             for (Milestone milestone1 : test.getMilestones()) {
                                 if (milestone1.get_id().equals(milestone)){
@@ -136,13 +136,13 @@ public class AssignTaskService {
                         }
                         milestones.add(assignTaskPlanTrack);
                     }
-                    task.setPlan(modifiedPlan);
-                    task.setMilestones(milestones);
+                    planTask.setPlan(modifiedPlan);
+                    planTask.setPhases(milestones);
                 }
             }
         }
 
-        assignTask = AssignTask.builder()
+        assignTask = AssignedPlan.builder()
                 .createdBy(principal.getName())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -152,16 +152,16 @@ public class AssignTaskService {
                 .build();
         return assignTaskRepo.save(assignTask);
     }
-    public List<AssignTask> getAllAssignTasks(String query, Integer sortDirection, String sortKey) {
+    public List<AssignedPlan> getAllAssignTasks(String query, Integer sortDirection, String sortKey) {
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("deleted").is(false));
 
-        List<AssignTask> assignTasks = mongoTemplate.find(searchQuery, AssignTask.class);
+        List<AssignedPlan> assignTasks = mongoTemplate.find(searchQuery, AssignedPlan.class);
 
         if (!sortKey.isEmpty()) {
-            Comparator<AssignTask> assignTaskComparator = Comparator.comparing(assignTask -> {
+            Comparator<AssignedPlan> assignTaskComparator = Comparator.comparing(assignTask -> {
                 try {
-                    Field field = AssignTask.class.getDeclaredField(sortKey);
+                    Field field = AssignedPlan.class.getDeclaredField(sortKey);
                     field.setAccessible(true);
                     Object value = field.get(assignTask);
                     if (value instanceof String) {
@@ -183,7 +183,7 @@ public class AssignTaskService {
 
         return assignTasks;
     }
-    public List<AssignTask> getAllAssignTasks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
+    public List<AssignedPlan> getAllAssignTasks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
             Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -198,12 +198,12 @@ public class AssignTaskService {
                 .addCriteria(Criteria.where("deleted").is(false))
                 .with(pageable);
 
-        List<AssignTask> assignTasks = mongoTemplate.find(searchQuery, AssignTask.class);
+        List<AssignedPlan> assignTasks = mongoTemplate.find(searchQuery, AssignedPlan.class);
 
         if (!sortKey.isEmpty()) {
-            Comparator<AssignTask> assignTaskComparator = Comparator.comparing(assignTask -> {
+            Comparator<AssignedPlan> assignTaskComparator = Comparator.comparing(assignTask -> {
                 try {
-                    Field field = AssignTask.class.getDeclaredField(sortKey);
+                    Field field = AssignedPlan.class.getDeclaredField(sortKey);
                     field.setAccessible(true);
                     Object value = field.get(assignTask);
                     if (value instanceof String) {
@@ -226,12 +226,12 @@ public class AssignTaskService {
         return assignTasks;
     }
 
-    public AssignTask getAssignTaskById(String assignTaskId) {
+    public AssignedPlan getAssignTaskById(String assignTaskId) {
         return assignTaskRepo.findById(assignTaskId).orElse(null);
     }
 
     public Boolean deleteAssignTaskById(String assignTaskId) {
-        AssignTask assignTask = assignTaskRepo.findById(assignTaskId).orElse(null);
+        AssignedPlan assignTask = assignTaskRepo.findById(assignTaskId).orElse(null);
         if (assignTask != null) {
             assignTask.setDeleted(true);
             assignTaskRepo.save(assignTask);
@@ -244,11 +244,11 @@ public class AssignTaskService {
     public long countNonDeletedAssignTasks() {
         MatchOperation matchStage = match(Criteria.where("deleted").is(false));
         Aggregation aggregation = newAggregation(matchStage);
-        AggregationResults<AssignTask> aggregationResults = mongoTemplate.aggregate(aggregation, "assignTask", AssignTask.class);
+        AggregationResults<AssignedPlan> aggregationResults = mongoTemplate.aggregate(aggregation, "assignTask", AssignedPlan.class);
         return aggregationResults.getMappedResults().size();
     }
 
-    public AssignTask updateAssignTask(AssignTaskDto assignTaskDto, String assignTaskId) {
+    public AssignedPlan updateAssignTask(AssignTaskDto assignTaskDto, String assignTaskId) {
 //        AssignTask assignTask = assignTaskRepo.findById(assignTaskId).orElse(null);
 //        if (assignTask != null) {
 //            List<Milestone> milestones = new ArrayList<>();
@@ -282,7 +282,7 @@ public class AssignTaskService {
         return null;
     }
 
-    public AssignTask approve(AssignTask assignTask, String userId) {
+    public AssignedPlan approve(AssignedPlan assignTask, String userId) {
         Set<String> approvedBy = assignTask.getApprovedBy();
         approvedBy.add(userId);
         assignTask.setApprovedBy(approvedBy);
@@ -299,32 +299,32 @@ public class AssignTaskService {
 //            Query query = new Query(Criteria.where("userId").in(traineeId));
 //            return mongoTemplate.find(query, AssignTask.class);
 //    }
-        public AssignTask getAllAssignTasksByTraineeId(String traineeId) {
+        public AssignedPlan getAllAssignTasksByTraineeId(String traineeId) {
             Query query = new Query(Criteria.where("userId").in(traineeId));
-            return mongoTemplate.findOne(query, AssignTask.class);
+            return mongoTemplate.findOne(query, AssignedPlan.class);
         }
-    public AssignTask completeTask(TaskCompleteDto taskCompleteDto, Principal principal) {
+    public AssignedPlan completeTask(TaskCompleteDto taskCompleteDto, Principal principal) {
         System.out.println("Task complete Dto " + taskCompleteDto);
         if (taskCompleteDto.getMilestone() != null) {
             System.out.println("Im completing this task ");
-            AssignTask assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
+            AssignedPlan assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
             return markMilestoneAsCompleted(taskCompleteDto);
         }else {
             System.out.println("Im completing this task ");
-            AssignTask assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
+            AssignedPlan assignTask = assignTaskRepo.findById(taskCompleteDto.getAssignTaskId()).orElse(null);
             return markMilestoneAsCompleted(taskCompleteDto);
         }
 //        return null;
     }
 
-    public AssignTask markMilestoneAsCompleted(TaskCompleteDto taskCompleteDto) {
+    public AssignedPlan markMilestoneAsCompleted(TaskCompleteDto taskCompleteDto) {
         String assignTaskId = taskCompleteDto.getAssignTaskId();
         String planId = taskCompleteDto.getPlanId();
         String milestoneId = taskCompleteDto.getMilestone();
         String mainTaskId = taskCompleteDto.getMainTaskId();
         String subTaskId = taskCompleteDto.getSubtaskId();
         Query query = new Query(Criteria.where("_id").is(assignTaskId).and("plans._id").is(planId));
-        List<Plan> plans = mongoTemplate.find(query, AssignTask.class)
+        List<Plan> plans = mongoTemplate.find(query, AssignedPlan.class)
                 .stream()
                 .flatMap(assignTask -> assignTask.getPlans().stream()
                         .filter(plan -> plan.get_id().equals(planId)))
@@ -336,8 +336,8 @@ public class AssignTaskService {
             for (Plan plan : plans) {
                 if (plan.get_id().equals(planId)) {
                     for (Phase phase : plan.getPhases()) {
-                        for (Task task : phase.getTasks()) {
-                            List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        for (PlanTask planTask : phase.getTasks()) {
+                            List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) planTask.getPhases();
                             Integer countMilestoneComplete = 0;
                             for (AssignTaskPlanTrack milestone : milestones) {
                                 if (milestone.get_id().equals(milestoneId)) {
@@ -355,7 +355,7 @@ public class AssignTaskService {
                                 }
                             }
                             if(countMilestoneComplete == milestones.size()){
-                                ((AssignTaskPlanTrack)task.getPlan()).setIsCompleted(true);
+                                ((AssignTaskPlanTrack) planTask.getPlan()).setIsCompleted(true);
                                 break one;
                             }
                         }
@@ -368,9 +368,9 @@ public class AssignTaskService {
             for (Plan plan : plans) {
                 if (plan.get_id().equals(planId)) {
                     for (Phase phase : plan.getPhases()) {
-                        for (Task task : phase.getTasks()) {
-                            System.out.println("Plan type = " + task.getPlanType());
-                            if (task.getPlanType() == 4) {
+                        for (PlanTask planTask : phase.getTasks()) {
+                            System.out.println("Plan type = " + planTask.getPlanType());
+                            if (planTask.getPlanType() == 4) {
                                 phase.setIsCompleted(true);
                                 break one;
                             }
@@ -386,8 +386,8 @@ public class AssignTaskService {
             for (Plan plan : plans) {
                 if (plan.get_id().equals(planId)) {
                     for (Phase phase : plan.getPhases()) {
-                        for (Task task : phase.getTasks()) {
-                            List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        for (PlanTask planTask : phase.getTasks()) {
+                            List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) planTask.getPhases();
                             Integer countMilestoneComplete = 0;
                             for (AssignTaskPlanTrack milestone : milestones) {
                                 if (milestone.get_id().equals(milestoneId)) {
@@ -425,7 +425,7 @@ public class AssignTaskService {
                                 }
                             }
                             if(countMilestoneComplete == milestones.size()){
-                                ((AssignTaskPlanTrack)task.getPlan()).setIsCompleted(true);
+                                ((AssignTaskPlanTrack) planTask.getPlan()).setIsCompleted(true);
                                 break one;
                             }
                         }
@@ -433,7 +433,7 @@ public class AssignTaskService {
                 }
             }
         }
-        AssignTask assignTask = assignTaskRepo.findById(assignTaskId).orElse(null);
+        AssignedPlan assignTask = assignTaskRepo.findById(assignTaskId).orElse(null);
         assignTask.setPlans(plans);
         return assignTaskRepo.save(assignTask);
 //        return null;

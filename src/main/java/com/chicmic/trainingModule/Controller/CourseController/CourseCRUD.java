@@ -5,18 +5,18 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.Phase;
-import com.chicmic.trainingModule.Entity.Course.CourseTask;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Course;
+
+import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;
@@ -76,20 +76,19 @@ public class CourseCRUD {
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase> phases = new ArrayList<>();
-        for (List<CourseTask> courseTasks : courseDto.getPhases()) {
+        for (List<Task> courseTasks : courseDto.getPhases()) {
             Phase phase = Phase.builder()
-                    ._id(String.valueOf(new ObjectId()))
+                    .entityType(EntityType.COURSE)
                     .tasks(courseTasks)
                     .build();
             phases.add(phase);
         }
         Course course = Course.builder()
                 .createdBy(principal.getName())
-                .createdByName(TrainingModuleApplication.searchUserById(principal.getName()).getName())
                 .name(courseDto.getName())
                 .figmaLink(courseDto.getFigmaLink())
                 .guidelines(courseDto.getGuidelines())
-                .reviewers(courseDto.getReviewers())
+                .approver(courseDto.getApprover())
                 .phases(phases)
                 .isDeleted(false)
                 .isApproved(false)
@@ -111,12 +110,12 @@ public class CourseCRUD {
     @PutMapping
     public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
-        if (courseDto.getReviewers() != null && courseDto.getReviewers().size() == 0) {
+        if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
         if (course != null) {
             if (courseDto != null && courseDto.getApproved() == true) {
-                Set<String> approver = course.getReviewers();
+                Set<String> approver = course.getApprover();
                 if (approver.contains(principal.getName())) {
                     course = courseService.approve(course, principal.getName());
                 } else {

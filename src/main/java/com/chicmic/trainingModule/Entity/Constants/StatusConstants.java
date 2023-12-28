@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Entity;
+package com.chicmic.trainingModule.Entity.Constants;
 
 public class StatusConstants {
     public static final int PENDING = 1;

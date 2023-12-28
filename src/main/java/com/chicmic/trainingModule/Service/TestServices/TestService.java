@@ -1,12 +1,9 @@
 package com.chicmic.trainingModule.Service.TestServices;
 
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Course123.Phase;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
-import com.chicmic.trainingModule.Entity.Test.Test;
-import com.chicmic.trainingModule.Entity.Test.TestTask;
+import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Repository.TestRepo;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;

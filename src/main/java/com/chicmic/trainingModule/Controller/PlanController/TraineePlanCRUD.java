@@ -2,20 +2,17 @@ package com.chicmic.trainingModule.Controller.PlanController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
-import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
 import com.chicmic.trainingModule.Dto.TraineePlanReponse;
-import com.chicmic.trainingModule.Entity.Plan.UserPlan;
+import com.chicmic.trainingModule.Entity.Plan33.UserPlan;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
 import jakarta.validation.Valid;
-import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 
 //@RequestMapping("/v1/training/traineeList")

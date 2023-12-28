@@ -1,13 +1,12 @@
 package com.chicmic.trainingModule.Dto.PlanDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
+import com.chicmic.trainingModule.Entity.Plan33.Phase;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter

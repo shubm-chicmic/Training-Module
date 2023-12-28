@@ -1,8 +1,6 @@
 package com.chicmic.trainingModule.Dto.PlanDto;
 
-import com.chicmic.trainingModule.Dto.UserDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
+import com.chicmic.trainingModule.Entity.Plan33.Phase;
 import lombok.*;
 
 import java.util.List;

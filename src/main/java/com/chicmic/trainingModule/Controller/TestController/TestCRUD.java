@@ -5,7 +5,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
-import com.chicmic.trainingModule.Entity.Test.Test;
+import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -14,7 +14,7 @@ import lombok.AllArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+
 import java.security.Principal;
 import java.util.*;
 

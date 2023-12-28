@@ -2,12 +2,10 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan33.Phase;
+import com.chicmic.trainingModule.Entity.Plan;
 
-import com.chicmic.trainingModule.Entity.Plan.Task;
-import com.chicmic.trainingModule.Repository.CourseRepo;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -20,7 +18,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -204,11 +201,11 @@ public class PlanService {
 
         for (Plan plan : plans) {
             for (Phase phase : plan.getPhases()) {
-                for (Task task : phase.getTasks()) {
-                    if (task.getPlanType() == 1) {
+                for (PlanTask planTask : phase.getTasks()) {
+                    if (planTask.getPlanType() == 1) {
                         UserIdAndNameDto course = new UserIdAndNameDto();
-                        course.set_id((String) task.getPlan());
-                        course.setName(courseService.getCourseById((String) task.getPlan()).getName());
+                        course.set_id((String) planTask.getPlan());
+                        course.setName(courseService.getCourseById((String) planTask.getPlan()).getName());
 
                         courseIds.putIfAbsent(plan.get_id(), new ArrayList<>());
                         courseIds.get(plan.get_id()).add(course);

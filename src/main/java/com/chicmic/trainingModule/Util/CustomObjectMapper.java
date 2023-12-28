@@ -10,18 +10,18 @@ import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
-import com.chicmic.trainingModule.Entity.Course.CourseTask;
-import com.chicmic.trainingModule.Entity.GithubSample.GithubSample;
-import com.chicmic.trainingModule.Entity.Course.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
-import com.chicmic.trainingModule.Entity.Plan.Task;
-import com.chicmic.trainingModule.Entity.Session.Session;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.AssignTasktem.AssignTaskPlanTrack;
+import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.Course123.CourseSubTask;
+import com.chicmic.trainingModule.Entity.Course123.CourseTask;
+import com.chicmic.trainingModule.Entity.GithubSample;
+import com.chicmic.trainingModule.Entity.Course123.Phase;
+import com.chicmic.trainingModule.Entity.Plan;
+import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Entity.Test.Milestone;
-import com.chicmic.trainingModule.Entity.Test.Test;
+import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Entity.Test.TestSubTask;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
@@ -38,7 +38,6 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -486,18 +485,18 @@ public class CustomObjectMapper {
                 .build();
     }
 
-    public static String calculateTotalEstimatedTimeInPlan(List<com.chicmic.trainingModule.Entity.Plan.Phase> phases) {
+    public static String calculateTotalEstimatedTimeInPlan(List<com.chicmic.trainingModule.Entity.Plan33.Phase> phases) {
 
         long totalHours = 0;
         long totalMinutes = 0;
-        for (com.chicmic.trainingModule.Entity.Plan.Phase phase : phases) {
+        for (com.chicmic.trainingModule.Entity.Plan33.Phase phase : phases) {
             long phaseHours = 0;
             long phaseMinutes = 0;
 
-            for (Task task : phase.getTasks()) {
+            for (PlanTask planTask : phase.getTasks()) {
 
 //                        System.out.println("Estimated time : " + subTask.getEstimatedTime());
-                String[] timeParts = task.getEstimatedTime().split(":");
+                String[] timeParts = planTask.getEstimatedTime().split(":");
                 if (timeParts.length == 1) {
                     phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
                 } else if (timeParts.length == 2) {
@@ -549,41 +548,41 @@ public class CustomObjectMapper {
 
         String totalEstimatedTime = calculateTotalEstimatedTimeInPlan(plan.getPhases());
         int noOfTasks = 0;
-        for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
+        for (com.chicmic.trainingModule.Entity.Plan33.Phase phase : plan.getPhases()) {
             noOfTasks += phase.getTasks().size();
         }
 
-        List<com.chicmic.trainingModule.Entity.Plan.Phase> phaseList = new ArrayList<>();
-        for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
-            com.chicmic.trainingModule.Entity.Plan.Phase newPhase = new com.chicmic.trainingModule.Entity.Plan.Phase();
-            List<Task> taskList = new ArrayList<>();
+        List<com.chicmic.trainingModule.Entity.Plan33.Phase> phaseList = new ArrayList<>();
+        for (com.chicmic.trainingModule.Entity.Plan33.Phase phase : plan.getPhases()) {
+            com.chicmic.trainingModule.Entity.Plan33.Phase newPhase = new com.chicmic.trainingModule.Entity.Plan33.Phase();
+            List<PlanTask> planTaskList = new ArrayList<>();
             long phaseHours = 0;
             long phaseMinutes = 0;
             long totalHours = 0;
             long totalMinutes = 0;
-            for (Task task : phase.getTasks()) {
-                Task newTask = new Task();
-                newTask.setPlanType(task.getPlanType());
-                newTask.setPlan(task.getPlan());
-                if(task.getPlanType() == 1) {
-                    newTask.setPlanName(courseService.getCourseById((String) task.getPlan()).getName());
+            for (PlanTask planTask : phase.getTasks()) {
+                PlanTask newPlanTask = new PlanTask();
+                newPlanTask.setPlanType(planTask.getPlanType());
+                newPlanTask.setPlan(planTask.getPlan());
+                if(planTask.getPlanType() == 1) {
+                    newPlanTask.setPlanName(courseService.getCourseById((String) planTask.getPlan()).getName());
                 }
-                else if(task.getPlanType() == 2){
-                    newTask.setPlanName(testService.getTestById((String) task.getPlan()).getTestName());
+                else if(planTask.getPlanType() == 2){
+                    newPlanTask.setPlanName(testService.getTestById((String) planTask.getPlan()).getTestName());
                 }
-                newTask.setIsCompleted(task.getIsCompleted());
-                newTask.setEstimatedTime(task.getEstimatedTime());
-                newTask.set_id(task.get_id());
+                newPlanTask.setIsCompleted(planTask.getIsCompleted());
+                newPlanTask.setEstimatedTime(planTask.getEstimatedTime());
+                newPlanTask.set_id(planTask.get_id());
                 Object milestone = null;
-                System.out.println("Plan type " +task.getPlanType());
-                if (task.getPlanType() != null && task.getPlanType() == 1) {
-                    System.out.println("Milestone: fet " + task.getMilestones());
-                    milestone = (courseService.getCourseByPhaseIds((String) task.getPlan(), (List<Object>) task.getMilestones()));
-                } else if (task.getPlanType() != null && task.getPlanType() == 2) {
-                    milestone = (testService.getTestByMilestoneIds((String) task.getPlan(), (List<Object>) task.getMilestones()));
+                System.out.println("Plan type " + planTask.getPlanType());
+                if (planTask.getPlanType() != null && planTask.getPlanType() == 1) {
+                    System.out.println("Milestone: fet " + planTask.getPhases());
+                    milestone = (courseService.getCourseByPhaseIds((String) planTask.getPlan(), (List<Object>) planTask.getPhases()));
+                } else if (planTask.getPlanType() != null && planTask.getPlanType() == 2) {
+                    milestone = (testService.getTestByMilestoneIds((String) planTask.getPlan(), (List<Object>) planTask.getPhases()));
                 }
                 System.out.println("Milestone : " + milestone);
-                String[] timeParts = task.getEstimatedTime().split(":");
+                String[] timeParts = planTask.getEstimatedTime().split(":");
                 if (timeParts.length == 1) {
                     phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
                 } else if (timeParts.length == 2) {
@@ -591,9 +590,9 @@ public class CustomObjectMapper {
                     phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
                 }
                 System.out.println("\u001B[31m milestone " + milestone + "\u001B[0m");
-                newTask.setMilestones(milestone);
-                newTask.setMentor(task.getMentor());
-                taskList.add(newTask);
+                newPlanTask.setPhases(milestone);
+                newPlanTask.setMentor(planTask.getMentor());
+                planTaskList.add(newPlanTask);
             }
             totalHours += phaseHours + phaseMinutes / 60;
             totalMinutes += phaseMinutes % 60;
@@ -601,7 +600,7 @@ public class CustomObjectMapper {
             newPhase.setPhaseName(phase.getPhaseName());
             newPhase.setEstimatedTime(String.format("%02d:%02d", totalHours, totalMinutes));
             newPhase.setNoOfTasks(phase.getTasks().size());
-            newPhase.setTasks(taskList);
+            newPhase.setTasks(planTaskList);
             newPhase.setIsCompleted(phase.getIsCompleted());
             phaseList.add(newPhase);
         }
@@ -624,9 +623,9 @@ public class CustomObjectMapper {
                 .build();
     }
 
-    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignTask> assignTasks, String traineeId, Principal principal) {
+    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
         List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
-        for (AssignTask assignTask : assignTasks) {
+        for (AssignedPlan assignTask : assignTasks) {
             assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId, principal));
         }
         return assignTaskResponseDtoList;
@@ -653,7 +652,7 @@ public class CustomObjectMapper {
                 .collect(Collectors.toList());
     }
 
-    public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
+    public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
             Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
 
@@ -698,18 +697,18 @@ public class CustomObjectMapper {
         List<PlanDto> plans = new ArrayList<>();
         for (Plan plan : assignTask.getPlans()) {
             System.out.println(" plan = " + plan);
-            for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
-                for (Task task : phase.getTasks()) {
+            for (com.chicmic.trainingModule.Entity.Plan33.Phase phase : plan.getPhases()) {
+                for (PlanTask planTask : phase.getTasks()) {
                     PlanDto planDto = null;
-                    if (task.getPlanType() == 1) {
-                        Course course = courseService.getCourseById(((AssignTaskPlanTrack) task.getPlan()).get_id());
+                    if (planTask.getPlanType() == 1) {
+                        Course course = courseService.getCourseById(((AssignTaskPlanTrack) planTask.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
-                        List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>)task.getMilestones();
+                        List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>) planTask.getPhases();
                         for(AssignTaskPlanTrack milestoneTrack : milestonesData) {
                             for (Phase coursePhase : course.getPhases()) {
                                 if(milestoneTrack!=null && milestoneTrack.get_id().equals(coursePhase.get_id())){
                                 boolean isMilestoneCompleted = false;
-                                for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) planTask.getPhases()) {
                                     if (assignTaskPlanTrack.get_id().equals(coursePhase.get_id())) {
                                         isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
                                         break;
@@ -722,7 +721,7 @@ public class CustomObjectMapper {
                                         String subTaskId = courseSubTask.get_id();
                                         System.out.println("subtask id = " + subTaskId);
 
-                                        for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                        for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) planTask.getPhases()) {
 //                                        if (milestonePlan.get_id().equals(phase.get_id())) {
                                             for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
                                                 for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
@@ -741,9 +740,9 @@ public class CustomObjectMapper {
                                 }
                                 MilestoneDto milestoneDto = MilestoneDto.builder()
                                         ._id(coursePhase.get_id())
-                                        .reviewers(task.getMentor())
+                                        .reviewers(planTask.getMentor())
                                         .name(coursePhase.getName())
-                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
+                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(planTask.getPlanType()), ((AssignTaskPlanTrack) planTask.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
                                         .isCompleted(isMilestoneCompleted)
                                         .noOfTasks(coursePhase.getTasks().size())
                                         .estimatedTime(coursePhase.getEstimatedTime())
@@ -755,30 +754,30 @@ public class CustomObjectMapper {
                         }
                         planDto = PlanDto.builder()
                                 ._id(course.get_id())
-                                .planType(task.getPlanType())
+                                .planType(planTask.getPlanType())
                                 .assignPlanId(plan.get_id())
-                                .isCompleted(task.getIsCompleted())
+                                .isCompleted(planTask.getIsCompleted())
 //                                .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), (String)task.getPlan(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
-                                .estimatedTime(task.getEstimatedTime())
-                                .noOfTopics(((List<AssignTaskPlanTrack>) task.getMilestones()).size())
+                                .estimatedTime(planTask.getEstimatedTime())
+                                .noOfTopics(((List<AssignTaskPlanTrack>) planTask.getPhases()).size())
                                 .isApproved(course.getIsApproved())
                                 .isDeleted(course.getIsDeleted())
                                 .milestones(milestoneDtos)
                                 .name(course.getName())
                                 .rating(0.0f)
-                                .reviewers(task.getMentor())
+                                .reviewers(planTask.getMentor())
 
                                 .build();
-                    } else if (task.getPlanType() == 2) {
+                    } else if (planTask.getPlanType() == 2) {
 
-                        Test test = testService.getTestById(((AssignTaskPlanTrack) task.getPlan()).get_id());
+                        Test test = testService.getTestById(((AssignTaskPlanTrack) planTask.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
-                        List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>) task.getMilestones();
+                        List<AssignTaskPlanTrack> milestonesData = (List<AssignTaskPlanTrack>) planTask.getPhases();
                         for(AssignTaskPlanTrack milestoneTrack : milestonesData) {
                             for (Milestone milestone : test.getMilestones()) {
                                 if(milestoneTrack.get_id().equals(milestone.get_id())){
                                 boolean isMilestoneCompleted = false;
-                                for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                for (AssignTaskPlanTrack assignTaskPlanTrack : (List<AssignTaskPlanTrack>) planTask.getPhases()) {
                                     if (assignTaskPlanTrack.get_id().equals(milestone.get_id())) {
                                         isMilestoneCompleted = assignTaskPlanTrack.getIsCompleted();
                                         break;
@@ -790,7 +789,7 @@ public class CustomObjectMapper {
 
                                         String subTaskId = testSubTask.get_id();
                                         one:
-                                        for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) task.getMilestones()) {
+                                        for (AssignTaskPlanTrack milestonePlan : (List<AssignTaskPlanTrack>) planTask.getPhases()) {
                                             if (milestonePlan.get_id().equals(milestone.get_id())) {
                                                 for (AssignTaskPlanTrack milestoneMainTask : milestonePlan.getTasks()) {
                                                     for (AssignTaskPlanTrack milestoneSubTask : milestoneMainTask.getSubtasks()) {
@@ -807,10 +806,10 @@ public class CustomObjectMapper {
                                 }
                                 MilestoneDto milestoneDto = MilestoneDto.builder()
                                         ._id(milestone.get_id())
-                                        .reviewers(task.getMentor())
+                                        .reviewers(planTask.getMentor())
 
                                         .name(milestone.getName())
-                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
+                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(planTask.getPlanType()), ((AssignTaskPlanTrack) planTask.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
                                         .isCompleted(isMilestoneCompleted)
                                         .noOfTasks(milestone.getTasks().size())
                                         .estimatedTime(milestone.getEstimatedTime())
@@ -822,26 +821,26 @@ public class CustomObjectMapper {
                     }
                         planDto = PlanDto.builder()
                                 ._id(test.get_id())
-                                .planType(task.getPlanType())
+                                .planType(planTask.getPlanType())
                                 .assignPlanId(plan.get_id())
-                                .isCompleted(task.getIsCompleted())
+                                .isCompleted(planTask.getIsCompleted())
 //                                .feedbackId("6581c5388096904d2af3204d")
-                                .estimatedTime(task.getEstimatedTime())
-                                .noOfTopics(((List<AssignTaskPlanTrack>) task.getMilestones()).size())
+                                .estimatedTime(planTask.getEstimatedTime())
+                                .noOfTopics(((List<AssignTaskPlanTrack>) planTask.getPhases()).size())
                                 .isApproved(test.getApproved())
                                 .isDeleted(test.getDeleted())
                                 .milestones(milestoneDtos)
                                 .name(test.getTestName())
                                 .rating(null)
-                                .reviewers(task.getMentor())
+                                .reviewers(planTask.getMentor())
 
                                 .build();
-                    } else if (task.getPlanType() == 4) {
-                        Course course = courseService.getCourseById(((AssignTaskPlanTrack)task.getPlan()).get_id());
+                    } else if (planTask.getPlanType() == 4) {
+                        Course course = courseService.getCourseById(((AssignTaskPlanTrack) planTask.getPlan()).get_id());
                         List<MilestoneDto> milestoneDtos = new ArrayList<>();
                         MilestoneDto milestoneDto = MilestoneDto.builder()
-                                ._id(((AssignTaskPlanTrack) task.getPlan()).get_id())
-                                .reviewers(task.getMentor())
+                                ._id(((AssignTaskPlanTrack) planTask.getPlan()).get_id())
+                                .reviewers(planTask.getMentor())
 
                                 .tasks(new ArrayList<>())
                                 .name(course.getName())
@@ -854,19 +853,19 @@ public class CustomObjectMapper {
                                 .build();
                         milestoneDtos.add(milestoneDto);
                         planDto = PlanDto.builder()
-                                ._id(((AssignTaskPlanTrack) task.getPlan()).get_id())
+                                ._id(((AssignTaskPlanTrack) planTask.getPlan()).get_id())
                                 .planType(3)
                                 .name("Ppt")
                                 .assignPlanId(plan.get_id())
                                 .isCompleted(phase.getIsCompleted())
                                 .feedbackId("6581c5388096904d2af3204d")
-                                .estimatedTime(task.getEstimatedTime())
-                                .noOfTopics(((List<AssignTaskPlanTrack>) task.getMilestones()).size())
+                                .estimatedTime(planTask.getEstimatedTime())
+                                .noOfTopics(((List<AssignTaskPlanTrack>) planTask.getPhases()).size())
                                 .isApproved(false)
                                 .isDeleted(false)
                                 .milestones(milestoneDtos)
                                 .rating(null)
-                                .reviewers(task.getMentor())
+                                .reviewers(planTask.getMentor())
 
                                 .build();
                     }

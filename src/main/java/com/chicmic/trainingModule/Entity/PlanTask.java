@@ -1,29 +1,31 @@
-package com.chicmic.trainingModule.Entity.Plan;
+package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.chicmic.trainingModule.Entity.Phase;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
-
+@Document
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@JsonInclude(JsonInclude.Include.NON_NULL)
-public class Task {
-    private String _id = String.valueOf(new ObjectId());
-    private Integer planType = null;
+public class PlanTask {
+    @Id
+    private ObjectId _id;
+    private Integer planType;
     @NotNull(message = "Plan Id cannot be empty")
-    private Object plan;
-    private String planName;
+    private String plan;
     @NotNull(message = "Milestones cannot be Empty")
-    private Object milestones;
-    List<UserIdAndNameDto> mentor;
+    @DBRef
+    private List<Phase> phases;
+    private List<String> mentor;
     private String estimatedTime;
-    private Boolean isCompleted = false;
     public String getEstimatedTime() {
         int hours = 0;
         int minutes = 0;
