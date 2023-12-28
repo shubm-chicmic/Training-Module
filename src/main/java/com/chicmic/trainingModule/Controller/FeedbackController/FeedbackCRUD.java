@@ -3,7 +3,7 @@ package com.chicmic.trainingModule.Controller.FeedbackController;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
 import com.chicmic.trainingModule.Dto.FeedBackDto;
-import com.chicmic.trainingModule.Dto.FeedbackResponse1;
+import com.chicmic.trainingModule.Dto.FeedbackResponse;
 import com.chicmic.trainingModule.Dto.FeedbackResponseForCourse;
 import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
@@ -122,7 +122,7 @@ public class FeedbackCRUD {
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
         Feedback feedback = feedbackService.getFeedbackById(id);
-        FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
+        FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         //com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
          //       com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);

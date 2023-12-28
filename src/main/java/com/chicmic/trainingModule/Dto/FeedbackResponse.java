@@ -13,7 +13,7 @@ import lombok.Setter;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 
 @Getter @Setter @Builder
-public class FeedbackResponse1 {
+public class FeedbackResponse {
     private Trainee trainee;
     private Trainee reviewer;
     private int feedbackType;
@@ -30,13 +30,13 @@ public class FeedbackResponse1 {
     private float teamSpiritRating;
     private String comment;
 
-    public static FeedbackResponse1 buildResponse(Feedback feedback){
+    public static FeedbackResponse buildResponse(Feedback feedback){
         //Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
         UserDto userDto = searchUserById(feedback.getTraineeID());
 
         int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
-         FeedbackResponse1 feedbackResponse1 = FeedbackResponse1.builder()
+         FeedbackResponse feedbackResponse1 = FeedbackResponse.builder()
                  .feedbackType((feedback.getType().charAt(0) - '0'))
                          .trainee(new Trainee(feedback.getTraineeID(),userDto.getName()))
                  .reviewer(new Trainee(feedback.getCreatedBy(), TrainingModuleApplication.searchNameById(feedback.getCreatedBy())))

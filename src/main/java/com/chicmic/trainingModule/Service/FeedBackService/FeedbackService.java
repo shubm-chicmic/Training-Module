@@ -72,7 +72,7 @@ public class FeedbackService {
         return true;
     }
 
-    public FeedbackResponse1 addingPhaseAndTestNameInResponse(FeedbackResponse1 feedbackResponse1){
+    public FeedbackResponse addingPhaseAndTestNameInResponse(FeedbackResponse feedbackResponse1){
         List<String> courseId = new ArrayList<>();
         List<String> testId = new ArrayList<>();
         int type = feedbackResponse1.getFeedbackType();
@@ -641,8 +641,8 @@ public class FeedbackService {
         return phaseResponse;
     }
 
-    public FeedbackResponse1 buildFeedbackResponseForSpecificFeedback(Feedback feedback){
-        return FeedbackResponse1.buildResponse(feedback);
+    public FeedbackResponse buildFeedbackResponseForSpecificFeedback(Feedback feedback){
+        return FeedbackResponse.buildResponse(feedback);
     }
     public List<Feedback> findFeedbacksByTestIdAndTraineeId(String testId,String traineeId,String feedbackType){
         searchUserById(traineeId);
