@@ -36,6 +36,7 @@ public class TraineePlanCRUD {
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         System.out.println("request reaches here!!");
+        sortDirection = (sortDirection!=1)?-1:1;
         List<Document> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
         long count = 0;
         count  = mongoTemplate.count(new Query(), AssignTask.class);

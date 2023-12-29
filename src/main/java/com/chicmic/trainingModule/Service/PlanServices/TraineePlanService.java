@@ -27,7 +27,6 @@ public class TraineePlanService {
         if(query==null || query.isBlank()) query = ".*";
         int skipValue = (pageNumber - 1) * pageSize;
 
-        sortDirection = (sortDirection!=1)?-1:1;
 
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
         //fetching trainee List
@@ -58,8 +57,18 @@ public class TraineePlanService {
                         new Document("name", new Document("$regex", namePattern)),
                         new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
                 ))),
+                context -> new Document("$sort", new Document(sortKey, sortDirection)),
                 context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
                 context -> new Document("$limit", pageSize)
+//                context -> new Document("$facet", new Document(
+//                        "data", Arrays.asList(
+//                        new Document("$sort", new Document(sortKey, sortDirection)),
+//                        new Document("$skip", Integer.max(skipValue,0)),
+//                        new Document("$limit", pageSize)
+//                )
+//                ).append("totalCount", Arrays.asList(
+//                        new Document("$count", "total")
+//                )))
         );
         List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignTask", Document.class).getMappedResults();
         Set<String> userIds = new HashSet<>();

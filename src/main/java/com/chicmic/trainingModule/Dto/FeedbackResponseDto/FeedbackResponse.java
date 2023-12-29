@@ -23,14 +23,4 @@ public interface FeedbackResponse {
         throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
     }
     public void setOverallRating(Float overallRating);
-
-    public static Integer getTypeOfFeedbackResponse(FeedbackResponse feedbackResponse){
-        if(feedbackResponse instanceof FeedbackResponse_COURSE)
-            return 1;
-         else if (feedbackResponse instanceof FeedbackResponse_TEST)
-            return 2;
-         else if (feedbackResponse instanceof FeedbackResponse_PPT)
-            return 3;
-        return 4;
-    }
 }

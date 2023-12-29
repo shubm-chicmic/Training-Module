@@ -255,11 +255,20 @@ public class FeedbackService {
                         new Document("userData.reviewerName", new Document("$regex", namePattern)),
                         new Document("userData.reviewerTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
                 ))),
+
                 context -> new Document("$sort", new Document(sortKey, sortDirection)),
                 context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
                 context -> new Document("$limit", pageSize)
+//                context -> new Document("$facet", new Document(
+//                        "data", Arrays.asList(
+//                        new Document("$sort", new Document(sortKey, sortDirection)),
+//                        new Document("$skip", Integer.max(skipValue,0)),
+//                        new Document("$limit", pageSize)
+//                )
+//                ).append("totalCount", Arrays.asList(
+//                        new Document("$count", "total")
+//                )))
         );
-
         // Execute the aggregation
         List<Feedback> feedbackList = mongoTemplate.aggregate(aggregation, "feedback", Feedback.class).getMappedResults();
 
