@@ -39,7 +39,7 @@ public class FeedbackCRUD {
                                     Principal principal
                                     ){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TR");
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
         sortDirection = (sortDirection!=1)?-1:1;
         if(flag){//trainee
             if(sortKey.equals("reviewerName")||sortKey.equals("reviewerCode")||sortKey.equals("reviewerTeam"))
@@ -144,7 +144,7 @@ public class FeedbackCRUD {
     public ApiResponse feedback(@Valid  @RequestBody FeedBackDto feedBackDto, Principal principal, @RequestParam(defaultValue = "0",required = false)Integer q){
         //System.out.println(principal.getName() + "///");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TR");
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
 
@@ -166,7 +166,7 @@ public class FeedbackCRUD {
     public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
 //        System.out.println(principal.getName() + "-----------------");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TR");
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
 
@@ -190,7 +190,7 @@ public class FeedbackCRUD {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse deleteFeedbackById(@PathVariable String id,Principal principal){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TR");
+        boolean flag = authentication.getAuthorities().contains("TRAINEE");
         if(flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You can't delete this feedback.");
 
