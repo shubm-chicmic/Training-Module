@@ -147,6 +147,6 @@ public class GithubSampleService {
         approvedBy.add(userId);
         githubSample.setApprovedBy(approvedBy);
         githubSample.setIsApproved(true);
-        return githubSampleRepo.save(githubSample);
+        return githubSample;
     }
 }

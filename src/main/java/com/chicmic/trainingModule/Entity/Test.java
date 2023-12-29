@@ -31,9 +31,9 @@ public class Test {
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    public Test() {
-        Milestone.count = 0;
-    }
+//    public Test() {
+//        Milestone.count = 0;
+//    }
     public List<UserIdAndNameDto> getTeamsDetails() {
         return ConversionUtility.convertToTeamIdAndName(this.teams);
     }
@@ -43,5 +43,6 @@ public class Test {
 
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
 
 }

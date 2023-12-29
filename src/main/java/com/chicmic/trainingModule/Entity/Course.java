@@ -23,13 +23,13 @@ import java.util.Set;
 @Builder
 public class Course {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String name;
     private String figmaLink;
     private String guidelines;
     @DBRef
     @CascadeSave
-    private List<Phase> phases;
+    private List<Phase<Task>> phases;
     private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
@@ -37,10 +37,9 @@ public class Course {
     private Boolean isApproved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    @Transient
-    private Integer totalEstimateTime;
-    @Transient
-    private Integer totalSubTasks;
+    private Integer estimatedTime;
+    private Integer completedTasks;
+    private Integer totalTasks;
 //    public Course() {
 //        Phase.count = 0;
 //    }
@@ -51,7 +50,29 @@ public class Course {
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
     }
-    public Integer getTotalSubTasks(){
-        return this.phases.size() * phases.getTotalTasks;
+    public void setPhases(List<Phase<Task>> phases) {
+        this.phases = phases;
+        updateTotalTasks();
+        updateTotalEstimateTime();
+    }
+    public void updateTotalTasks(){
+        if (this.phases != null) {
+            totalTasks = this.phases.stream()
+                    .mapToInt(phase -> phase.getTotalTasks())
+                    .sum();
+        }
+    }
+    private void updateTotalEstimateTime() {
+        if (phases != null) {
+            estimatedTime = phases.stream()
+                    .mapToInt(phase -> phase.getEstimatedTimeInSeconds())
+                    .sum();
+        }
+    }
+    public String getEstimatedTime() {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
     }
 }

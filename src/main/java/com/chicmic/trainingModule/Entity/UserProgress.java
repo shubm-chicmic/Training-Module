@@ -19,10 +19,10 @@ import java.time.LocalDateTime;
 public class UserProgress {
     @Id
     private ObjectId _id;
-    @Indexed
-    private String courseId;
-    private String phaseId;
-    private String mainTaskId;
+//    @Indexed
+//    private String courseId;
+//    private String phaseId;
+//    private String mainTaskId;
     private String subTaskId;
     private Integer status = ProgessConstants.NotStarted;
     private LocalDateTime startDate;

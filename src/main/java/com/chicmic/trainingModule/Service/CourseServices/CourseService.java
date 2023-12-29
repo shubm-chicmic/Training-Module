@@ -5,11 +5,16 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 
 import com.chicmic.trainingModule.Repository.CourseRepo;
+import com.chicmic.trainingModule.Repository.PhaseRepo;
+import com.chicmic.trainingModule.Repository.SubTaskRepo;
+import com.chicmic.trainingModule.Repository.TaskRepo;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -27,13 +32,45 @@ import java.util.*;
 public class CourseService {
     private final CourseRepo courseRepo;
     private final MongoTemplate mongoTemplate;
+    private final MongoOperations mongoOperations;
+    private final PhaseRepo phaseRepo;
+    private final TaskRepo taskRepo;
+    private final SubTaskRepo subTaskRepo;
 
     public Course createCourse(Course course) {
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
+        List<Phase<Task>> phases = new ArrayList<>();
+        int count = 0;
+        course.set_id(String.valueOf(new ObjectId()));
+        for (Phase<Task> phase : course.getPhases()) {
+            phase.set_id(String.valueOf(new ObjectId()));
+            count++;
+            List<Task> tasks = new ArrayList<>();
+            for (Task task : phase.getTasks()) {
+                task.set_id(String.valueOf(new ObjectId()));
+                List<SubTask> subTasks = new ArrayList<>();
+                for (SubTask subTask : task.getSubtasks()) {
+                    subTask.setEntityType(EntityType.COURSE);
+                    subTask.setTask(task);
+                    subTasks.add(subTaskRepo.save(subTask));
+                }
+                task.setEntityType(EntityType.COURSE);
+                task.setSubtasks(subTasks);
+                task.setPhase(phase);
+                tasks.add(taskRepo.save(task));
+            }
+            phase.setName("Phase " + count);
+            phase.setEntityType(EntityType.COURSE);
+            phase.setTasks(tasks);
+            phase.setEntity(course);
+            phases.add(phaseRepo.save(phase));
+        }
+        course.setPhases(phases);
         course = courseRepo.save(course);
         return course;
     }
+
     public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
         Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").is(phaseId));
         Course course = mongoTemplate.findOne(courseQuery, Course.class);
@@ -190,58 +227,41 @@ public class CourseService {
     public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
-//            List<Phase> phases = new ArrayList<>();
             if (courseDto.getPhases() != null) {
-                List<Phase> phases = new ArrayList<>();
-                for (List<Task> courseTasks : courseDto.getPhases()) {
-                    Phase phase = Phase.builder()
-                            .entityType(EntityType.COURSE)
-                            .tasks(courseTasks)
-                            .build();
-                    phases.add(phase);
-                }
-                course.setPhases(phases);
 //                List<Phase> phases = new ArrayList<>();
-//                int i = 0, j = 0;
-//                System.out.println("Course Phase size = " + course.getPhases().size());
-//                System.out.println("CourseDto Phase size = " + courseDto.getPhases().size());
-//
-//                while(i < course.getPhases().size() && j < courseDto.getPhases().size()){
-//                    Phase phase = course.getPhases().get(i);
-//                    phase.setTasks(courseDto.getPhases().get(j));
-//                    i++;
-//                    j++;
-//                    phases.add(phase);
-//                }
-////                while(i < course.getPhases().size()){
-////                    phases.add(course.getPhases().get(i));
-////                    i++;
-////                }
-//                while(j < courseDto.getPhases().size()){
+//                for (List<Task> courseTasks : courseDto.getPhases()) {
 //                    Phase phase = Phase.builder()
-//                            ._id(String.valueOf(new ObjectId()))
-//                            .tasks(courseDto.getPhases().get(j))
+//                            .entityType(EntityType.COURSE)
+//                            .tasks(courseTasks)
 //                            .build();
 //                    phases.add(phase);
-//                    j++;
 //                }
-//                course.setPhases(phases);
-////                for (int i = 0; i < courseDto.getPhases().size(); i++) {
-////                    Phase phase = course.getPhases().get(i);
-////                    phase.setTasks(courseDto.getPhases().get(i));
-////                }
-////                for (List<CourseTask> courseTasks : courseDto.getPhases()) {
-////                    for (Phase phase : course.getPhases()) {
-////                        phase.setTasks(courseTasks);
-////                    }
-////                    }
-////                    Phase phase = Phase.builder()
-////                            .tasks(courseTasks)
-////                            .build();
-////                    phases.add(phase);
+                List<Phase<Task>> phases = new ArrayList<>();
+                int i = 0, j = 0;
+                System.out.println("Course Phase size = " + course.getPhases().size());
+                System.out.println("CourseDto Phase size = " + courseDto.getPhases().size());
 
+                while(i < course.getPhases().size() && j < courseDto.getPhases().size()){
+                    Phase phase = course.getPhases().get(i);
+                    phase.setTasks(courseDto.getPhases().get(j));
+                    i++;
+                    j++;
+                    phases.add(phase);
+                }
+//                while(i < course.getPhases().size()){
+//                    phases.add(course.getPhases().get(i));
+//                    i++;
+//                }
+                while(j < courseDto.getPhases().size()){
+                    Phase<Task> phase = Phase.<Task>builder()
+                            ._id(String.valueOf(new ObjectId()))
+                            .tasks(courseDto.getPhases().get(j))
+                            .build();
+                    phases.add(phase);
+                    j++;
+                }
+                course.setPhases(phases);
             }
-            // Only update properties from the DTO if they are not null
             if (courseDto.getName() != null) {
                 course.setName(courseDto.getName());
             }
@@ -273,10 +293,6 @@ public class CourseService {
                 }
                 course.setApprovedBy(approvedBy);
             }
-//            if (!phases.isEmpty()) {
-//                course.setPhases(phases);
-//            }
-            // Saving the updated course
             courseRepo.save(course);
             return course;
         }else {
@@ -301,38 +317,7 @@ public class CourseService {
         }else {
             course.setIsApproved(false);
         }
-        return courseRepo.save(course);
-    }
-
-    public List<Phase> getCourseByPhaseIds(String courseId, List<Object> phaseIds) {
-        System.out.println("course id = " + courseId + " " + phaseIds );
-        Course course = mongoTemplate.findById(courseId, Course.class); // Retrieve course by ID
-        System.out.println("course Id = " + course.get_id());
-        System.out.println(course);
-        for (Phase phase : course.getPhases()) {
-            System.out.println("phaseId = " + phase.get_id());
-        }
-        if (course != null) {
-            List<Phase> phases = new ArrayList<>();
-
-            for (Object phaseId : phaseIds) {
-                String strPhaseId = phaseId.toString();
-
-                // Find phase by ID and add it to the list if found in the course's phases
-                Phase foundPhase = course.getPhases().stream()
-                        .filter(phase -> strPhaseId.equals(phase.get_id()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (foundPhase != null) {
-                    phases.add(foundPhase);
-                }
-            }
-
-            return phases;
-        } else {
-            return Collections.emptyList();
-        }
+        return course;
     }
 
 }

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+
 public class SessionResponseMapper {
     public static List<SessionResponseDto> mapSessionToResponseDto(List<Session> sessions) {
         List<SessionResponseDto> sessionResponseDtoList = new ArrayList<>();

@@ -18,13 +18,13 @@ import java.util.List;
 @AllArgsConstructor
 public class PlanTask {
     @Id
-    private ObjectId _id;
+    private String _id;
     private Integer planType;
     @NotNull(message = "Plan Id cannot be empty")
     private String plan;
     @NotNull(message = "Milestones cannot be Empty")
     @DBRef
-    private List<Phase> phases;
+    private List<String> phases;
     private List<String> mentor;
     private String estimatedTime;
     public List<UserIdAndNameDto> getMentorDetails() {

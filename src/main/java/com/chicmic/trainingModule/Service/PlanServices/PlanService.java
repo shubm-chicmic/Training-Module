@@ -2,14 +2,14 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan33.Phase;
-import com.chicmic.trainingModule.Entity.Plan;
-
-import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,10 +29,28 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PlanService {
     private final PlanRepo planRepo;
+    private final PhaseRepo phaseRepo;
     private final CourseService courseService;
     private final MongoTemplate mongoTemplate;
 
-    public Plan createPlan(Plan plan, Principal principal) {
+    public Plan createPlan(PlanDto planDto, Principal principal) {
+        List<Phase<PlanTask>> phases = new ArrayList<>();
+        Plan plan = Plan.builder()
+                ._id(String.valueOf(new ObjectId()))
+                .build();
+        for (Phase<PlanTask> phase : planDto.getPhases()) {
+            phase.set_id(String.valueOf(new ObjectId()));
+            List<PlanTask> tasks = new ArrayList<>();
+            for (PlanTask task : phase.getTasks()) {
+                task.set_id(String.valueOf(new ObjectId()));
+                tasks.add(task);
+            }
+            phase.setEntityType(EntityType.PLAN);
+            phase.setTasks(tasks);
+            phase.setEntity(plan);
+            phases.add(phaseRepo.save(phase));
+        }
+        plan.setPhases(phases);
         plan.setCreatedAt(LocalDateTime.now());
         plan.setUpdatedAt(LocalDateTime.now());
         plan.setCreatedBy(principal.getName());
@@ -200,7 +218,7 @@ public class PlanService {
         HashMap<String, List<UserIdAndNameDto>> courseIds = new HashMap<>();
 
         for (Plan plan : plans) {
-            for (Phase phase : plan.getPhases()) {
+            for (Phase<PlanTask> phase : plan.getPhases()) {
                 for (PlanTask planTask : phase.getTasks()) {
                     if (planTask.getPlanType() == 1) {
                         UserIdAndNameDto course = new UserIdAndNameDto();

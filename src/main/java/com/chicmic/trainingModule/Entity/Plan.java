@@ -20,11 +20,11 @@ import java.util.Set;
 @Builder
 public class Plan {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String planName;
     private String description;
     private Boolean isCompleted = false;
-    private List<Phase> phases;
+    private List<Phase<PlanTask>> phases;
     private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
