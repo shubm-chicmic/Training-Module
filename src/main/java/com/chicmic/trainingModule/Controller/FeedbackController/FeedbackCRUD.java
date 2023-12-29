@@ -231,5 +231,4 @@ public class FeedbackCRUD {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksForCourseByCourseIdAndTraineeId(courseId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
-
 }
