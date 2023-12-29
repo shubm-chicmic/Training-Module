@@ -52,14 +52,14 @@ public class TraineePlanService {
                                         "$$REMOVE"
                                 ))
                         ))
-                ),
-                context -> new Document("$match", new Document("$or", Arrays.asList(
-                        new Document("name", new Document("$regex", namePattern)),
-                        new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
-                ))),
-                context -> new Document("$sort", new Document(sortKey, sortDirection)),
-                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
-                context -> new Document("$limit", pageSize)
+                )
+//                context -> new Document("$match", new Document("$or", Arrays.asList(
+//                        new Document("name", new Document("$regex", namePattern)),
+//                        new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+//                )))
+//                context -> new Document("$sort", new Document(sortKey, sortDirection)),
+//                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
+//                context -> new Document("$limit", pageSize)
 //                context -> new Document("$facet", new Document(
 //                        "data", Arrays.asList(
 //                        new Document("$sort", new Document(sortKey, sortDirection)),
