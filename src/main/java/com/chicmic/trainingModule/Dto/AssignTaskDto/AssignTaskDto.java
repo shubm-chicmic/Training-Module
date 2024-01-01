@@ -1,6 +1,5 @@
 package com.chicmic.trainingModule.Dto.AssignTaskDto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ public class AssignTaskDto {
     private LocalDateTime date;
     private List<String> users;
     private List<String> planIds;
-    private Set<String> reviewers = new HashSet<>();
+    private Set<String> approver = new HashSet<>();
     private Boolean approved = false;
 
     @Override
@@ -25,7 +24,7 @@ public class AssignTaskDto {
         return "AssignTaskDto{" +
                 "users=" + users +
                 ", plans=" + planIds +
-                ", reviewers=" + reviewers +
+                ", reviewers=" + approver +
                 ", approved=" + approved +
                 '}';
     }

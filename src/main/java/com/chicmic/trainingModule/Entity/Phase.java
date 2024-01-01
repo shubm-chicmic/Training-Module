@@ -28,6 +28,7 @@ public class Phase<T> {
     private Integer totalTasks;
     @DBRef
     @CascadeSave
+    @JsonIgnore
     private List<T> tasks;
     @DBRef
     @JsonIgnore

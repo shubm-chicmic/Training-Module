@@ -32,7 +32,6 @@ import java.util.*;
 public class CourseService {
     private final CourseRepo courseRepo;
     private final MongoTemplate mongoTemplate;
-    private final MongoOperations mongoOperations;
     private final PhaseRepo phaseRepo;
     private final TaskRepo taskRepo;
     private final SubTaskRepo subTaskRepo;

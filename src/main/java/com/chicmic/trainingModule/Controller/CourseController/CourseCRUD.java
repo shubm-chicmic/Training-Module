@@ -5,6 +5,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Course;
 
@@ -72,6 +73,7 @@ public class CourseCRUD {
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Course retrieved successfully", courseResponseDto, response);
         }
     }
+
 
     @PostMapping
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {

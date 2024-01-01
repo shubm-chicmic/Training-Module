@@ -251,6 +251,6 @@ public class PlanService {
         } else {
             plan.setApproved(false);
         }
-        return planRepo.save(plan);
+        return plan;
     }
 }

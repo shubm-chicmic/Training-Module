@@ -21,7 +21,7 @@ import java.util.Set;
 @Builder
 public class AssignedPlan {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String userId;
     private LocalDateTime date;
     @DBRef

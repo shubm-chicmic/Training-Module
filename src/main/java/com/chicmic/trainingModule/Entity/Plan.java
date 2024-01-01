@@ -2,9 +2,11 @@ package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.chicmic.trainingModule.annotation.CascadeSave;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -23,7 +25,8 @@ public class Plan {
     private String _id;
     private String planName;
     private String description;
-    private Boolean isCompleted = false;
+    @DBRef
+    @CascadeSave
     private List<Phase<PlanTask>> phases;
     private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();

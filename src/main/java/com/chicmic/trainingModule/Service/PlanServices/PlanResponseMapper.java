@@ -105,7 +105,7 @@ public class PlanResponseMapper {
                 ._id(plan.get_id())
                 .planName(plan.getPlanName())
                 .description(plan.getDescription())
-                .estimatedTime("")
+                .estimatedTime("00:00")
                 .noOfPhases(plan.getPhases().size())
                 .noOfTasks(0)
                 .approver(plan.getApproverDetails())

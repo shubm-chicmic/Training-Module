@@ -2,9 +2,11 @@ package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.chicmic.trainingModule.annotation.CascadeSave;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -20,10 +22,12 @@ import java.util.Set;
 @Builder
 public class Test {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String testName;
     private List<String> teams;
-    private List<Phase> milestones;
+    @DBRef
+    @CascadeSave
+    private List<Phase<Task>> milestones;
     private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
