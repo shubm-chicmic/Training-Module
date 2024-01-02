@@ -21,6 +21,6 @@ public class Feedback {
     private Date createdAt;
     private Date updateAt;
     private String createdBy;
-    private boolean isDeleted = false;
+//    private boolean isDeleted;
     private Float overallRating;
 }
