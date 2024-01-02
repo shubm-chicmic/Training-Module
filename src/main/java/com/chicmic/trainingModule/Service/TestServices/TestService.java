@@ -1,11 +1,8 @@
 package com.chicmic.trainingModule.Service.TestServices;
 
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.SubTask;
-import com.chicmic.trainingModule.Entity.Task;
-import com.chicmic.trainingModule.Entity.Test;
 import com.chicmic.trainingModule.Repository.*;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -303,5 +300,20 @@ public class TestService {
         } else {
             return Collections.emptyList();
         }
+    }
+    public List<Map<String,String>> findTestsByIds(List<String> Ids){
+        Criteria criteria = Criteria.where("_id").in(Ids);
+        Query query = new Query(criteria);
+        query.fields().include("_id","name","milestones._id","milestones.name");
+        List<Course> course = mongoTemplate.find(new Query(criteria),Course.class);
+//        HashMap<String,String> courseDetails = new HashMap<>();
+        List<Map<String,String>> testDetailsList = Arrays.asList(new HashMap<>(),new HashMap<>());
+        course.forEach(c -> {
+            testDetailsList.get(0).put(c.get_id(),c.getName());
+            c.getPhases().forEach(p -> {
+                testDetailsList.get(1).put(p.get_id(),p.getName());
+            });
+        });
+        return testDetailsList;
     }
 }

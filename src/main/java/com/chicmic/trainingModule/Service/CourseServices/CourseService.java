@@ -324,5 +324,19 @@ public class CourseService {
         }
         return course;
     }
-
+    public List<Map<String,String>> findCoursesByIds(List<String> Ids){
+        Criteria criteria = Criteria.where("_id").in(Ids);
+        Query query = new Query(criteria);
+        query.fields().include("_id","name","phases._id","phases.name");
+        List<Course> course = mongoTemplate.find(new Query(criteria),Course.class);
+//        HashMap<String,String> courseDetails = new HashMap<>();
+        List<Map<String,String>> courseDetailsList = Arrays.asList(new HashMap<>(),new HashMap<>());
+        course.forEach(c -> {
+            courseDetailsList.get(0).put(c.get_id(),c.getName());
+            c.getPhases().forEach(p -> {
+                courseDetailsList.get(1).put(p.get_id(),p.getName());
+            });
+        });
+        return courseDetailsList;
+    }
 }

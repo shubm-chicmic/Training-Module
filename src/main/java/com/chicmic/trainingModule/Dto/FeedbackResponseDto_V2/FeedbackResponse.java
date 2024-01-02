@@ -1,10 +1,17 @@
 package com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+
 public interface FeedbackResponse {
+    public UserIdAndNameDto getFeedbackType();
+    public void setTask(UserIdAndNameDto task);
+    public UserIdAndNameDto getTask();
+    public List<UserIdAndNameDto> getSubTask();
     public static FeedbackResponse buildFeedbackResponse(Feedback_V2 feedback){
         String type = feedback.getType();
         switch (type){

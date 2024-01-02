@@ -29,6 +29,11 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private String comment;
     private Float overallRating;
 
+
+    public void setSubTask(List<UserIdAndNameDto> subTask) {
+        this.subTask = subTask;
+    }
+
     public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
         Rating_COURSE rating_course = (Rating_COURSE) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());

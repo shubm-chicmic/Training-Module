@@ -8,6 +8,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 
 @Getter @Setter @Builder
@@ -35,9 +39,21 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .comment(feedback.getComment())
                 .teamSpiritRating(rating_behaviour.getTeamSpiritRating())
                 .attitudeRating(rating_behaviour.getAttitudeRating())
-                .feedbackType(new UserIdAndNameDto("4", feedback.getType()))
+                .feedbackType(new UserIdAndNameDto("3", feedback.getType()))
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_behaviour.computeOverallRating())
                 .build();
+    }
+    @Override
+    public UserIdAndNameDto getTask() {
+        return null;
+    }
+    @Override
+    public void setTask(UserIdAndNameDto task) {
+
+    }
+    @Override
+    public List<UserIdAndNameDto> getSubTask() {
+        return new ArrayList<>();
     }
 }
