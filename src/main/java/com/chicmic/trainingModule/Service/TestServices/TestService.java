@@ -128,7 +128,7 @@ public class TestService {
 
         Criteria approvedCriteria = Criteria.where("approved").is(true);
         Criteria reviewersCriteria = Criteria.where("approved").is(false)
-                .and("reviewers").in(userId);
+                .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("approved").is(false)
                 .and("createdBy").is(userId);
 

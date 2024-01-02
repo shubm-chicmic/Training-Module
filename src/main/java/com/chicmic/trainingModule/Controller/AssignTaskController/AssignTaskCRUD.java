@@ -2,16 +2,15 @@ package com.chicmic.trainingModule.Controller.AssignTaskController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
-import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.Plan;
-import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.*;
+import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,12 +23,16 @@ import java.util.HashSet;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/training/assignTask")
+@RequestMapping("/v1/training/assignedPlan")
 @AllArgsConstructor
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
     private final PlanService planService;
+    private final CourseService courseService;
+    private final TestService testService;
+    private final PlanTaskService planTaskService;
     private final AssignTaskResponseMapper assignTaskResponseMapper;
+    private final AssignPlanResponseMapper assignPlanResponseMapper;
 //    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
@@ -78,7 +81,8 @@ public class AssignTaskCRUD {
         return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Fount", null, response);
     }
     @GetMapping("/plan")
-    public ApiResponse getPlan(@RequestParam String planId
+    public ApiResponseWithCount getPlan(@RequestParam String planId,
+                               HttpServletResponse response
     ){
         Plan plan = planService.getPlanById(planId);
         if(plan != null) {
@@ -87,12 +91,29 @@ public class AssignTaskCRUD {
            for (Phase<PlanTask> phase : phases) {
                planTasks.addAll(phase.getTasks());
            }
-           for (PlanTask planTask : planTasks) {
-
-           }
+           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks);
+           return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
         }
+        return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Plan Not Found", null, response);
 
     }
+    @GetMapping("/planTask")
+    public ApiResponseWithCount getPlanTask(@RequestParam String planTaskId,
+                                        HttpServletResponse response
+    ){
+        PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
+        if(planTask != null) {
+            List<String> phasesList = planTask.getPhases();
+            List<TaskDto> taskDtoList = new ArrayList<>();
+            List<Phase> phases = courseService.getPhaseByIds(phasesList);
+            List<Task> taskList = new ArrayList<>();
+            for(Phase phase : phases) {
+                taskList.addAll(phase.getTasks());
+            }
+        }
+        return null;
+    }
+
 
 
 

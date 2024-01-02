@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.PlanServices.PlanResponseMapper;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.*;
 @AllArgsConstructor
 public class PlanCRUD {
     private final PlanService planService;
+    private final PlanTaskService planTaskService;
     private final PlanResponseMapper planResponseMapper;
 //    @GetMapping("/getting")
 //    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
