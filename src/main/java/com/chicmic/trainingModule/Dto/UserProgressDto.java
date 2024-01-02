@@ -9,5 +9,7 @@ import lombok.*;
 @Builder
 public class UserProgressDto {
     private Integer progressType;
+    private String userId;
     private String id;
+    private Integer status;
 }

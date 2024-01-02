@@ -21,4 +21,5 @@ public class PlanTaskResponseDto {
     private List<UserIdAndNameDto> mentor;
     private String estimatedTime;
     private String consumedTime;
+    private Boolean isCompleted;
 }

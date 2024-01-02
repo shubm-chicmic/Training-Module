@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/training/assignedPlan")
+@RequestMapping("/v1/training/assignTask")
 @AllArgsConstructor
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
@@ -83,6 +83,7 @@ public class AssignTaskCRUD {
     }
     @GetMapping("/plan")
     public ApiResponseWithCount getPlan(@RequestParam String planId,
+                               @RequestParam String traineeId,
                                HttpServletResponse response
     ){
         Plan plan = planService.getPlanById(planId);
@@ -92,7 +93,7 @@ public class AssignTaskCRUD {
            for (Phase<PlanTask> phase : phases) {
                planTasks.addAll(phase.getTasks());
            }
-           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks);
+           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, traineeId);
            return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
         }
         return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Plan Not Found", null, response);
@@ -100,6 +101,7 @@ public class AssignTaskCRUD {
     }
     @GetMapping("/planTask")
     public ApiResponseWithCount getPlanTask(@RequestParam String planTaskId,
+                                        @RequestParam String traineeId,
                                         HttpServletResponse response
     ){
         PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
@@ -111,7 +113,7 @@ public class AssignTaskCRUD {
             for(Phase phase : phases) {
                 taskList.addAll(phase.getTasks());
             }
-            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList);
+            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList, traineeId);
             return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Task Retrieved", taskDtoList, response);
         }
         return null;

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/v1/training/userProgress")
@@ -19,10 +20,12 @@ import java.security.Principal;
 public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     @PostMapping
-
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal) {
         UserProgress userProgress = UserProgress.builder()
+                .userId(userProgressDto.getUserId())
+                .startDate(LocalDateTime.now())
                 .progressType(userProgressDto.getProgressType())
+                .status(userProgressDto.getStatus())
                 .build();
         userProgress = userProgressService.createUserProgress(userProgress);
         return new ApiResponse(HttpStatus.OK.value(), "UserProgress created successfully", userProgress);

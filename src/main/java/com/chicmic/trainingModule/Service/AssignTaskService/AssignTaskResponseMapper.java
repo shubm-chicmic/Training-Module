@@ -33,25 +33,6 @@ public class AssignTaskResponseMapper {
 
             return null;
         }
-//        List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
-//                .map(reviewersIds -> reviewersIds.stream()
-//                        .map(reviewerId -> {
-//                            String name = TrainingModuleApplication.searchNameById(reviewerId);
-//                            return new UserIdAndNameDto(reviewerId, name);
-//                        })
-//                        .collect(Collectors.toList())
-//                )
-//                .orElse(null);
-//
-//        List<UserIdAndNameDto> approvedBy = Optional.ofNullable(assignTask.getApprovedBy())
-//                .map(approvedByIds -> approvedByIds.stream()
-//                        .map(approverId -> {
-//                            String name = TrainingModuleApplication.searchNameById(approverId);
-//                            return new UserIdAndNameDto(approverId, name);
-//                        })
-//                        .collect(Collectors.toList())
-//                )
-//                .orElse(null);
 //        Object trainee = null;
 //        if (traineeId == null && traineeId.isEmpty()) {
 ////            trainee = Optional.ofNullable(assignTask.getUsers())
@@ -69,6 +50,7 @@ public class AssignTaskResponseMapper {
 
         List<PlanDto> plans = new ArrayList<>();
         for (Plan plan : assignTask.getPlans()) {
+
             PlanDto planDto = PlanDto.builder()
                     .assignPlanId(assignTask.get_id())
                     .name(plan.getPlanName())
@@ -79,7 +61,7 @@ public class AssignTaskResponseMapper {
                     .approver(plan.getApproverDetails())
 //                    .estimatedTime(plan.getEs)
 //                    .feedbackId()
-//                    .isCompleted
+                    .isCompleted(false)
                     .rating(0f)
                     .build();
             plans.add(planDto);
