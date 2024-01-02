@@ -31,6 +31,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<ApiError> handleConstraintViolationException(ConstraintViolationException e) {
+        System.out.println(e.getMessage() + "////....");
        // System.out.println("this method get called");
 //        return new ResponseEntity<>(new ApiError(HttpStatus.BAD_REQUEST,Arrays.asList(e.getMessage()),Instant.now()),HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(new ApiError(HttpStatus.BAD_REQUEST,e.getMessage(),Instant.now()),HttpStatus.BAD_REQUEST);

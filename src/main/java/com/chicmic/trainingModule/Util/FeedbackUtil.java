@@ -2,6 +2,8 @@ package com.chicmic.trainingModule.Util;
 
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,6 +15,8 @@ import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
 public class FeedbackUtil {
     public static  final String[] FEEDBACK_TYPE_CATEGORY =
             {"COURSE","TEST","PPT","BEHAVIOUR"};
+    public static  final String[] FEEDBACK_TYPE_CATEGORY_V2 =
+            {"COURSE","TEST","BEHAVIOUR","PPT"};
 
     public static HashSet<String> searchNameAndEmployeeCode(String query){
         HashSet<String> ids = new HashSet<>();
@@ -26,6 +30,10 @@ public class FeedbackUtil {
             }
         }
         return ids;
+    }
+    public static boolean checkRole(String roleName){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().contains(roleName);
     }
     public static String getFeedbackMessageBasedOnOverallRating(Float overallRating){
         if(overallRating==0) return "";

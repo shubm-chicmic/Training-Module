@@ -25,7 +25,7 @@ import com.chicmic.trainingModule.Entity.Test.Test;
 import com.chicmic.trainingModule.Entity.Test.TestSubTask;
 import com.chicmic.trainingModule.Entity.Test.TestTask;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+//import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomObjectMapper {
     private final CourseService courseService;
-    private final FeedbackService feedbackService;
+//    private final FeedbackService feedbackService;
     private final TestService testService;
 
     public static <T> T convert(Object dto, Class<T> targetType) {
@@ -655,10 +655,10 @@ public class CustomObjectMapper {
 
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignTask assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+//            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
 
             return AssignTaskResponseDto.builder()
-                    .trainee(trainee)
+//                    .trainee(trainee)
                     .build();
         }
         List<UserIdAndNameDto> reviewers = Optional.ofNullable(assignTask.getReviewers())
@@ -692,7 +692,7 @@ public class CustomObjectMapper {
 //                    )
 //                    .orElse(null);
         } else {
-            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+//            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
         }
 
         List<PlanDto> plans = new ArrayList<>();
@@ -743,7 +743,7 @@ public class CustomObjectMapper {
                                         ._id(coursePhase.get_id())
                                         .reviewers(task.getMentor())
                                         .name(coursePhase.getName())
-                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
+//                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), coursePhase.get_id(), principal.getName(), assignTask.getUserId()))
                                         .isCompleted(isMilestoneCompleted)
                                         .noOfTasks(coursePhase.getTasks().size())
                                         .estimatedTime(coursePhase.getEstimatedTime())
@@ -810,7 +810,7 @@ public class CustomObjectMapper {
                                         .reviewers(task.getMentor())
 
                                         .name(milestone.getName())
-                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
+//                                        .feedbackId(feedbackService.getFeedbackIdForMileStoneAndPhase(String.valueOf(task.getPlanType()), ((AssignTaskPlanTrack) task.getPlan()).get_id(), milestone.get_id(), principal.getName(), assignTask.getUserId()))
                                         .isCompleted(isMilestoneCompleted)
                                         .noOfTasks(milestone.getTasks().size())
                                         .estimatedTime(milestone.getEstimatedTime())

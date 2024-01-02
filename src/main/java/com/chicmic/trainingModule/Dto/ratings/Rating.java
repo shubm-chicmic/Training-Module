@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Dto.ratings;
 
 import com.chicmic.trainingModule.Dto.FeedBackDto;
+//import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import org.springframework.http.HttpStatus;
 
@@ -8,9 +9,9 @@ public interface Rating {
     public static Rating getRating(FeedBackDto feedBackDto){
         String feedBack_type = feedBackDto.getFeedbackType();
         switch (feedBack_type){
-            case "1" :  {
-                return new Rating_COURSE(feedBackDto.getCourse(), feedBackDto.getPhase(), feedBackDto.getTheoreticalRating(), feedBackDto.getTechnicalRating(), feedBackDto.getCommunicationRating());
-            }
+//            case "1" :  {
+//                return new Rating_COURSE(feedBackDto.getCourse(), feedBackDto.getPhase(), feedBackDto.getTheoreticalRating(), feedBackDto.getTechnicalRating(), feedBackDto.getCommunicationRating());
+//            }
             case "2" : {
                 return new Rating_TEST(feedBackDto.getTest(), feedBackDto.getMilestone(), feedBackDto.getTheoreticalRating(), feedBackDto.getCodingRating(), feedBackDto.getCommunicationRating());
             }

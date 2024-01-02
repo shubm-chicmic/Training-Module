@@ -7,7 +7,7 @@ import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
 import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
+//import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.List;
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
     private final CustomObjectMapper customObjectMapper;
-    private final TraineePlanService trainePlanService;
+//    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
 //        trainePlanService.assignMultiplePlansToTrainees();

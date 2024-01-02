@@ -48,7 +48,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         String servletPath = request.getServletPath();
         log.info("visited url = " + servletPath);
 
-        if (servletPath.contains("/v1/training")||servletPath.contains("/api/feedback")) {
+        if (servletPath.contains("/v1/training")||servletPath.contains("/v2/training")) {
             String authorizationHeader = request.getHeader("Authorization");
             String userMetadataHeader = request.getHeader("userMeta");
 
