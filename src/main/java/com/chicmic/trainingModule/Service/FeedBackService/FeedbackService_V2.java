@@ -3,8 +3,10 @@ package com.chicmic.trainingModule.Service.FeedBackService;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
+import com.chicmic.trainingModule.Dto.FeedbackDto.RatingAndCountDto;
 import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
 import com.chicmic.trainingModule.Dto.FeedbackResponse_V2;
+import com.chicmic.trainingModule.Dto.PhaseResponse_V2.PhaseResponse_V2;
 import com.chicmic.trainingModule.Dto.rating.Rating;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
@@ -22,10 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Entity.Feedback_V2.buildFeedbackFromFeedbackRequestDto;
@@ -276,7 +275,29 @@ public class FeedbackService_V2 {
         Query query = new Query(criteria);
         return mongoTemplate.find(query,Feedback_V2.class);
     }
+
     public List<CourseResponse_V2> buildFeedbackResponseForCourseAndTest(List<Feedback_V2> feedbackList, String _id, Integer type){
+        List<String> courseIds = new ArrayList<>();
+        List<String> testIds = new ArrayList<>();
+        feedbackList.forEach(f -> {
+            if(f.getType().equals("COURSE")||f.getType().equals("PPT"))
+                courseIds.add(f.getDetails().getTaskId());
+            else if(f.getType().equals("TEST"))
+                testIds.add(f.getDetails().getTaskId());
+        });
+
+        var testDetails = testService.findTestsByIds(testIds);
+        var courseDetails = courseService.findCoursesByIds(courseIds);
+        List<CourseResponse_V2> courseResponseList = new ArrayList<>();
+        Map<String, RatingAndCountDto> reviewerDetails = new HashMap<>();
+        for (Feedback_V2 feedback_v2 : feedbackList){
+            String reviewerId = feedback_v2.getCreatedBy();
+            if(!reviewerDetails.containsKey(reviewerId)){
+                reviewerDetails.put(reviewerId,new RatingAndCountDto(1,4.5f));
+            }else{
+//                PhaseResponse_V2 phaseResponse = buildPhaseResponseForCourseOrTest(feedback,names);
+            }
+        }
 //        Map<String,String> names = new HashMap<>();
 //        if(type == 1) names = getPhaseName(_id);
 //        else if (type == 2) names = getTestName(_id);
@@ -328,4 +349,7 @@ public class FeedbackService_V2 {
 //        return courseResponseList;
         return null;
     }
+//    public PhaseResponse_V2 buildPhaseResponseForCourseOrTest(){
+//
+//    }
 }

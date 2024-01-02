@@ -42,12 +42,13 @@
 //        count  = 4l;
 //        return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
 //    }
-//    @PostMapping
-//    public ApiResponse assignMultiplePlansToTrainees(@Valid @RequestBody PlanRequestDto planRequestDto,Principal principal){
-////        System.out.println("FGafgasa");
-//        List<TraineePlanReponse> documentList = traineePlanService.assignMultiplePlansToTrainees(planRequestDto,principal.getName());
 //
-//        return new ApiResponse(201,"Plan assigned successfully to user",documentList);
-//    }
+////    @PostMapping
+////    public ApiResponse assignMultiplePlansToTrainees(@Valid @RequestBody PlanRequestDto planRequestDto,Principal principal){
+//////        System.out.println("FGafgasa");
+////        List<TraineePlanReponse> documentList = traineePlanService.assignMultiplePlansToTrainees(planRequestDto,principal.getName());
+////
+////        return new ApiResponse(201,"Plan assigned successfully to user",documentList);
+////    }
 //}
 //
