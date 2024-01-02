@@ -5,7 +5,7 @@ import com.chicmic.trainingModule.Dto.AssignTaskDto.MilestoneDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+//import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AssignTaskResponseMapper {
-    private final FeedbackService feedbackService;
+//    private final FeedbackService feedbackService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
 //        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
 //        for (AssignedPlan assignTask : assignTasks) {
@@ -29,7 +29,7 @@ public class AssignTaskResponseMapper {
 //    }
     public List<PlanDto> mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+//            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
 
             return null;
         }

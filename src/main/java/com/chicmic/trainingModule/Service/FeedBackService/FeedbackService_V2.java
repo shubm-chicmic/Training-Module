@@ -3,15 +3,11 @@ package com.chicmic.trainingModule.Service.FeedBackService;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
-import com.chicmic.trainingModule.Dto.FeedbackResponse_V2;
 import com.chicmic.trainingModule.Dto.rating.Rating;
-import com.chicmic.trainingModule.Dto.rating.Rating_PPT;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -104,9 +100,6 @@ public class FeedbackService_V2 {
         return feedback.getTraineeId();
     }
     public Feedback_V2 getFeedbackById(String _id){
-        System.out.println(_id + "////");
-//        Criteria criteria = Criteria.where("_id").is(_id);
-//        mongoTemplate
 //        Feedback_V2 feedbackV2 =  mongoTemplate.findOne(new Query(criteria), Feedback_V2.class);
         Feedback_V2 feedbackV2 =  mongoTemplate.findById(_id, Feedback_V2.class);
         if (feedbackV2 == null)
@@ -126,7 +119,6 @@ public class FeedbackService_V2 {
         if(query==null || query.isBlank()) query = ".*";
         int skipValue = (pageNumber - 1) * pageSize;
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
-
         Aggregation aggregation = newAggregation(
                 match(criteria),
                 context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
