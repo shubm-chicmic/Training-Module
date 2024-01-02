@@ -22,6 +22,7 @@ public interface FeedbackResponse {
         }
         throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
     }
+
     public void setOverallRating(Float overallRating);
 //    public static FeedbackResponse buildFeedbackResponse(Document document){
 //        String type = (String) document.get("type");

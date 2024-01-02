@@ -39,6 +39,9 @@ public class PlanService {
         plan.setCreatedAt(LocalDateTime.now());
         plan.setUpdatedAt(LocalDateTime.now());
         plan.setCreatedBy(principal.getName());
+        plan.setApproved(true);
+        plan.getApprovedBy().add("61fba5d5f4f70d6c0b3eff40");
+        plan.setApprovedBy(plan.getApprovedBy());
         plan = planRepo.save(plan);
         return plan;
     }

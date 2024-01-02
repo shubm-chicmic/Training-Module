@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Entity.Course.CourseSubTask;
 import com.chicmic.trainingModule.Entity.Course.CourseTask;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.bson.types.ObjectId;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +44,7 @@ public class ExcelPerformOperations {
                 if (phaseCell != null && !phaseCell.getStringCellValue().isEmpty()) {
                     phaseName = phaseCell.getStringCellValue();
                     phase = new Phase();
+                    phase.set_id((String.valueOf(new ObjectId())));
                     phase.setTasks(new ArrayList<>());
                     phaseList.add(phase);
                 }
@@ -50,7 +52,7 @@ public class ExcelPerformOperations {
                 if (mainTaskCell != null && !mainTaskCell.getStringCellValue().isEmpty()) {
                     mainTask = mainTaskCell.getStringCellValue();
                     CourseTask courseTask = new CourseTask();
-
+                    courseTask.set_id((String.valueOf(new ObjectId())));
                     courseTask.setMainTask(mainTask);
                     courseTask.setSubtasks(new ArrayList<>());
                     if (phase != null) {
@@ -61,6 +63,7 @@ public class ExcelPerformOperations {
                 if (subTaskCell != null && hoursCell != null && referenceCell != null &&
                         !subTaskCell.getStringCellValue().isEmpty() && hoursCell.getCellType() == CellType.NUMERIC) {
                     CourseSubTask courseSubTask = new CourseSubTask();
+                    courseSubTask.set_id((String.valueOf(new ObjectId())));
                     courseSubTask.setSubTask(subTaskCell.getStringCellValue());
                     courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()));
                     courseSubTask.setLink(referenceCell.getStringCellValue());
@@ -84,7 +87,7 @@ public class ExcelPerformOperations {
         course.setFigmaLink("https://www.figma.com/file/");
         course.setGuidelines("");
         course.setIsDeleted(false);
-        course.setIsApproved(false);
+        course.setIsApproved(true);
         course.setPhases(phaseList);
         course.setReviewers(new HashSet<>(Set.of(
                 "61fba5d5f4f70d6c0b3eff40"
@@ -92,7 +95,10 @@ public class ExcelPerformOperations {
         )));
         course.setCreatedBy("61fba5d5f4f70d6c0b3eff40");
         course.setCreatedByName("Priti Mittal");
-        course.setApprovedBy(new HashSet<>());
+        course.setApprovedBy(new HashSet<>(Set.of(
+                "61fba5d5f4f70d6c0b3eff40"
+//                "61fba5d5f4f70d6c0b3eff3d"
+        )));
 
         return course;
     }
