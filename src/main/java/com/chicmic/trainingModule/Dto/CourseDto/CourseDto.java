@@ -17,9 +17,21 @@ import java.util.Set;
 public class CourseDto {
     @JsonProperty("courseName")
     private String name;
-    private Set<String> approver = new HashSet<>();
+    private Set<String> approver;
     private String figmaLink;
     private String guidelines;
     private List<List<Task>> phases;
     private Boolean approved = false;
+
+    @Override
+    public String toString() {
+        return "CourseDto{" +
+                "name='" + name + '\'' +
+                ", approver=" + approver +
+                ", figmaLink='" + figmaLink + '\'' +
+                ", guidelines='" + guidelines + '\'' +
+                ", phases=" + phases +
+                ", approved=" + approved +
+                '}';
+    }
 }

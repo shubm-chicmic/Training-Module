@@ -66,6 +66,8 @@ public class CourseService {
             phases.add(phaseRepo.save(phase));
         }
         course.setPhases(phases);
+        System.out.println("course in service  " + course);
+
         course = courseRepo.save(course);
         return course;
     }
@@ -277,6 +279,7 @@ public class CourseService {
                 course.setGuidelines(courseDto.getGuidelines());
             }
             if (courseDto.getApprover() != null) {
+                System.out.println("Insdie update " + courseDto);
                 course.setApprover(courseDto.getApprover());
                 Integer count = 0;
                 for (String reviewer : course.getApprover()){
@@ -322,7 +325,7 @@ public class CourseService {
         }else {
             course.setIsApproved(false);
         }
-        return course;
+        return courseRepo.save(course);
     }
 
 }

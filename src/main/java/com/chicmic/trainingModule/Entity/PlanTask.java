@@ -1,14 +1,10 @@
 package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Util.ConversionUtility;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.apache.poi.ss.formula.functions.T;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -25,8 +21,7 @@ public class PlanTask {
     @NotNull(message = "Plan Id cannot be empty")
     private String plan;
     @NotNull(message = "Milestones cannot be Empty")
-    @DBRef
-    private List<String> phases;
+    private List<String> milestones;
     private List<String> mentor;
     private String estimatedTime;
     public List<UserIdAndNameDto> getMentorDetails() {
@@ -47,5 +42,17 @@ public class PlanTask {
         formattedTime = String.format("%02d:%02d", hours, minutes);
         this.estimatedTime = formattedTime;
         return this.estimatedTime;
+    }
+
+    @Override
+    public String toString() {
+        return "PlanTask{" +
+                "_id='" + _id + '\'' +
+                ", planType=" + planType +
+                ", plan='" + plan + '\'' +
+                ", milestones=" + milestones +
+                ", mentor=" + mentor +
+                ", estimatedTime='" + estimatedTime + '\'' +
+                '}';
     }
 }

@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.AssignTaskService.TaskResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
@@ -18,8 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 @RestController
@@ -33,6 +32,8 @@ public class AssignTaskCRUD {
     private final PlanTaskService planTaskService;
     private final AssignTaskResponseMapper assignTaskResponseMapper;
     private final AssignPlanResponseMapper assignPlanResponseMapper;
+    private final TaskResponseMapper taskResponseMapper;
+
 //    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
@@ -103,13 +104,15 @@ public class AssignTaskCRUD {
     ){
         PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
         if(planTask != null) {
-            List<String> phasesList = planTask.getPhases();
+            List<String> phasesList = planTask.getMilestones();
             List<TaskDto> taskDtoList = new ArrayList<>();
             List<Phase> phases = courseService.getPhaseByIds(phasesList);
             List<Task> taskList = new ArrayList<>();
             for(Phase phase : phases) {
                 taskList.addAll(phase.getTasks());
             }
+            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList);
+            return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Task Retrieved", taskDtoList, response);
         }
         return null;
     }

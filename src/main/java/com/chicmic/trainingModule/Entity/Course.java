@@ -76,4 +76,25 @@ public class Course {
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
+//    @Override
+//    public String toString() {
+//        return "Course{" +
+//                "_id='" + _id + '\'' +
+//                ", name='" + name + '\'' +
+//                ", figmaLink='" + figmaLink + '\'' +
+//                ", guidelines='" + guidelines + '\'' +
+//                ", phases=" + phases +
+//                ", approver=" + approver +
+//                ", approvedBy=" + approvedBy +
+//                ", createdBy='" + createdBy + '\'' +
+//                ", isDeleted=" + isDeleted +
+//                ", isApproved=" + isApproved +
+//                ", createdAt=" + createdAt +
+//                ", updatedAt=" + updatedAt +
+//                ", estimatedTime=" + estimatedTime +
+//                ", completedTasks=" + completedTasks +
+//                ", totalTasks=" + totalTasks +
+//                '}';
+//    }
 }

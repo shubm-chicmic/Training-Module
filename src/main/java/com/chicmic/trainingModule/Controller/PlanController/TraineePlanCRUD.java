@@ -1,7 +1,7 @@
 package com.chicmic.trainingModule.Controller.PlanController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
 import org.bson.Document;
@@ -39,7 +39,7 @@ public class TraineePlanCRUD {
         sortDirection = (sortDirection!=1)?-1:1;
         List<Document> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
         long count = 0;
-        count  = mongoTemplate.count(new Query(), AssignTask.class);
+        count  = mongoTemplate.count(new Query(), AssignedPlan.class);
         return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
     }
 }

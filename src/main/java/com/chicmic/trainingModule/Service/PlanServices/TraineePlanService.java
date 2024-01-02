@@ -70,7 +70,7 @@ public class TraineePlanService {
 //                        new Document("$count", "total")
 //                )))
         );
-        List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignTask", Document.class).getMappedResults();
+        List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
         Set<String> userIds = new HashSet<>();
         Map<String,Integer> userSummary = new HashMap<>();
         int count = 0;

@@ -45,7 +45,7 @@ public class AssignPlanResponseMapper {
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)
                 .planType(planTask.getPlanType())
-                .phases(planTask.getPhases())
+                .phases(planTask.getMilestones())
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .build();

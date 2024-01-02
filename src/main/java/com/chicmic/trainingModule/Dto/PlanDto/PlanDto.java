@@ -19,4 +19,15 @@ public class PlanDto {
     private Set<String> approver;
     private List<Phase<PlanTask>> phases;
     private Boolean approved = false;
+
+    @Override
+    public String toString() {
+        return "PlanDto{" +
+                "planName='" + planName + '\'' +
+                ", description='" + description + '\'' +
+                ", approver=" + approver +
+                ", milestones=" + phases +
+                ", approved=" + approved +
+                '}';
+    }
 }

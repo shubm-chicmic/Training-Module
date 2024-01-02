@@ -7,7 +7,6 @@ import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
-import com.chicmic.trainingModule.Repository.TaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +55,11 @@ public class PlanService {
             phases.add(phaseRepo.save(phase));
         }
         plan.setPhases(phases);
+        plan.setApproved(false);
+        plan.setDeleted(false);
+        plan.setPlanName(planDto.getPlanName());
+        plan.setCreatedBy(principal.getName());
+        plan.setApprover(planDto.getApprover());
         plan.setCreatedAt(LocalDateTime.now());
         plan.setUpdatedAt(LocalDateTime.now());
         plan.setCreatedBy(principal.getName());
@@ -256,6 +260,6 @@ public class PlanService {
         } else {
             plan.setApproved(false);
         }
-        return plan;
+        return planRepo.save(plan);
     }
 }

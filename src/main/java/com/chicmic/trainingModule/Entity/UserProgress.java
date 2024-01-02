@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class UserProgress {
     @Id
     private ObjectId _id;
+    private String userId;
     private Integer progressType;
     private String id;
     private Integer status = ProgessConstants.NotStarted;

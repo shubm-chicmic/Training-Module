@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Dto.AssignTaskDto;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
 
 @Getter
@@ -8,8 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class TaskDto {
-    private String mainTaskId;
-    private String mainTask;
+    private UserIdAndNameDto mainTask;
     private String subtaskId;
     private String subtask;
     private String estimatedTime;

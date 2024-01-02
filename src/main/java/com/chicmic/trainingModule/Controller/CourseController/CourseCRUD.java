@@ -96,6 +96,7 @@ public class CourseCRUD {
                 .isDeleted(false)
                 .isApproved(false)
                 .build();
+        System.out.println("course in controller  " + course);
         course = courseService.createCourse(course);
         return new ApiResponse(HttpStatus.CREATED.value(), "Course created successfully", course);
     }
@@ -113,6 +114,7 @@ public class CourseCRUD {
     @PutMapping
     public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
+        System.out.println("course Dto = " + courseDto);
         if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
@@ -127,7 +129,7 @@ public class CourseCRUD {
                 }
             }
             courseDto.setApproved(course.getIsApproved());
-
+//            courseDto.setApprover(course.getApprover());
             CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId), true);
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);
         }else {

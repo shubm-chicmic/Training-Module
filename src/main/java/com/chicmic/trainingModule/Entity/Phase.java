@@ -28,7 +28,6 @@ public class Phase<T> {
     private Integer totalTasks;
     @DBRef
     @CascadeSave
-    @JsonIgnore
     private List<T> tasks;
     @DBRef
     @JsonIgnore
@@ -79,5 +78,19 @@ public class Phase<T> {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
         return String.format("%02d:%02d", hours, minutes);
+    }
+
+    @Override
+    public String toString() {
+        return "Phase{" +
+                "_id='" + _id + '\'' +
+                ", entityType=" + entityType +
+                ", name='" + name + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", completedTasks=" + completedTasks +
+                ", totalTasks=" + totalTasks +
+                ", tasks=" + tasks +
+                ", entity=" + entity +
+                '}';
     }
 }

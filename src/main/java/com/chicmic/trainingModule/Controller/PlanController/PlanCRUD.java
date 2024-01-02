@@ -46,12 +46,14 @@ public class PlanCRUD {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
+            System.out.println(planList);
             Long count = planService.countNonDeletedPlans(searchString);
             List<PlanResponseDto> planResponseDtoList = planResponseMapper.mapPlanToResponseDto(planList, isPhaseRequired);
 //            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         }
         if (planId == null || planId.isEmpty()) {
+
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
