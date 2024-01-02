@@ -1,8 +1,11 @@
-package com.chicmic.trainingModule.Entity.AssignTask;
+package com.chicmic.trainingModule.Entity;
 
-import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Util.ConversionUtility;
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -16,17 +19,25 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AssignTask {
+public class AssignedPlan {
     @Id
     private String _id;
     private String userId;
     private LocalDateTime date;
+    @DBRef
     private List<Plan> plans;
-    private Set<String> reviewers = new HashSet<>();
+    private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public List<UserIdAndNameDto> getApproverDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.approver);
+    }
+
+    public List<UserIdAndNameDto> getApprovedByDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
 }

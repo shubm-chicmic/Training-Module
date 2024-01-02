@@ -4,15 +4,14 @@
 //import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
 //import com.chicmic.trainingModule.Dto.DashboardDto.PlanDto;
 //import com.chicmic.trainingModule.Dto.UserDto;
-//import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
-//import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
-//import com.chicmic.trainingModule.Entity.Plan.Phase;
-//import com.chicmic.trainingModule.Entity.Plan.Plan;
-//import com.chicmic.trainingModule.Entity.Plan.Task;
+//import com.chicmic.trainingModule.Entity.AssignedPlan;
+//import com.chicmic.trainingModule.Entity.AssignTasktem.AssignTaskPlanTrack;
+//import com.chicmic.trainingModule.Entity.Plan33.Phase;
+//import com.chicmic.trainingModule.Entity.Plan;
+//import com.chicmic.trainingModule.Entity.PlanTask;
 //import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 //import com.chicmic.trainingModule.TrainingModuleApplication;
 //import org.bson.Document;
-//import org.springframework.data.domain.Sort;
 //import org.springframework.data.mongodb.core.MongoTemplate;
 //import org.springframework.data.mongodb.core.query.Criteria;
 //import org.springframework.data.mongodb.core.query.Query;
@@ -20,7 +19,6 @@
 //
 //import java.text.SimpleDateFormat;
 //import java.util.*;
-//import java.util.stream.Collectors;
 //
 //@Service
 //public class DashboardService {
@@ -59,10 +57,9 @@
 ////            ));
 ////        }
 //        //get
-//        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
 //        Criteria criteria = Criteria.where("userId").is(traineeId);
 //        Query query = new Query(criteria);
-//        AssignTask assignTask = mongoTemplate.findOne(query, AssignTask.class);
+//        AssignedPlan assignTask = mongoTemplate.findOne(query, AssignedPlan.class);
 //        Map<String,List<AssignTaskPlanTrack>> assignCourseMap  = new HashMap<>();
 //        Map<String,List<AssignTaskPlanTrack>> assignTestMap = new HashMap<>();
 //        List<PlanDto> planDtoList = new ArrayList<>();
@@ -74,19 +71,18 @@
 //            List<String> testIds = new ArrayList<>();
 //            for (Plan plan : plans) {
 //                for (Phase phase : plan.getPhases()) {
-//                    for (Task task : phase.getTasks()) {
-//                        String _id = ((AssignTaskPlanTrack) task.getPlan()).get_id();
-//                        Boolean isCompleted = ((AssignTaskPlanTrack) task.getPlan()).getIsCompleted();
-//                        if(task.getPlanType() != 3)
-//                            planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(isCompleted)
-//                                .phase(_id).type(task.getPlanType()).build());
+//                    for (PlanTask planTask : phase.getTasks()) {
+//                        String _id = ((AssignTaskPlanTrack) planTask.getPlan()).get_id();
+//                        if(planTask.getPlanType() != 3)
+//                            planDtoList.add(PlanDto.builder().name(phase.getPhaseName()).date(formatter.format(date)).isComplete(planTask.getIsCompleted())
+//                                .phase(_id).type(planTask.getPlanType()).build());
 //                        //AssignTaskPlanTrack assignTaskPlanTrack = ((AssignTaskPlanTrack) task.getPlan());
-//                        List<AssignTaskPlanTrack> milestones =  (List<AssignTaskPlanTrack>) task.getMilestones();
-//                        if(task.getPlanType() == 2){
+//                        List<AssignTaskPlanTrack> milestones = (List<AssignTaskPlanTrack>) planTask.getPhases();
+//                        if(planTask.getPlanType() == 2){
 //                            assignTestMap.put(_id,milestones);
 //                            testIds.add(_id);
 //                        }
-//                        if(task.getPlanType() != 1) continue;
+//                        if(planTask.getPlanType() != 1) continue;
 //                        int count = 0;
 //                        for (AssignTaskPlanTrack milestone : milestones) {
 //                            if (milestone.getIsCompleted() == true)

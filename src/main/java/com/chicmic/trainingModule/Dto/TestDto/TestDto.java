@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.Dto.TestDto;
 
-import com.chicmic.trainingModule.Entity.Test.TestTask;
+import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,8 +19,8 @@ import java.util.Set;
 public class TestDto {
     private String testName;
     private List<String> teams;
-    private List<List<TestTask>> milestones;
-    private Set<String> reviewers = new HashSet<>();
+    private List<List<Task>> milestones;
+    private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private Boolean approved = false;
 }

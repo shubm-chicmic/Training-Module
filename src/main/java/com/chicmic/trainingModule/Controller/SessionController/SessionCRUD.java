@@ -2,11 +2,11 @@ package com.chicmic.trainingModule.Controller.SessionController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
-import com.chicmic.trainingModule.Dto.SessionDto.Mommessage;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
-import com.chicmic.trainingModule.Entity.Session.Session;
-import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.Session;
+import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
+import com.chicmic.trainingModule.Service.SessionService.SessionResponseMapper;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;
@@ -24,6 +23,7 @@ import java.util.*;
 @AllArgsConstructor
 public class SessionCRUD {
     private final SessionService sessionService;
+    private final SessionResponseMapper sessionResponseMapper;
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
@@ -43,7 +43,7 @@ public class SessionCRUD {
             List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = sessionService.countNonDeletedSessions(searchString);
 
-            List<SessionResponseDto> sessionResponseDtoList = CustomObjectMapper.mapSessionToResponseDto(sessionList);
+            List<SessionResponseDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToResponseDto(sessionList);
 //            Collections.reverse(sessionResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList, response);
         }else {
@@ -51,7 +51,7 @@ public class SessionCRUD {
             if(session == null){
                 return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Session not found", null, response);
             }
-            SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(session);
+            SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(session);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response);
         }
     }
@@ -84,7 +84,7 @@ public class SessionCRUD {
         if (session != null) {
 
             if (sessionDto != null && sessionDto.getApproved() != null) {
-                List<String> approver = session.getApprover();
+                Set<String> approver = session.getApprover();
                 if (approver.contains(principal.getName())) {
                     session =sessionService.approve(session, principal.getName(), sessionDto.getApproved());
                 } else {
@@ -118,7 +118,7 @@ public class SessionCRUD {
                 }
 
             }
-            SessionResponseDto sessionResponseDto = CustomObjectMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
+            SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);

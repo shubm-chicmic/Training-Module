@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.SessionDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class SessionResponseDto {
-    private String _id;
+    private ObjectId _id;
     private String title;
     private String time;
     private String date;

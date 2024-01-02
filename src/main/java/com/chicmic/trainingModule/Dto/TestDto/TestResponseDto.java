@@ -1,8 +1,10 @@
 package com.chicmic.trainingModule.Dto.TestDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Test.Milestone;
+import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.Task;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 
@@ -16,10 +18,10 @@ public class TestResponseDto {
     private String testName;
     private String estimatedTime;
     private int noOfMilestones;
-    private int noOfTopics;
+//    private int noOfTopics;
     private List<UserIdAndNameDto> teams;
-    private List<Milestone> milestones;
-    private List<UserIdAndNameDto> reviewers;
+    private List<Phase<Task>> milestones;
+    private List<UserIdAndNameDto> approver;
     private List<UserIdAndNameDto> approvedBy;
     private String createdBy;
     private String createdByName;

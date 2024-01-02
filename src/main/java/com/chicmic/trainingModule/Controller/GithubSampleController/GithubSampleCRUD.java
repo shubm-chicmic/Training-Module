@@ -5,7 +5,8 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleDto;
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleResponseDto;
-import com.chicmic.trainingModule.Entity.GithubSample.GithubSample;
+import com.chicmic.trainingModule.Entity.GithubSample;
+import com.chicmic.trainingModule.Service.GithubSampleServices.GithubSampleResponseMapper;
 import com.chicmic.trainingModule.Service.GithubSampleServices.GithubSampleService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +23,7 @@ import java.util.*;
 @AllArgsConstructor
 public class GithubSampleCRUD {
     private final GithubSampleService githubSampleService;
+    private final GithubSampleResponseMapper githubSampleResponseMapper;
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -40,7 +42,7 @@ public class GithubSampleCRUD {
             List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = githubSampleService.countNonDeletedGithubSamples(searchString);
 
-            List<GithubSampleResponseDto> githubSampleResponseDtoList = CustomObjectMapper.mapGithubSampleToResponseDto(githubSampleList);
+            List<GithubSampleResponseDto> githubSampleResponseDtoList = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSampleList);
 //            Collections.reverse(githubSampleResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), githubSampleResponseDtoList.size() + " GithubSamples retrieved", githubSampleResponseDtoList, response);
         } else {
@@ -49,7 +51,7 @@ public class GithubSampleCRUD {
             if(githubSample == null){
                 return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "GithubSample not found", null, response);
             }
-            GithubSampleResponseDto githubSampleResponseDto = CustomObjectMapper.mapGithubSampleToResponseDto(githubSample);
+            GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSample);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "GithubSample retrieved successfully", githubSampleResponseDto, response);
         }
     }
@@ -78,14 +80,14 @@ public class GithubSampleCRUD {
         GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
         if (githubSample != null) {
             if (githubSampleDto.getApproved()) {
-                List<String> approver = githubSample.getApprover();
+                Set<String> approver = githubSample.getApprover();
                 if (approver.contains(principal.getName())) {
                     githubSample = githubSampleService.approve(githubSample, principal.getName());
                 } else {
                     return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this GithubSample", null, response);
                 }
             }
-            GithubSampleResponseDto githubSampleResponseDto = CustomObjectMapper.mapGithubSampleToResponseDto(githubSampleService.updateGithubSample(githubSampleDto, githubSampleId));
+            GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSampleService.updateGithubSample(githubSampleDto, githubSampleId));
             return new ApiResponse(HttpStatus.CREATED.value(), "GithubSample updated successfully", githubSampleResponseDto, response);
         } else {
             return new ApiResponse(HttpStatus.NOT_FOUND.value(), "GithubSample not found", null, response);

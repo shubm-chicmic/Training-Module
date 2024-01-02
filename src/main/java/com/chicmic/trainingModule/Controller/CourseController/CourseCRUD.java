@@ -5,18 +5,20 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.Phase;
-import com.chicmic.trainingModule.Entity.Course.CourseTask;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Course;
+
+import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Service.CourseServices.CourseResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
 import java.util.*;
@@ -27,6 +29,8 @@ import java.util.*;
 @AllArgsConstructor
 public class CourseCRUD {
     private final CourseService courseService;
+    private final CourseResponseMapper courseResponseMapper;
+
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -48,8 +52,7 @@ public class CourseCRUD {
         if (isDropdown) {
             List<Course> courseList = courseService.getAllCourses(searchString, sortDirection, sortKey, traineeId);
             Long count = courseService.countNonDeletedCourses(searchString);
-            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
-//            Collections.reverse(courseResponseDtoList);
+            List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         }
         if(courseId == null || courseId.isEmpty()) {
@@ -59,37 +62,36 @@ public class CourseCRUD {
             List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = courseService.countNonDeletedCourses(searchString);
 
-            List<CourseResponseDto> courseResponseDtoList = CustomObjectMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
-//            Collections.reverse(courseResponseDtoList);
+            List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         } else {
             Course course = courseService.getCourseById(courseId);
             if(course == null){
                 return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Course not found", null, response);
             }
-            CourseResponseDto courseResponseDto = CustomObjectMapper.mapCourseToResponseDto(course);
+            CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(course, true);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Course retrieved successfully", courseResponseDto, response);
         }
     }
 
+
     @PostMapping
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
-        List<Phase> phases = new ArrayList<>();
-        for (List<CourseTask> courseTasks : courseDto.getPhases()) {
-            Phase phase = Phase.builder()
-                    ._id(String.valueOf(new ObjectId()))
+        List<Phase<Task>> phases = new ArrayList<>();
+        for (List<Task> courseTasks : courseDto.getPhases()) {
+            Phase<Task> phase = Phase.<Task>builder()
+                    .entityType(EntityType.COURSE)
                     .tasks(courseTasks)
                     .build();
             phases.add(phase);
         }
         Course course = Course.builder()
                 .createdBy(principal.getName())
-                .createdByName(TrainingModuleApplication.searchUserById(principal.getName()).getName())
                 .name(courseDto.getName())
                 .figmaLink(courseDto.getFigmaLink())
                 .guidelines(courseDto.getGuidelines())
-                .reviewers(courseDto.getReviewers())
+                .approver(courseDto.getApprover())
                 .phases(phases)
                 .isDeleted(false)
                 .isApproved(false)
@@ -111,12 +113,12 @@ public class CourseCRUD {
     @PutMapping
     public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
-        if (courseDto.getReviewers() != null && courseDto.getReviewers().size() == 0) {
+        if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
         if (course != null) {
             if (courseDto != null && courseDto.getApproved() == true) {
-                Set<String> approver = course.getReviewers();
+                Set<String> approver = course.getApprover();
                 if (approver.contains(principal.getName())) {
                     course = courseService.approve(course, principal.getName());
                 } else {
@@ -126,7 +128,7 @@ public class CourseCRUD {
             }
             courseDto.setApproved(course.getIsApproved());
 
-            CourseResponseDto courseResponseDto = CustomObjectMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId));
+            CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId), true);
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);
         }else {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course not found", null, response);

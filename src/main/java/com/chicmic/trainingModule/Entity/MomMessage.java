@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Entity.Session;
+package com.chicmic.trainingModule.Entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

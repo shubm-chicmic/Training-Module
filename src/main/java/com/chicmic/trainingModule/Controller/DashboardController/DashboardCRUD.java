@@ -2,7 +2,7 @@
 //
 //import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 //import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
-////import com.chicmic.trainingModule.Service.DashboardService.DashboardService;
+//import com.chicmic.trainingModule.Service.DashboardService.DashboardService;
 //import org.springframework.security.core.Authentication;
 //import org.springframework.security.core.context.SecurityContextHolder;
 //import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +15,11 @@
 //@RestController
 //@RequestMapping("/v1/training/dashboard")
 //public class DashboardCRUD {
-////    private final DashboardService dashboardService;
+//    private final DashboardService dashboardService;
 //
-////    public DashboardCRUD(DashboardService dashboardService) {
-////        this.dashboardService = dashboardService;
-////    }
+//    public DashboardCRUD(DashboardService dashboardService) {
+//        this.dashboardService = dashboardService;
+//    }
 //
 //    @GetMapping("/{traineeId}")
 //    public ApiResponse getTraineeRatingSummary(@PathVariable String traineeId, Principal principal){
