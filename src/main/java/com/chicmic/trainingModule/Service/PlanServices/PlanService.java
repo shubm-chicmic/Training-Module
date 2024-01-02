@@ -6,6 +6,8 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
+import com.chicmic.trainingModule.Repository.PlanTaskRepo;
+import com.chicmic.trainingModule.Repository.TaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ import java.util.*;
 public class PlanService {
     private final PlanRepo planRepo;
     private final PhaseRepo phaseRepo;
+    private final PlanTaskRepo planTaskRepo;
     private final CourseService courseService;
     private final MongoTemplate mongoTemplate;
 
@@ -42,8 +45,10 @@ public class PlanService {
             phase.set_id(String.valueOf(new ObjectId()));
             List<PlanTask> tasks = new ArrayList<>();
             for (PlanTask task : phase.getTasks()) {
+
                 task.set_id(String.valueOf(new ObjectId()));
-                tasks.add(task);
+                task.setPlanType(EntityType.PLAN);
+                tasks.add(planTaskRepo.save(task));
             }
             phase.setEntityType(EntityType.PLAN);
             phase.setTasks(tasks);

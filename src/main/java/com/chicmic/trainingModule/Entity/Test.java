@@ -33,8 +33,16 @@ public class Test {
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
+    private Integer estimatedTime;
+    private Integer completedTasks;
+    private Integer totalTasks;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public void setMilestones(List<Phase<Task>> milestones) {
+        this.milestones = milestones;
+        updateTotalTasks();
+        updateTotalEstimateTime();
+    }
 //    public Test() {
 //        Milestone.count = 0;
 //    }
@@ -47,6 +55,26 @@ public class Test {
 
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
+    public void updateTotalTasks(){
+        if (this.milestones != null) {
+            totalTasks = this.milestones.stream()
+                    .mapToInt(phase -> phase.getTotalTasks())
+                    .sum();
+        }
+    }
+    private void updateTotalEstimateTime() {
+        if (milestones != null) {
+            estimatedTime = milestones.stream()
+                    .mapToInt(phase -> phase.getEstimatedTimeInSeconds())
+                    .sum();
+        }
+    }
+    public String getEstimatedTime() {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
     }
 
 }

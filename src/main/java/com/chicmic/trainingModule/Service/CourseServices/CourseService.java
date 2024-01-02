@@ -168,7 +168,7 @@ public class CourseService {
 
         Criteria approvedCriteria = Criteria.where("isApproved").is(true);
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
-                .and("reviewers").in(userId);
+                .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
 
@@ -210,6 +210,12 @@ public class CourseService {
 
     public Course getCourseById(String courseId) {
         return courseRepo.findById(courseId).orElse(null);
+    }
+    public Phase<Task> getPhaseById(String phaseId) {
+        return phaseRepo.findById(phaseId).orElse(null);
+    }
+    public List<Phase> getPhaseByIds(List<String> phaseId) {
+        return phaseRepo.findAllById(phaseId);
     }
 
     public Boolean deleteCourseById(String courseId) {
