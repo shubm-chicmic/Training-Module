@@ -73,6 +73,7 @@ public class FeedbackService_V2 {
         //checking traineeId is valid
         TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
 
+
         Feedback_V2 feedback = buildFeedbackFromFeedbackRequestDto(feedbackDto,reviewerId);
         //course assigned or not!!
 
@@ -467,20 +468,28 @@ public class FeedbackService_V2 {
         Query query = new Query(criteria);
         System.out.println(traineeId + "////");
         AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+        int tmp = (type == 1)?3:type;
         if (assignedPlan == null)
             throw new ApiException(HttpStatus.BAD_REQUEST,"No plan assigned!!");
         var plans =  assignedPlan.getPlans();
         AtomicReference<String> planId = new AtomicReference<>("");
         plans.forEach((p)->{
-            p.getPhases().forEach(ps -> {
-                if (ps.getEntityType() == type && ps.get_id().equals(courseId))
+            System.out.println(p.getPhases().size() + "------>");
+            var phases = p.getPhases();
+            System.out.println(phases.size() + "------>");
+            phases.forEach(ps -> {
+                System.out.println(ps.get_id() + "////");
+                if (ps.getEntityType() == tmp && ps.get_id().equals(courseId))
                     planId.set(p.get_id());
             });
         });
+
         Set<String> taskIds = new HashSet<>();
         plans.forEach((p)->{
-            if(p.get_id().equals(planId.get()))
-                p.getPhases().forEach(ps -> taskIds.add(ps.get_id()));
+            if(p.get_id().equals(planId.get())) {
+                var phases = p.getPhases();
+                phases.forEach(ps -> taskIds.add(ps.get_id()));
+            }
         });
         Map<String,Float> response = new HashMap<>();
         response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,taskIds));
@@ -528,4 +537,23 @@ public class FeedbackService_V2 {
         double totalRating = (double) document.get(0).get("overallRating");
         return roundOff_Rating(totalRating/count);
     }
+
+//    public boolean courseExist(String traineeId,int tmp){
+//        Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
+//        Query query = new Query(criteria);
+//        System.out.println(traineeId + "////");
+//        AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+//        var plans =  assignedPlan.getPlans();
+//        plans.forEach((p)->{
+//            System.out.println(p.getPhases().size() + "------>");
+//            var phases = p.getPhases();
+//            System.out.println(phases.size() + "------>");
+//            phases.forEach(ps -> {
+//                System.out.println(ps.get_id() + "////");
+//                if (ps.getEntityType() == tmp && ps.get_id().equals(courseId))
+//                    planId.set(p.get_id());
+//            });
+//        });
+//
+//    }
 }
