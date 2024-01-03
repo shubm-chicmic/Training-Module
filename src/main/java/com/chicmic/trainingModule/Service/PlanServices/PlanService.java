@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -33,6 +34,7 @@ public class PlanService {
     private final PhaseRepo phaseRepo;
     private final PlanTaskRepo planTaskRepo;
     private final CourseService courseService;
+    private final TestService testService;
     private final MongoTemplate mongoTemplate;
 
     public Plan createPlan(PlanDto planDto, Principal principal) {
@@ -44,9 +46,25 @@ public class PlanService {
             phase.set_id(String.valueOf(new ObjectId()));
             List<PlanTask> tasks = new ArrayList<>();
             for (PlanTask task : phase.getTasks()) {
-
                 task.set_id(String.valueOf(new ObjectId()));
-                task.setPlanType(EntityType.PLAN);
+                List<UserIdAndNameDto> milestoneDetails = new ArrayList<>();
+                for (String milestoneId : task.getMilestones()){
+                    UserIdAndNameDto milestoneDetail = null;
+                    System.out.println("Milestone : " + milestoneId);
+                    if(task.getPlanType() == 2){
+                        milestoneDetail = UserIdAndNameDto.builder()
+                                .name((testService.getTestById(task.getPlan()).getTestName()))
+                                ._id(milestoneId)
+                                .build();
+                    }else if(task.getPlanType() == 1){
+                        milestoneDetail = UserIdAndNameDto.builder()
+                                .name(courseService.getCourseById(task.getPlan()).getName())
+                                ._id(milestoneId)
+                                .build();
+                    }
+                    milestoneDetails.add(milestoneDetail);
+                }
+                task.setMilestoneDetails(milestoneDetails);
                 tasks.add(planTaskRepo.save(task));
             }
             phase.setEntityType(EntityType.PLAN);
@@ -195,6 +213,7 @@ public class PlanService {
     }
 
     public Plan updatePlan(PlanDto planDto, String planId) {
+        System.out.println("PlanDto");
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
             plan = (Plan) CustomObjectMapper.updateFields(planDto, plan);

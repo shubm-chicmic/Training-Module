@@ -52,29 +52,30 @@ public class AssignTaskResponseMapper {
         Integer completedTasks = 0;//userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
         for (Plan plan : assignTask.getPlans()) {
-
-            PlanDto planDto = PlanDto.builder()
-                    .assignPlanId(assignTask.get_id())
-                    .name(plan.getPlanName())
-                    .isApproved(plan.getApproved())
-                    .isDeleted(plan.getDeleted())
-                    ._id(plan.get_id())
-                    .estimatedTime(plan.getEstimatedTime())
-                    .totalTasks(plan.getTotalTasks())
-                    .completedTasks(completedTasks)
+            if(plan != null) {
+                PlanDto planDto = PlanDto.builder()
+                        .assignPlanId(assignTask.get_id())
+                        .name(plan.getPlanName())
+                        .isApproved(plan.getApproved())
+                        .isDeleted(plan.getDeleted())
+                        ._id(plan.get_id())
+                        .estimatedTime(plan.getEstimatedTime())
+                        .totalTasks(plan.getTotalTasks())
+                        .completedTasks(completedTasks)
 //                    .planType(plan.get)
-                    .approver(plan.getApproverDetails())
+                        .approver(plan.getApproverDetails())
 //                    .feedbackId()
-                    .isCompleted(false)
-                    .rating(0f)
-                    .build();
-            plans.add(planDto);
+                        .isCompleted(false)
+                        .rating(0f)
+                        .build();
+                plans.add(planDto);
+            }
         }
         return AssignTaskResponseDto.builder()
                 ._id(assignTask.get_id())
                 .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
                 .createdBy(assignTask.getCreatedBy())
-                .reviewers(assignTask.getApproverDetails())
+                .reviewers(assignTask.getReviewerDetails())
                 .plans(plans)
 //                .totalPhases(assignTask.getPlans().size())
 //                .approved(assignTask.getApproved())

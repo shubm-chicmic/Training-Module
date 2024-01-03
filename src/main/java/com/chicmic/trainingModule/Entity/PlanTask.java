@@ -1,13 +1,17 @@
 package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.ConversionUtility;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 @Document
 @Getter
@@ -22,8 +26,17 @@ public class PlanTask {
     private String plan;
     @NotNull(message = "Milestones cannot be Empty")
     private List<String> milestones;
+//    @Transient
+    private List<UserIdAndNameDto> milestoneDetails;
     private List<String> mentor;
     private Integer estimatedTime;
+//    public List<UserIdAndNameDto> getMilestones(){
+//        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
+//        for (String milestone : milestones) {
+//
+//        }
+//        return milestonesDetails;
+//    }
     public List<UserIdAndNameDto> getMentorDetails() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }

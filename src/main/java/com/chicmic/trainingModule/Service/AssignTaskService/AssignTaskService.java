@@ -57,7 +57,7 @@ public class AssignTaskService {
                 .updatedAt(LocalDateTime.now())
                 .plans(plans)
                 .userId(userId)
-                .approver(assignTaskDto.getApprover())
+                .reviewers(assignTaskDto.getApprover())
                 .date(assignTaskDto.getDate())
                 .build();
         return assignTaskRepo.save(assignTask);
@@ -192,17 +192,17 @@ public class AssignTaskService {
 //        return null;
 //    }
 
-    public AssignedPlan approve(AssignedPlan assignTask, String userId) {
-        Set<String> approvedBy = assignTask.getApprovedBy();
-        approvedBy.add(userId);
-        assignTask.setApprovedBy(approvedBy);
-        if (assignTask.getApprover().size() == approvedBy.size()) {
-            assignTask.setApproved(true);
-        } else {
-            assignTask.setApproved(false);
-        }
-        return assignTaskRepo.save(assignTask);
-    }
+//    public AssignedPlan approve(AssignedPlan assignTask, String userId) {
+//        Set<String> approvedBy = assignTask.getApprovedBy();
+//        approvedBy.add(userId);
+//        assignTask.setApprovedBy(approvedBy);
+//        if (assignTask.re().size() == approvedBy.size()) {
+//            assignTask.setApproved(true);
+//        } else {
+//            assignTask.setApproved(false);
+//        }
+//        return assignTaskRepo.save(assignTask);
+//    }
 
 //    public List<AssignTask> getAllAssignTasksByTraineeId(String traineeId) {
 //        System.out.println(traineeId);

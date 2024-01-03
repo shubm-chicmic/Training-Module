@@ -20,6 +20,8 @@ public class UserProgress {
     @Id
     private String _id;
     private String userId;
+    private String planId;
+    private String courseId;
     private Integer progressType;
     private String id;
     private Integer status = ProgessConstants.NotStarted;

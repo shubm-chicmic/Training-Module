@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.findTraineeAndMap;
@@ -31,6 +32,10 @@ public class TraineePlanService {
         int skipValue = (pageNumber - 1) * pageSize;
 
         List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(), AssignedPlan.class);
+        if (assignedPlanList.size() == 0){
+            mongoTemplate.insert(AssignedPlan.builder().userId("12345").date(LocalDateTime.now()).deleted(true),"assignedPlan");
+        }
+
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
         //fetching trainee List
         List<Document> userDatasDocuments = findTraineeAndMap().values().stream().map(userDto ->

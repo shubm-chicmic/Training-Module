@@ -29,7 +29,6 @@ public class Course {
     private String guidelines;
     @DBRef
     @CascadeSave
-
     private List<Phase<Task>> phases;
     private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
@@ -76,25 +75,44 @@ public class Course {
 
         return String.format("%02d:%02d", hours, minutes);
     }
+    public Integer getEstimatedTimeInSeconds() {
+        return estimatedTime;
+    }
+    public void setEstimatedTime(String estimatedTime) {
+        int hours = 0;
+        int minutes = 0;
+        Integer formattedTime;
+        if (estimatedTime.contains(":")) {
+            String[] parts = estimatedTime.split(":");
+            hours = parts.length > 1 ? Integer.parseInt(parts[0]) : 0;
+            minutes = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+        } else {
+            hours = Integer.parseInt(estimatedTime);
+            minutes = 0;
+        }
+//        formattedTime = String.format("%02d:%02d", hours, minutes);
+        int totalSeconds = hours * 3600 + minutes * 60;
+        this.estimatedTime = totalSeconds;
+    }
 
-//    @Override
-//    public String toString() {
-//        return "Course{" +
-//                "_id='" + _id + '\'' +
-//                ", name='" + name + '\'' +
-//                ", figmaLink='" + figmaLink + '\'' +
-//                ", guidelines='" + guidelines + '\'' +
-//                ", phases=" + phases +
-//                ", approver=" + approver +
-//                ", approvedBy=" + approvedBy +
-//                ", createdBy='" + createdBy + '\'' +
-//                ", isDeleted=" + isDeleted +
-//                ", isApproved=" + isApproved +
-//                ", createdAt=" + createdAt +
-//                ", updatedAt=" + updatedAt +
-//                ", estimatedTime=" + estimatedTime +
-//                ", completedTasks=" + completedTasks +
-//                ", totalTasks=" + totalTasks +
-//                '}';
-//    }
+    @Override
+    public String toString() {
+        return "Course{" +
+                "_id='" + _id + '\'' +
+                ", name='" + name + '\'' +
+                ", figmaLink='" + figmaLink + '\'' +
+                ", guidelines='" + guidelines + '\'' +
+                ", phases=" + phases +
+                ", approver=" + approver +
+                ", approvedBy=" + approvedBy +
+                ", createdBy='" + createdBy + '\'' +
+                ", isDeleted=" + isDeleted +
+                ", isApproved=" + isApproved +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", estimatedTime=" + estimatedTime +
+                ", completedTasks=" + completedTasks +
+                ", totalTasks=" + totalTasks +
+                '}';
+    }
 }

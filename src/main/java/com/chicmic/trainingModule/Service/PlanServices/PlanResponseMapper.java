@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.TrainingModuleApplication;
@@ -101,6 +102,7 @@ public class PlanResponseMapper {
 //            newPhase.setIsCompleted(phase.getIsCompleted());
 //            phaseList.add(newPhase);
 //        }
+
         return PlanResponseDto.builder()
                 ._id(plan.get_id())
                 .planName(plan.getPlanName())

@@ -18,11 +18,13 @@ public class AssignTaskResponseDto {
     private Object trainee;
     private LocalDateTime date;
     private List<UserIdAndNameDto> reviewers;
+//    private Integer completedTask;
+//    private Integer totalTasks;
     private List<PlanDto> plans;
 //    private List<Milestone> milestones;
-    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
+//    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private String createdByName;
-    private Boolean deleted = false;
-    private Boolean approved = false;
+//    private Boolean deleted = false;
+//    private Boolean approved = false;
 }

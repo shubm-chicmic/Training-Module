@@ -25,6 +25,8 @@ public class UserProgressCRUD {
         if(userProgress == null) {
             userProgress = UserProgress.builder()
                     .userId(userProgressDto.getUserId())
+                    .planId(userProgressDto.getPlanId())
+                    .courseId(userProgressDto.getCourseId())
                     .startDate(LocalDateTime.now())
                     .progressType(userProgressDto.getProgressType())
                     .status(userProgressDto.getStatus())

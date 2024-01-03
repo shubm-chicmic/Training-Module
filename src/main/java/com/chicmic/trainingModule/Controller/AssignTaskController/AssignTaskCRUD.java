@@ -100,7 +100,9 @@ public class AssignTaskCRUD {
            List<Phase<PlanTask>> phases = plan.getPhases();
            List<PlanTask> planTasks = new ArrayList<>();
            for (Phase<PlanTask> phase : phases) {
-               planTasks.addAll(phase.getTasks());
+               if(phase != null) {
+                   planTasks.addAll(phase.getTasks());
+               }
            }
            List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, traineeId);
            return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);

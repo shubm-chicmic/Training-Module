@@ -25,7 +25,7 @@ public class CourseResponseMapper {
 
 
     public static CourseResponseDto mapCourseToResponseDto(Course course, Boolean isPhaseRequired) {
-
+        System.out.println("Size = " + course);
         return CourseResponseDto.builder()
                 ._id(course.get_id())
                 .guidelines(course.getGuidelines())

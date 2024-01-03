@@ -26,15 +26,15 @@ public class AssignedPlan {
     private LocalDateTime date;
     @DBRef
     private List<Plan> plans;
-    private Set<String> approver = new HashSet<>();
+    private Set<String> reviewers = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    public List<UserIdAndNameDto> getApproverDetails() {
-        return ConversionUtility.convertToUserIdAndName(this.approver);
+    public List<UserIdAndNameDto> getReviewerDetails() {
+        return ConversionUtility.convertToUserIdAndName(this.reviewers);
     }
 
     public List<UserIdAndNameDto> getApprovedByDetails() {
