@@ -36,7 +36,7 @@ public class TraineePlanService_V2 {
         //query1.fields().include("plans._id")
         List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(),AssignedPlan.class);
         if (assignedPlanList.size() == 0){
-            mongoTemplate.insert(AssignedPlan.builder().userId("12345").date(LocalDateTime.now())).deleted(true);
+            mongoTemplate.insert(AssignedPlan.builder().userId("12345").date(LocalDateTime.now()).deleted(true),"assignedPlan");
         }
 
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
