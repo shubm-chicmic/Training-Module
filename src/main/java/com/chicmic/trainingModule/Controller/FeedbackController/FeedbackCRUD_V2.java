@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Controller.FeedbackController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
+import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
 import com.chicmic.trainingModule.Dto.FeedbackResponse_V2;
@@ -51,14 +52,11 @@ public class FeedbackCRUD_V2 {
                 sortKey = String.format("userData.%s", sortKey);
             return feedbackService.findFeedbacksGivenByUser(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
-//        List<Feedback_V2> feedbackList;
-//        if(feedbackType == 1)
-//         //   feedbackList = feedbackService.findFeedbacksByCourseIdAndTraineeId(_id,traineeId);
-//        else if (feedbackType == 2)
-//         //   feedbackList = feedbackService.findFeedbacksByTestIdAndTraineeId(_id,traineeId);
-//        else
-//            feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(traineeId,"3");
-        return new ApiResponse(200,"Feedback fetched successfully", null);
+        List<CourseResponse_V2> courseResponseV2List;
+        courseResponseV2List = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,traineeId,FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2[feedbackType-1]);
+            //feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(traineeId,"3");
+
+        return new ApiResponse(200,"Feedback fetched successfully", courseResponseV2List);
     }
     @GetMapping("/user/{userId}")
     public ApiResponse findCourseAndTestFeedbacksForTrainee(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -85,7 +83,7 @@ public class FeedbackCRUD_V2 {
         if(type == 3)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
 
-        List<Feedback_V2>
+        List<CourseResponse_V2>
             feedbackList = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,userId, FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2[type - 1]);
         //List<CourseResponse> responseList = null;//feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList,_id,type);
 
@@ -132,5 +130,15 @@ public class FeedbackCRUD_V2 {
         // FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
         //feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         return new ApiResponse(200,"Feedback fetched successfully",feedback);
+    }
+    @GetMapping("/user/phase/{phaseId}")
+    public ApiResponse getFeedbackByPhase(@RequestParam String traineeId, @RequestParam String courseId,@PathVariable String phaseId) {
+        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
+    }
+    @GetMapping("/milestone/{milestoneId}")
+    public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @RequestParam String testId,@PathVariable String milestoneId) {
+        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
 }

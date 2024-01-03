@@ -9,6 +9,7 @@ import java.util.Set;
 
 public interface Rating {
     public String getTaskId();
+    public Float computeOverallRating();
 
     static Rating getRating(FeedbackRequestDto feedBackDto) {
         String feedBack_type = feedBackDto.getFeedbackType();
