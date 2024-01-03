@@ -1,6 +1,5 @@
 package com.chicmic.trainingModule.Dto.CourseResponse_V2;
 
-import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
 import com.chicmic.trainingModule.Dto.PhaseResponse_V2.PhaseResponse_V2;
 import lombok.Builder;
 import lombok.Getter;

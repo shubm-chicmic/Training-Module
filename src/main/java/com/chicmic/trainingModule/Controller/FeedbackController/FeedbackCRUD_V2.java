@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Dto.FeedbackResponse_V2;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -92,24 +93,32 @@ public class FeedbackCRUD_V2 {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse giveFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto, Principal principal){
+    public ApiResponse giveFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto, Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
         System.out.println("Fasfasfas..................");
         FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto,principal.getName());
-        return new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
+        if(q==0)
+            return new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
+        int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
+        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        return new ApiResponse(201,"Feedback saved successfully",response);
     }
 
     @PutMapping
-    public ApiResponse updateFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal){
+    public ApiResponse updateFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
         FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
 //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
-        return new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
-        //feedbackService.updateFeedback(feedbackRequestDto,"sdasdas");
+        if(q==0)
+            return new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
+
+        int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
+        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        return new ApiResponse(200,"Feedback updated successfully",response);
     }
 
     @DeleteMapping("/{id}")
@@ -117,10 +126,10 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        String traineeId = feedbackService.deleteFeedbackById(id, principal.getName());
-        Map<String,Float> mp = new HashMap<>();
-        mp.put("overallRating",4.5f);
-        return new ApiResponse(200,"Feedback deleted successfully",mp);
+        Feedback_V2 feedbackV2 = feedbackService.deleteFeedbackById(id, principal.getName());
+        int type = FeedbackUtil.FEEDBACKS_V2.get(feedbackV2.getType());
+        var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),feedbackV2.getDetails().getTaskId(),type);
+        return new ApiResponse(200,"Feedback deleted successfully",response);
     }
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){

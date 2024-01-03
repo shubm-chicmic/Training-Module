@@ -15,11 +15,13 @@ import com.chicmic.trainingModule.Dto.rating.Rating;
 import com.chicmic.trainingModule.Dto.rating.Rating_COURSE;
 import com.chicmic.trainingModule.Dto.rating.Rating_PPT;
 import com.chicmic.trainingModule.Dto.rating.Rating_TEST;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.FeedbackUtil;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Entity.Feedback_V2.buildFeedbackFromFeedbackRequestDto;
@@ -112,14 +115,14 @@ public class FeedbackService_V2 {
         addTaskNameAndSubTaskName(Arrays.asList(feedbackResponse));
         return feedbackResponse;
     }
-    public String deleteFeedbackById(String _id,String reviewerId){
+    public Feedback_V2 deleteFeedbackById(String _id,String reviewerId){
         Criteria criteria = Criteria.where("_id").is(_id).and("createdBy").is(reviewerId);
         Query query = new Query(criteria);
         Update update = new Update().set("isDeleted",true);
         Feedback_V2 feedback = mongoTemplate.findAndModify(query,update,Feedback_V2.class);
         if(feedback == null)  throw new ApiException(HttpStatus.valueOf(400),"You can't delete this feedback");
 
-        return feedback.getTraineeId();
+        return feedback;
     }
     public FeedbackResponse_V2 getFeedbackById(String _id){
 //        Feedback_V2 feedbackV2 =  mongoTemplate.findOne(new Query(criteria), Feedback_V2.class);
@@ -458,5 +461,67 @@ public class FeedbackService_V2 {
 //        return roundOff_Rating(totalRating/count);
         return ((float) temp) / 100;
     }
-
+    public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
+        Criteria criteria = Criteria.where("userId").is(traineeId).and("deleted").is(false);
+        Query query = new Query(criteria);
+        AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+        var plans =  assignedPlan.getPlans();
+        AtomicReference<String> planId = new AtomicReference<>("");
+        plans.forEach((p)->{
+            p.getPhases().forEach(ps -> {
+                if (ps.getEntityType() == type && ps.get_id().equals(courseId))
+                    planId.set(p.get_id());
+            });
+        });
+        Set<String> taskIds = new HashSet<>();
+        plans.forEach((p)->{
+            if(p.get_id().equals(planId.get()))
+                p.getPhases().forEach(ps -> taskIds.add(ps.get_id()));
+        });
+        Map<String,Float> response = new HashMap<>();
+        response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,taskIds));
+        response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
+        response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, FEEDBACK_TYPE_CATEGORY_V2[type-1]));
+        return response;
+    }
+    Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<String> taskIds){
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeID").is(traineeId).and("isDeleted").is(false).and("details.taskId").in(taskIds)),
+                Aggregation.group("traineeID")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        List<Document> document = aggregationResults.getMappedResults();
+        int count = (int) document.get(0).get("count");
+        double totalRating = (double) document.get(0).get("overallRating");
+        return roundOff_Rating(totalRating/count);
+    }
+    Float computeOverallRatingOfTrainee(String traineeId){
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeID").is(traineeId).and("isDeleted").is(false)),
+                Aggregation.group("traineeID")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        List<Document> document = aggregationResults.getMappedResults();
+        int count = (int) document.get(0).get("count");
+        double totalRating = (double) document.get(0).get("overallRating");
+        return roundOff_Rating(totalRating/count);
+    }
+    Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeID").is(traineeId).and("type").is(type)
+                        .and("isDeleted").is(false).and("details.taskId").is(courseId)),
+                Aggregation.group("traineeID")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        List<Document> document = aggregationResults.getMappedResults();
+        int count = (int) document.get(0).get("count");
+        double totalRating = (double) document.get(0).get("overallRating");
+        return roundOff_Rating(totalRating/count);
+    }
 }

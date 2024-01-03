@@ -15,7 +15,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class DashboardService_V2 {
@@ -32,30 +34,25 @@ public class DashboardService_V2 {
         UserDto userDto = TrainingModuleApplication.searchUserById(traineeId);
         DashboardResponse dashboardResponse = feedbackService.findFeedbacksSummaryOfTrainee(traineeId);
         dashboardResponse.setName(userDto.getName());
-//        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        //fetch plans of user
-//        if(dashboardResponse.getFeedbacks().size()>=0) {
-//            dashboardResponse.setCourses(Arrays.asList(CourseDto.builder().name("ReactJs").progress(50).build(),
-//                    CourseDto.builder().name("VueJS").progress(53).build(),
-//                    CourseDto.builder().name("NodeJs").progress(63).build()));
-//            dashboardResponse.setPlan(Arrays.asList(PlanDto.builder()
-//                            .name("Initial Plan")
-//                            .date(formatter.format(new Date()))
-//                            .phase("Planning")
-//                            .isComplete(true)
-//                            .build(),
-//                    PlanDto.builder()
-//                            .name("Implementation Plan")
-//                            .date(formatter.format(new Date()))
-//                            .phase("Implementation")
-//                            .isComplete(false)
-//                            .build()
-//            ));
-//        }
         //get
         Criteria criteria = Criteria.where("userId").is(traineeId);
         Query query = new Query(criteria);
-        AssignedPlan assignTask = mongoTemplate.findOne(query, AssignedPlan.class);
+
+        AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+        var plans =  assignedPlan.getPlans();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+        //AtomicReference<String> planId = new AtomicReference<>("");
+        List<CourseDto> courseDtoList = new ArrayList<>();
+        List<PlanDto> planDtoList = new ArrayList<>();
+        plans.forEach((p)->{
+            p.getPhases().forEach(ps -> {
+                if (ps.getEntityType() == 1) courseDtoList.add(new CourseDto(ps.getName(),50));
+                planDtoList.add(PlanDto.builder().name(p.getPlanName()).phase(ps.getName())
+                        .isComplete(false).date(formatter.format(new Date())).build());
+                    //planId.set(p.get_id());
+            });
+        });
+        dashboardResponse.setCourses(courseDtoList);
 //        Map<String,List<AssignTaskPlanTrack>> assignCourseMap  = new HashMap<>();
 //        Map<String,List<AssignTaskPlanTrack>> assignTestMap = new HashMap<>();
 //        List<PlanDto> planDtoList = new ArrayList<>();
