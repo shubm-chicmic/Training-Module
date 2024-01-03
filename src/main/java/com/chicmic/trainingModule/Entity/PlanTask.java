@@ -23,25 +23,34 @@ public class PlanTask {
     @NotNull(message = "Milestones cannot be Empty")
     private List<String> milestones;
     private List<String> mentor;
-    private String estimatedTime;
+    private Integer estimatedTime;
     public List<UserIdAndNameDto> getMentorDetails() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }
-    public String getEstimatedTime() {
+    public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;
-        String formattedTime;
-        if (this.estimatedTime.contains(":")) {
-            String[] parts = this.estimatedTime.split(":");
+        Integer formattedTime;
+        if (estimatedTime.contains(":")) {
+            String[] parts = estimatedTime.split(":");
             hours = parts.length > 1 ? Integer.parseInt(parts[0]) : 0;
             minutes = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
         } else {
-            hours = Integer.parseInt(this.estimatedTime);
+            hours = Integer.parseInt(estimatedTime);
             minutes = 0;
         }
-        formattedTime = String.format("%02d:%02d", hours, minutes);
-        this.estimatedTime = formattedTime;
-        return this.estimatedTime;
+//        formattedTime = String.format("%02d:%02d", hours, minutes);
+        int totalSeconds = hours * 3600 + minutes * 60;
+        this.estimatedTime = totalSeconds;
+    }
+    public String getEstimatedTime() {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
+    }
+    public Integer getEstimatedTimeInSeconds() {
+        return estimatedTime;
     }
 
     @Override

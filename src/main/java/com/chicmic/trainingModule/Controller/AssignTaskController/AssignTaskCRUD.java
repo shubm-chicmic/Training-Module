@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/training/assignTask")
+@RequestMapping("/v1/training/assignedPlan")
 @AllArgsConstructor
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
@@ -46,14 +46,23 @@ public class AssignTaskCRUD {
         Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
             AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
-            if(assignTask == null){
-                error = true;
-            }
-        }
-        if(error) {
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan is Already Assigned To Some Trainees", null, response);
         }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
+    }
+    @PutMapping
+    public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response){
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
+        if(assignedPlan != null) {
+            List<Plan> plans = new ArrayList<>();
+            for (String planId : assignTaskDto.getPlan()) {
+                Plan plan = planService.getPlanById(planId);
+                plans.add(plan);
+            }
+            assignedPlan.setPlans(plans);
+            AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
+            return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);
+        }
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan Not Assigned", null, response);
     }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
@@ -75,9 +84,9 @@ public class AssignTaskCRUD {
             AssignedPlan assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
 //            System.out.println(assignTaskList.size());
 //            Long count = assignTaskService.countNonDeletedAssignTasksByTraineeId(traineeId);
-            List<PlanDto> planDtoList = assignTaskResponseMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
+            AssignTaskResponseDto assignTaskResponseDto = assignTaskResponseMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
 //            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), planDtoList.size() + " Plans retrieved", planDtoList, response);
+            return new ApiResponseWithCount(1,HttpStatus.OK.value(), assignTaskResponseDto.getPlans().size() + " Plans retrieved", assignTaskResponseDto, response);
         }
         return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Fount", null, response);
     }

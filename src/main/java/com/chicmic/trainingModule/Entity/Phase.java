@@ -44,10 +44,10 @@ public class Phase<T> {
                     .mapToInt(task -> {
                         if (task instanceof Task) {
                             return ((Task) task).getSubtasks().size();
+
+                        } else if (task instanceof PlanTask) {
+                            return 1;
                         }
-//                        } else if (task instanceof PlanTask) {
-//                            return ((PlanTask) task).ge;
-//                        }
                         return 0;
                     })
                     .sum();
@@ -61,9 +61,9 @@ public class Phase<T> {
                         if (task instanceof Task) {
                             return ((Task) task).getEstimatedTimeInSeconds();
                         }
-//                        else if (task instanceof PlanTask) {
-//                            return ((PlanTask) task).getEstimatedTimeInSeconds();
-//                        }
+                        else if (task instanceof PlanTask) {
+                            return ((PlanTask) task).getEstimatedTimeInSeconds();
+                        }
                         return 0;
                     })
                     .sum();

@@ -18,7 +18,6 @@ public class AssignTaskResponseDto {
     private Object trainee;
     private LocalDateTime date;
     private List<UserIdAndNameDto> reviewers;
-    private int totalPhases;
     private List<PlanDto> plans;
 //    private List<Milestone> milestones;
     private List<UserIdAndNameDto> approvedBy = new ArrayList<>();

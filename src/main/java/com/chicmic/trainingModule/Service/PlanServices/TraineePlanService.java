@@ -1,9 +1,12 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,7 +30,7 @@ public class TraineePlanService {
         if(query==null || query.isBlank()) query = ".*";
         int skipValue = (pageNumber - 1) * pageSize;
 
-
+        List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(), AssignedPlan.class);
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
         //fetching trainee List
         List<Document> userDatasDocuments = findTraineeAndMap().values().stream().map(userDto ->
@@ -71,6 +74,14 @@ public class TraineePlanService {
 //                )))
         );
         List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
+        for (Document tr : traineePlanResponseList) {
+            List<UserIdAndNameDto> planDetails = new ArrayList<>();
+            assignedPlanList.forEach(ap -> {
+                if (ap.getUserId().equals(tr.get("_id")))
+                    ap.getPlans().forEach(p -> planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName())));
+            });
+            tr.put("plan", planDetails);
+        };
         Set<String> userIds = new HashSet<>();
         Map<String,Integer> userSummary = new HashMap<>();
         int count = 0;

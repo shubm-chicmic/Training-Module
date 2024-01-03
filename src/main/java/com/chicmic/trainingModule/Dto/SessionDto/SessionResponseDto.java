@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class SessionResponseDto {
-    private ObjectId _id;
+    private String _id;
     private String title;
     private String time;
     private String date;

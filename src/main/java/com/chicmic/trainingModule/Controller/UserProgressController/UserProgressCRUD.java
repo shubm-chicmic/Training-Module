@@ -21,12 +21,17 @@ public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal) {
-        UserProgress userProgress = UserProgress.builder()
-                .userId(userProgressDto.getUserId())
-                .startDate(LocalDateTime.now())
-                .progressType(userProgressDto.getProgressType())
-                .status(userProgressDto.getStatus())
-                .build();
+        UserProgress userProgress = userProgressService.getUserProgress(userProgressDto.getId(), userProgressDto.getProgressType(), userProgressDto.getUserId());
+        if(userProgress == null) {
+            userProgress = UserProgress.builder()
+                    .userId(userProgressDto.getUserId())
+                    .startDate(LocalDateTime.now())
+                    .progressType(userProgressDto.getProgressType())
+                    .status(userProgressDto.getStatus())
+                    .build();
+        }else {
+            userProgress.setStatus(userProgressDto.getStatus());
+        }
         userProgress = userProgressService.createUserProgress(userProgress);
         return new ApiResponse(HttpStatus.OK.value(), "UserProgress created successfully", userProgress);
     }

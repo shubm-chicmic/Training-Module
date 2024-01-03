@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class GithubSampleResponseDto {
-    private ObjectId _id;
+    private String _id;
     private String projectName;
     private String url;
     private List<UserIdAndNameDto> repoCreatedBy;

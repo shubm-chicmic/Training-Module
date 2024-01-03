@@ -25,6 +25,8 @@ public class Plan {
     private String _id;
     private String planName;
     private String description;
+    private Integer estimatedTime;
+    private Integer totalTasks;
     @DBRef
     @CascadeSave
     private List<Phase<PlanTask>> phases;
@@ -35,6 +37,31 @@ public class Plan {
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public void setPhases(List<Phase<PlanTask>> phases) {
+        this.phases = phases;
+        updateTotalTasks();
+        updateTotalEstimateTime();
+    }
+    private void updateTotalEstimateTime() {
+        if (phases != null) {
+            estimatedTime = phases.stream()
+                    .mapToInt(phase -> phase.getEstimatedTimeInSeconds())
+                    .sum();
+        }
+    }
+    public String getEstimatedTime() {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
+    }
+    public void updateTotalTasks(){
+        if (this.phases != null) {
+            totalTasks = this.phases.stream()
+                    .mapToInt(phase -> phase.getTotalTasks())
+                    .sum();
+        }
+    }
     public List<UserIdAndNameDto> getApproverDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approver);
     }

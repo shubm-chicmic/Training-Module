@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 public class UserProgress {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String userId;
     private Integer progressType;
     private String id;

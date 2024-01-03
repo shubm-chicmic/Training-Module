@@ -173,6 +173,9 @@ public class PlanService {
     }
 
     public Plan getPlanById(String planId) {
+        if(planId == null) {
+            return null;
+        }
         return planRepo.findById(planId).orElse(null);
     }
     public List<Plan> getPlanByIds(List<String> planIds) {

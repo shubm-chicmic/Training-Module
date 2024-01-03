@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class GithubSample {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String projectName;
     private String url;
     private List<String> repoCreatedBy;

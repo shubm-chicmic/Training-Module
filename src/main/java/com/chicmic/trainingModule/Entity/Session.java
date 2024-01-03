@@ -20,7 +20,7 @@ import java.util.Set;
 @Document(collection = "session")
 public class Session {
     @Id
-    private ObjectId _id;
+    private String _id;
     private String title;
     private List<String> teams;
     private List<String> trainees;

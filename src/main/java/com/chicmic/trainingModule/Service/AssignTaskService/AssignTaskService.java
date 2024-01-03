@@ -39,7 +39,15 @@ public class AssignTaskService {
     public AssignedPlan createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
         AssignedPlan assignTask = getAllAssignTasksByTraineeId(userId);
         if(assignTask != null) {
-            return null;
+            List<Plan> plans = assignTask.getPlans();
+            for (String planId : assignTaskDto.getPlanIds()) {
+                Plan plan = planService.getPlanById(planId);
+                if(!plans.contains(plan)){
+                    plans.add(plan);
+                }
+            }
+            assignTask.setPlans(plans);
+            return assignTaskRepo.save(assignTask);
         }
         List<Plan> plans = planService.getPlanByIds(assignTaskDto.getPlanIds());
 
@@ -207,5 +215,8 @@ public class AssignTaskService {
         }
 
 
+    public AssignedPlan updateAssignTask(AssignedPlan assignedPlan) {
+        return assignTaskRepo.save(assignedPlan);
+    }
 }
 
