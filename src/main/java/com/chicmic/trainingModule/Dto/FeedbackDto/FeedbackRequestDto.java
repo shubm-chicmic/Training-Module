@@ -64,4 +64,18 @@ public class FeedbackRequestDto {
 
     @NotBlank(message = "Comment field is required.")
     private String comment;
+    public Float computeRating(){
+        if (feedbackType.equals("1")) {
+            float total = theoreticalRating + technicalRating + communicationRating;
+            return total / 3;
+        }else if(feedbackType.equals("2")){
+            float total = communicationRating + theoreticalRating + codingRating;
+            return total/3;
+        } else if (feedbackType.equals("4")) {
+            float total = communicationRating + technicalRating + presentationRating;
+            return total/3;
+        }
+        float total = teamSpiritRating + attitudeRating;
+        return total/2;
+    }
 }

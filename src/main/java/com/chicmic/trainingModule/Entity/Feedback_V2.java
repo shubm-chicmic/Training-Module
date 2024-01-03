@@ -23,6 +23,7 @@ public class Feedback_V2 {
     private String _id;
     private String traineeId;
     private String type;
+    private Float overallRating;
     private Rating details;
     private Set<String> subtaskIds;//phaseids,milestoneids,courseids
     private String comment;
@@ -45,6 +46,7 @@ public class Feedback_V2 {
                 .createdAt(formatter.format(date))
                 .updateAt(formatter.format(date))
                 .createdBy(reviewer)
+                .overallRating(feedbackDto.computeRating())
                 .isDeleted(false)
                 .build();
     }

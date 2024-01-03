@@ -106,7 +106,8 @@ public class FeedbackService_V2 {
         Update update = new Update()
                 .set("updateAt",formatter.format(date))
                 .set("details",rating)
-                .set("comment",feedbackRequestDto.getComment());
+                .set("comment",feedbackRequestDto.getComment())
+                .set("overallRating",feedbackRequestDto.computeRating());
 
        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
@@ -462,9 +463,12 @@ public class FeedbackService_V2 {
         return ((float) temp) / 100;
     }
     public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
-        Criteria criteria = Criteria.where("userId").is(traineeId).and("deleted").is(false);
+        Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
         Query query = new Query(criteria);
+        System.out.println(traineeId + "////");
         AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+        if (assignedPlan == null)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"No plan assigned!!");
         var plans =  assignedPlan.getPlans();
         AtomicReference<String> planId = new AtomicReference<>("");
         plans.forEach((p)->{
