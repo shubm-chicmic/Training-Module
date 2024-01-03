@@ -142,7 +142,7 @@ public class FeedbackService_V2 {
                                 .append("id",userDto.get_id()))
                 .toList();
 
-        Criteria criteria = Criteria.where("traineeID").is(traineeId)
+        Criteria criteria = Criteria.where("traineeId").is(traineeId)
                 .and("isDeleted").is(false);
 //
 //        //searching!!!
@@ -385,8 +385,8 @@ public class FeedbackService_V2 {
 
     public List<Document> calculateEmployeeRatingSummary(Set<String> userIds) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeID").in(userIds).and("isDeleted").is(false)),
-                Aggregation.group("traineeID")
+                Aggregation.match(Criteria.where("traineeId").in(userIds).and("isDeleted").is(false)),
+                Aggregation.group("traineeId")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
         );
@@ -486,8 +486,8 @@ public class FeedbackService_V2 {
     }
     Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<String> taskIds){
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeID").is(traineeId).and("isDeleted").is(false).and("details.taskId").in(taskIds)),
-                Aggregation.group("traineeID")
+                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false).and("details.taskId").in(taskIds)),
+                Aggregation.group("traineeId")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
         );
@@ -499,8 +499,8 @@ public class FeedbackService_V2 {
     }
     Float computeOverallRatingOfTrainee(String traineeId){
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeID").is(traineeId).and("isDeleted").is(false)),
-                Aggregation.group("traineeID")
+                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
+                Aggregation.group("traineeId")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
         );
@@ -512,9 +512,9 @@ public class FeedbackService_V2 {
     }
     Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeID").is(traineeId).and("type").is(type)
+                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("type").is(type)
                         .and("isDeleted").is(false).and("details.taskId").is(courseId)),
-                Aggregation.group("traineeID")
+                Aggregation.group("traineeId")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
         );

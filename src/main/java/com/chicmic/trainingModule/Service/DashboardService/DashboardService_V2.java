@@ -39,6 +39,8 @@ public class DashboardService_V2 {
         Query query = new Query(criteria);
 
         AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+        if (assignedPlan == null) return dashboardResponse;
+
         var plans =  assignedPlan.getPlans();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         //AtomicReference<String> planId = new AtomicReference<>("");
@@ -53,6 +55,7 @@ public class DashboardService_V2 {
             });
         });
         dashboardResponse.setCourses(courseDtoList);
+        dashboardResponse.setPlan(planDtoList);
 //        Map<String,List<AssignTaskPlanTrack>> assignCourseMap  = new HashMap<>();
 //        Map<String,List<AssignTaskPlanTrack>> assignTestMap = new HashMap<>();
 //        List<PlanDto> planDtoList = new ArrayList<>();

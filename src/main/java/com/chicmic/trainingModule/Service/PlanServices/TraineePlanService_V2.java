@@ -30,8 +30,7 @@ public class TraineePlanService_V2 {
         //searching!!!
         if(query==null || query.isBlank()) query = ".*";
         int skipValue = (pageNumber - 1) * pageSize;
-       // Criteria criteria = Criteria
-        Query query1 = new Query();
+
         //query1.fields().include("plans._id")
         List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(),AssignedPlan.class);
         if (assignedPlanList.size() == 0){
