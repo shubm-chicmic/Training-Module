@@ -74,8 +74,12 @@ public class FeedbackService_V2 {
         TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
 
 
+
         Feedback_V2 feedback = buildFeedbackFromFeedbackRequestDto(feedbackDto,reviewerId);
         //course assigned or not!!
+
+        //course assigned to a trainee or not!!
+        courseExist(feedbackDto.getTrainee(),feedbackDto.getFeedbackType().charAt(0) - '0',feedback.getDetails().getTaskId());
 
         //checking feedback exist or not!!
         boolean flag = feedbackExist(feedback,reviewerId);
@@ -538,22 +542,28 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
 
-//    public boolean courseExist(String traineeId,int tmp){
-//        Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
-//        Query query = new Query(criteria);
-//        System.out.println(traineeId + "////");
-//        AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
-//        var plans =  assignedPlan.getPlans();
-//        plans.forEach((p)->{
-//            System.out.println(p.getPhases().size() + "------>");
-//            var phases = p.getPhases();
-//            System.out.println(phases.size() + "------>");
-//            phases.forEach(ps -> {
-//                System.out.println(ps.get_id() + "////");
-//                if (ps.getEntityType() == tmp && ps.get_id().equals(courseId))
-//                    planId.set(p.get_id());
-//            });
-//        });
-//
-//    }
+    public boolean courseExist(String traineeId,int tmp,String taskId){
+        tmp = (tmp==1)?3:tmp;
+        Integer type = tmp;
+        Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
+        Query query = new Query(criteria);
+        AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
+        if (assignedPlan == null)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"No plan assigned!!");
+
+        var plans =  assignedPlan.getPlans();
+        List<String> planId = new ArrayList<>();
+        plans.forEach((p)->{
+            System.out.println(p.getPhases().size() + "------>");
+            var phases = p.getPhases();
+            System.out.println(phases.size() + "------>");
+            phases.forEach(ps -> {
+               boolean flag =  (ps.getEntityType() == type && ps.get_id().equals(taskId));
+               if(flag) planId.add(p.get_id());
+            });
+        });
+        if (planId.size() == 0)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!");
+        return true;
+    }
 }
