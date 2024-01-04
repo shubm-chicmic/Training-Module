@@ -47,11 +47,12 @@ public class PlanService {
             List<PlanTask> tasks = new ArrayList<>();
             for (PlanTask task : phase.getTasks()) {
                 task.set_id(String.valueOf(new ObjectId()));
-//                Integer id = totalTask;
-//                for (Object milestone : task.getMilestones()) {
-//                    Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
-//                    totalTask += coursePhase.getTotalTasks();
-//                }
+                Integer totalTask = 0;
+                for (Object milestone : task.getMilestones()) {
+                    Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                    totalTask += coursePhase.getTotalTasks();
+                }
+                task.setTotalTasks(totalTask);
 //                List<UserIdAndNameDto> milestoneDetails = new ArrayList<>();
 //                for (String milestoneId : task.getMilestones()){
 //                    UserIdAndNameDto milestoneDetail = null;
@@ -197,11 +198,12 @@ public class PlanService {
     }
 
     public Plan getPlanById(String planId) {
-        if(planId == null) {
+        if (planId == null) {
             return null;
         }
         return planRepo.findById(planId).orElse(null);
     }
+
     public List<Plan> getPlanByIds(List<String> planIds) {
         System.out.println("plans  +  " + planIds);
         return planRepo.findAllById(planIds);
@@ -222,45 +224,138 @@ public class PlanService {
         System.out.println("PlanDto");
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
-            if(planDto.getPlanName() != null){
+            if (planDto.getPlanName() != null) {
                 plan.setPlanName(planDto.getPlanName());
             }
-            if(planDto.getApprover() != null){
+            if (planDto.getApprover() != null) {
                 System.out.println("IM approving");
                 Integer count = 0;
-                for (String reviewer : plan.getApprover()){
-                    if(plan.getApprovedBy().contains(reviewer)){
+                for (String reviewer : plan.getApprover()) {
+                    if (plan.getApprovedBy().contains(reviewer)) {
                         count++;
                     }
                 }
-                if(count == plan.getApprover().size()){
+                if (count == plan.getApprover().size()) {
                     plan.setApproved(true);
-                }else {
+                } else {
                     plan.setApproved(false);
                 }
                 Set<String> approvedBy = new HashSet<>();
-                for (String approver : plan.getApprovedBy()){
-                    if(plan.getApprover().contains(approver)){
+                for (String approver : plan.getApprovedBy()) {
+                    if (plan.getApprover().contains(approver)) {
                         approvedBy.add(approver);
                     }
                 }
                 plan.setApprovedBy(approvedBy);
                 plan.setApprover(planDto.getApprover());
             }
-            if(planDto.getDescription() != null) {
+            if (planDto.getDescription() != null) {
                 plan.setDescription(planDto.getDescription());
             }
-            if(planDto.getPhases() != null) {
-                plan.setPhases(planDto.getPhases());
-            }
-            plan.setUpdatedAt(LocalDateTime.now());
-            planRepo.save(plan);
-            return plan;
-        } else {
-            return null;
-        }
+            if (planDto.getPhases() != null) {
+                Plan plan = Plan.builder()
+                        ._id(String.valueOf(new ObjectId()))
+                        .build();
+                for (Phase<PlanTask> phase : planDto.getPhases()) {
+                    phase.set_id(String.valueOf(new ObjectId()));
+                    List<PlanTask> tasks = new ArrayList<>();
+                    for (PlanTask task : phase.getTasks()) {
+                        task.set_id(String.valueOf(new ObjectId()));
+                        Integer totalTask = 0;
+                        for (Object milestone : task.getMilestones()) {
+                            Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                            totalTask += coursePhase.getTotalTasks();
+                        }
+                        task.setTotalTasks(totalTask);
+                        tasks.add(planTaskRepo.save(task));
+                    }
+                    phase.setEntityType(EntityType.PLAN);
+                    phase.setTasks(tasks);
+                    phase.setEntity(plan);
+                    phases.add(phaseRepo.save(phase));
+                }
+                plan.setPhases(phases);
+                List<Phase<PlanTask>> phases = new ArrayList<>();
+                int i = 0;
+                for (Phase<PlanTask> planPhase : plan.getPhases()) {
+                    if (i < planDto.getPhases().size()) {
+                        List<PlanTask> taskList = planDto.getPhases().get(i).getTasks();
+                        List<PlanTask> tasks = new ArrayList<>();
 
+                        task.setMainTask(taskOfCourseDto.getMainTask());
+                        int k = 0;
+                        for (PlanTask planTask : planPhase.getTasks()) {
+                            if (k < taskList.size()) {
+                                PlanTask planTaskDto = taskList.get(k);
+                                planTask.setPlanType(planTask.getPlanType());
+                                planTask.setPlan(planTaskDto.getPlan());
+                                planTask.setEstimatedTime(planTaskDto.getEstimatedTime());
+                                planTask.setMilestones(planTaskDto.getMilestones());
+                                planTask.setMentor(planTaskDto.getMentorIds());
+                                planTask.setDate(planTaskDto.getDate());
+                                tasks.add(planTaskRepo.save(planTask));
+                            }
+                            k++;
+                        }
+                        while (k < taskList.size()) {
+                            PlanTask planTaskDto = taskList.get(k);
+                            PlanTask planTask = PlanTask.builder()
+                                    .planType(EntityType.COURSE)
+                                    .plan(planTaskDto.getPlan())
+                                    .date(planTaskDto.getDate())
+                                    .build();
+                            planTask.setEstimatedTime(planTaskDto.getEstimatedTime());
+                            planTask.setMilestones(planTaskDto.getMilestones());
+                            tasks.add(planTaskRepo.save(planTask));
+
+                            k++;
+                        }
+                        planPhase.setTasks(tasks);
+                        phases.add(phaseRepo.save(planPhase));
+                    }
+                    i++;
+                }
+
+            while (i < planDto.getPhases().size()) {
+                Phase<PlanTask> phase = new Phase<>();
+                phase.set_id(String.valueOf(new ObjectId()));
+                List<PlanTask> tasks = new ArrayList<>();
+                for (PlanTask task : phase.getTasks()) {
+                    task.set_id(String.valueOf(new ObjectId()));
+                    Integer totalTask = 0;
+                    for (Object milestone : task.getMilestones()) {
+                        Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                        totalTask += coursePhase.getTotalTasks();
+                    }
+                    task.setTotalTasks(totalTask);
+                    tasks.add(planTaskRepo.save(task));
+                }
+                phase.setEntityType(EntityType.PLAN);
+                phase.setTasks(tasks);
+                phase.setEntity(plan);
+                phases.add(phaseRepo.save(phase));
+
+                phase.setName("Phase " + i);
+                phase.setEntityType(EntityType.COURSE);
+                phase.setTasks(tasks);
+                phase.setEntity(course);
+                phases.add(phaseRepo.save(phase));
+
+                i++;
+            }
+            plan.setPhases(phases);
+        }
+        plan.setUpdatedAt(LocalDateTime.now());
+        planRepo.save(plan);
+        return plan;
+    } else
+
+    {
+        return null;
     }
+
+}
+
     public HashMap<String, List<UserIdAndNameDto>> getPlanCourseByPlanIds(List<String> planIds) {
         Query searchQuery = new Query(Criteria.where("_id").in(planIds).and("phases.tasks.planType").is(1));
         List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);

@@ -11,6 +11,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 @Document
@@ -18,6 +19,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PlanTask {
     @Id
     private String _id;
@@ -30,6 +32,7 @@ public class PlanTask {
 //    private List<UserIdAndNameDto> milestoneDetails;
     private List<String> mentor;
     private Integer totalTasks;
+    private LocalDateTime date;
     private Integer estimatedTime;
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
@@ -43,6 +46,9 @@ public class PlanTask {
     }
     public List<UserIdAndNameDto> getMentor() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
+    }
+    public List<String> getMentorIds() {
+        return this.mentor;
     }
 
     public void setEstimatedTime(String estimatedTime) {

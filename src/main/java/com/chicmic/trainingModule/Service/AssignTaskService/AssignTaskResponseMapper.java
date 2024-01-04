@@ -58,12 +58,10 @@ public class AssignTaskResponseMapper {
             if(plan != null) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
                 Integer totalTask = 0;
+
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
-                        for (Object milestone : planTask.getMilestones()) {
-                            Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
-                            totalTask += coursePhase.getTotalTasks();
-                        }
+                        totalTask += planTask.getTotalTasks();
                     }
                 }
                 PlanDto planDto = PlanDto.builder()

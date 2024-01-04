@@ -37,10 +37,14 @@ public class UserProgressService {
             System.out.println("userProgress Course Id : = " + userProgress.getCourseId());
             System.out.println("userProgress Trainee Id : = " + userProgress.getTraineeId());
             System.out.println("userProgress Id : = " + userProgress.getSubTaskId());
-            if (userProgress.getPlanId().equals(planId) && userProgress.getCourseId().equals(courseId)
-                && userProgress.getTraineeId().equals(traineeId) && userProgress.getSubTaskId().equals(subTaskId)
+            if(userProgress.getPlanId() != null && userProgress.getCourseId() != null
+                    && userProgress.getTraineeId() != null && userProgress.getSubTaskId() != null
             ) {
-               return  userProgress;
+                if (userProgress.getPlanId().equals(planId) && userProgress.getCourseId().equals(courseId)
+                        && userProgress.getTraineeId().equals(traineeId) && userProgress.getSubTaskId().equals(subTaskId)
+                ) {
+                    return userProgress;
+                }
             }
 
         }
