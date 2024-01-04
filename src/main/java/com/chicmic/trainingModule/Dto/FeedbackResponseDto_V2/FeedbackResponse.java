@@ -15,13 +15,13 @@ public interface FeedbackResponse {
     public static FeedbackResponse buildFeedbackResponse(Feedback_V2 feedback){
         String type = feedback.getType();
         switch (type){
-            case "COURSE" :
+            case "1" :
                 return FeedbackResponse_COURSE.buildFeedback_V2Response(feedback);
-            case "TEST" :
+            case "2" :
                 return FeedbackResponse_TEST.buildFeedback_V2Response(feedback);
-            case "PPT" :
+            case "4" :
                 return FeedbackResponse_PPT.buildFeedback_V2Response(feedback);
-            case "BEHAVIOUR":
+            case "3":
                 return FeedbackResponse_BEHAVIOUR.buildFeedback_V2Response(feedback);
         }
         throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");

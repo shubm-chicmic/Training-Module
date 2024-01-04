@@ -8,7 +8,16 @@ import java.util.List;
 import java.util.Set;
 
 public interface Rating {
-    public String getTaskId();
+//    public String getCourseId();
+
+    default public String getCourseId(){
+        return null;
+    }
+
+    default public String getTestId(){
+        return null;
+    }
+
     public Float computeOverallRating();
 
     static Rating getRating(FeedbackRequestDto feedBackDto) {
@@ -16,7 +25,7 @@ public interface Rating {
         switch (feedBack_type) {
             case "1": {
                 return Rating_COURSE.builder()
-                        .taskId(feedBackDto.getCourse())
+                        .courseId(feedBackDto.getCourse())
                         .theoreticalRating(feedBackDto.getTheoreticalRating())
                         .technicalRating(feedBackDto.getTechnicalRating())
                         .communicationRating(feedBackDto.getCommunicationRating())
@@ -24,7 +33,7 @@ public interface Rating {
             }
             case "2": {
                 return Rating_TEST.builder()
-                        .taskId(feedBackDto.getTest())
+                        .testId(feedBackDto.getTest())
                         .theoreticalRating(feedBackDto.getTheoreticalRating())
                         .codingRating(feedBackDto.getCodingRating())
                         .communicationRating(feedBackDto.getCommunicationRating())
@@ -38,7 +47,7 @@ public interface Rating {
             }
             case "4": {
                 return Rating_PPT.builder()
-                        .taskId(feedBackDto.getCourse())
+                        .courseId(feedBackDto.getCourse())
                         .communicationRating(feedBackDto.getCommunicationRating())
                         .technicalRating(feedBackDto.getTechnicalRating())
                         .presentationRating(feedBackDto.getPresentationRating())

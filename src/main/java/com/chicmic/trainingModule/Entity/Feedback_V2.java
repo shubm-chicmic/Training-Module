@@ -5,6 +5,7 @@ import com.chicmic.trainingModule.Dto.rating.Rating;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -25,7 +26,8 @@ public class Feedback_V2 {
     private String type;
     private Float overallRating;
     private Rating details;
-    private Set<String> subtaskIds;//phaseids,milestoneids,courseids
+    private Set<String> phaseIds;//phaseids,milestoneids,courseids
+    private Set<String> milestoneIds;
     private String comment;
     private String createdAt;
     private String updateAt;
@@ -35,13 +37,12 @@ public class Feedback_V2 {
     public static Feedback_V2 buildFeedbackFromFeedbackRequestDto(FeedbackRequestDto feedbackDto,String reviewer){
         Date date = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        String type = FEEDBACK_TYPE_CATEGORY_V2[feedbackDto.getFeedbackType().charAt(0) - '1'];
+       // String type = FEEDBACK_TYPE_CATEGORY_V2[feedbackDto.getFeedbackType().charAt(0) - '1'];
 
-        return Feedback_V2.builder()
+        Feedback_V2 feedbackV2 =  Feedback_V2.builder()
                 .traineeId(feedbackDto.getTrainee())
-                .type(type)
+                .type(feedbackDto.getFeedbackType())
                 .details(getRating(feedbackDto))
-                .subtaskIds(getSubTaskIds(feedbackDto))
                 .comment(feedbackDto.getComment())
                 .createdAt(formatter.format(date))
                 .updateAt(formatter.format(date))
@@ -49,5 +50,11 @@ public class Feedback_V2 {
                 .overallRating(feedbackDto.computeRating())
                 .isDeleted(false)
                 .build();
+        if (feedbackDto.getFeedbackType().equals("1"))
+            feedbackV2.setPhaseIds(feedbackDto.getPhase());
+        else if(feedbackDto.getFeedbackType().equals("2"))
+            feedbackV2.setMilestoneIds(feedbackDto.getMilestone());
+
+        return feedbackV2;
     }
 }

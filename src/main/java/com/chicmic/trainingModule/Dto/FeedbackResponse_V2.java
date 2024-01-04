@@ -47,29 +47,29 @@ public class FeedbackResponse_V2 {
                  .comment(feedback.getComment())
                  .build();
 
-         if(feedback.getType().equals("COURSE")){
+         if(feedback.getType().equals("1")){
              Rating_COURSE rating_course = (Rating_COURSE)  feedback.getDetails();
-            feedbackResponse1.setCourse(new UserIdAndNameDto(rating_course.getTaskId(), rating_course.getTaskId()));
-            feedbackResponse1.setPhase(feedback.getSubtaskIds().stream().map(_id -> new UserIdAndNameDto(_id,_id)).collect(Collectors.toList()));
+            feedbackResponse1.setCourse(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()));
+            feedbackResponse1.setPhase(feedback.getPhaseIds().stream().map(_id -> new UserIdAndNameDto(_id,_id)).collect(Collectors.toList()));
             feedbackResponse1.setTheoreticalRating(rating_course.getTheoreticalRating());
             feedbackResponse1.setFeedbackType(1);
             feedbackResponse1.setTechnicalRating(rating_course.getTechnicalRating());
             feedbackResponse1.setCommunicationRating(rating_course.getCommunicationRating());
-         }else if(feedback.getType().equals("TEST")){
+         }else if(feedback.getType().equals("2")){
              Rating_TEST rating_test = (Rating_TEST) feedback.getDetails();
-             feedbackResponse1.setTest(new UserIdAndNameDto(rating_test.getTaskId(), rating_test.getTaskId()));
-             feedbackResponse1.setMilestone(feedback.getSubtaskIds().stream().map(_id -> new UserIdAndNameDto(_id,_id)).collect(Collectors.toList()));
+             feedbackResponse1.setTest(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()));
+             feedbackResponse1.setMilestone(feedback.getMilestoneIds().stream().map(_id -> new UserIdAndNameDto(_id,_id)).collect(Collectors.toList()));
              feedbackResponse1.setTheoreticalRating(rating_test.getTheoreticalRating());
              feedbackResponse1.setFeedbackType(2);
              feedbackResponse1.setCommunicationRating(rating_test.getCommunicationRating());
              feedbackResponse1.setCodingRating(rating_test.getCodingRating());
-         }else if (feedback.getType().equals("PPT")){
+         }else if (feedback.getType().equals("4")){
              Rating_PPT rating_ppt = (Rating_PPT) feedback.getDetails();
              feedbackResponse1.setCommunicationRating(rating_ppt.getCommunicationRating());
              feedbackResponse1.setTechnicalRating(rating_ppt.getTechnicalRating());
              feedbackResponse1.setPresentationRating(rating_ppt.getPresentationRating());
              feedbackResponse1.setFeedbackType(4);
-             feedbackResponse1.setCourse(new UserIdAndNameDto(rating_ppt.getTaskId(), rating_ppt.getTaskId()));
+             feedbackResponse1.setCourse(new UserIdAndNameDto(rating_ppt.getCourseId(), rating_ppt.getCourseId()));
          }else{
              Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getDetails();
              feedbackResponse1.setAttitudeRating(rating_behaviour.getAttitudeRating());

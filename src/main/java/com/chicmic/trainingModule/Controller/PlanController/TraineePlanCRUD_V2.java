@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.management.Query;
 import java.util.List;
 
-@RequestMapping("/v1/training/traineeList")
+@RequestMapping("/v2/training/traineeList")
 @RestController
 public class TraineePlanCRUD_V2 {
     private final TraineePlanService_V2 traineePlanService;

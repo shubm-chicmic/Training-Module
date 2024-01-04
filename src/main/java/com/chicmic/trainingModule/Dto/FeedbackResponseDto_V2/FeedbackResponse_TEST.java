@@ -34,7 +34,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
         Rating_TEST rating_test = (Rating_TEST) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
-        Set<String> subTaskIds = feedback.getSubtaskIds();
+        Set<String> subTaskIds = feedback.getMilestoneIds();
 
         return FeedbackResponse_TEST.builder()
                 ._id(feedback.get_id())
@@ -44,8 +44,8 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
                 .theoreticalRating(rating_test.getTheoreticalRating())
                 .codingRating(rating_test.getCodingRating())
                 .communicationRating(rating_test.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("2", feedback.getType()))
-                .task(new UserIdAndNameDto(rating_test.getTaskId(), rating_test.getTaskId()))
+                .feedbackType(new UserIdAndNameDto("2", "TEST"))
+                .task(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_test.computeOverallRating())

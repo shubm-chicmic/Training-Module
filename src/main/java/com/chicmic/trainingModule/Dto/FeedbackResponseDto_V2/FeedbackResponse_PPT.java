@@ -40,9 +40,9 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
                 .comment(feedback.getComment())
                 .technicalRating(rating_ppt.getTechnicalRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
-                .communicationRating(rating_ppt.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("4", feedback.getType()))
-                .task(new UserIdAndNameDto(feedback.getDetails().getTaskId(),"PPT"))
+                .presentationRating(rating_ppt.getPresentationRating())
+                .feedbackType(new UserIdAndNameDto("4", "PPT"))
+                .task(new UserIdAndNameDto(feedback.getDetails().getCourseId(),feedback.getDetails().getCourseId()))
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_ppt.computeOverallRating())
                 .build();

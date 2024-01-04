@@ -12,10 +12,10 @@ public class Rating_BEHAVIOUR implements Rating{
     private Float teamSpiritRating;
     private Float attitudeRating;
 
-    @Override
-    public String getTaskId() {
-        return null;
-    }
+//    @Override
+//    public String getTaskId() {
+//        return null;
+//    }
     public Float computeOverallRating(){
         Float total = teamSpiritRating + attitudeRating;
         return total/2;

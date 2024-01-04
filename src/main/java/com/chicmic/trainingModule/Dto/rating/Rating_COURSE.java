@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Rating_COURSE implements Rating{
-    private String taskId;
+    private String courseId;
     private Float theoreticalRating;
     private Float technicalRating;
     private Float communicationRating;

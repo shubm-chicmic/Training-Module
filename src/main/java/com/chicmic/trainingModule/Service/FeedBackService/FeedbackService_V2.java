@@ -61,11 +61,21 @@ public class FeedbackService_V2 {
         Criteria criteria = Criteria.where("traineeId").is(feedback_v2.getTraineeId())
                 .and("createdBy").is(reviewer).and("type").is(feedback_v2.getType())
                 .and("isDeleted").is(false);
-        String taskId = feedback_v2.getDetails().getTaskId();
-        if(taskId != null)
-            criteria.and("details.taskId").is(taskId);
-        if(feedback_v2.getSubtaskIds() != null)
-                criteria.and("subtaskIds").is(feedback_v2.getSubtaskIds());
+
+        //String taskId = feedback_v2.getDetails().getTaskId();
+        String courseId = feedback_v2.getDetails().getCourseId();
+        if(courseId != null)
+            criteria.and("details.courseId").is(courseId);
+
+        String testId = feedback_v2.getDetails().getTestId();
+        if(feedback_v2.getMilestoneIds() != null)
+                criteria.and("details.testId").is(testId);
+
+        if (feedback_v2.getPhaseIds() != null)
+            criteria.and("phaseIds").is(feedback_v2.getPhaseIds());
+        if (feedback_v2.getMilestoneIds() != null)
+            criteria.and("milestoneIds").is(feedback_v2.getMilestoneIds());
+
         return mongoTemplate.exists(new Query(criteria), Feedback_V2.class);
     }
 
@@ -79,7 +89,8 @@ public class FeedbackService_V2 {
         //course assigned or not!!
 
         //course assigned to a trainee or not!!
-        courseExist(feedbackDto.getTrainee(),feedbackDto.getFeedbackType().charAt(0) - '0',feedback.getDetails().getTaskId());
+//        if (feedbackDto.getFeedbackType().equals("1")||feedbackDto.getFeedbackType().equals("2"))
+//            courseExist(feedbackDto.getTrainee(),feedbackDto.getFeedbackType().charAt(0) - '0',feedback.getDetails().getTaskId());
 
         //checking feedback exist or not!!
         boolean flag = feedbackExist(feedback,reviewerId);
@@ -301,9 +312,9 @@ public class FeedbackService_V2 {
         List<String> testIds = new ArrayList<>();
         feedbackList.forEach(f -> {
             if(f.getType().equals("COURSE")||f.getType().equals("PPT"))
-                courseIds.add(f.getDetails().getTaskId());
+                courseIds.add(f.getDetails().getCourseId());
             else if(f.getType().equals("TEST"))
-                testIds.add(f.getDetails().getTaskId());
+                testIds.add(f.getDetails().getTestId());
         });
 
         var testDetails = testService.findTestsByIds(testIds);
@@ -364,7 +375,7 @@ public class FeedbackService_V2 {
                 .build();
         if(feedback_v2.getType().equals("COURSE")) {
             Rating_COURSE ratingCourse = (Rating_COURSE) feedback_v2.getDetails();
-            feedback_v2.getSubtaskIds().forEach(st -> { phaseResponse.getSubTask().add(new UserIdAndNameDto(st, phaseDetails.get(st)));});
+            feedback_v2.getPhaseIds().forEach(st -> { phaseResponse.getSubTask().add(new UserIdAndNameDto(st, phaseDetails.get(st)));});
 //            phaseResponse.set_id(ratingCourse.getPhaseId());
 //            phaseResponse.setName(name.get(ratingCourse.getPhaseId()));
             phaseResponse.setTheoreticalRating(ratingCourse.getTheoreticalRating());
@@ -372,7 +383,7 @@ public class FeedbackService_V2 {
             phaseResponse.setTechnicalRating(ratingCourse.getTechnicalRating());
         }else if(feedback_v2.getType().equals("TEST")){
             Rating_TEST ratingTest = (Rating_TEST) feedback_v2.getDetails();
-            feedback_v2.getSubtaskIds().forEach(st -> { phaseResponse.getSubTask().add(new UserIdAndNameDto(st,milestoneDetails.get(st)));});
+            feedback_v2.getMilestoneIds().forEach(st -> { phaseResponse.getSubTask().add(new UserIdAndNameDto(st,milestoneDetails.get(st)));});
 //            phaseResponse.set_id(ratingTest.getMilestoneId());
 //            phaseResponse.setName(name.get(ratingTest.getMilestoneId()));
             phaseResponse.setTheoreticalRating(ratingTest.getTheoreticalRating());
@@ -468,6 +479,7 @@ public class FeedbackService_V2 {
         return ((float) temp) / 100;
     }
     public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
+
         Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
         Query query = new Query(criteria);
         System.out.println(traineeId + "////");

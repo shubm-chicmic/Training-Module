@@ -11,7 +11,7 @@ public class Rating_PPT implements Rating{
     private Float communicationRating;
     private Float technicalRating;
     private Float presentationRating;
-    private String taskId;
+    private String courseId;
     public Float computeOverallRating(){
         float total = communicationRating + technicalRating + presentationRating;
         return total/3;

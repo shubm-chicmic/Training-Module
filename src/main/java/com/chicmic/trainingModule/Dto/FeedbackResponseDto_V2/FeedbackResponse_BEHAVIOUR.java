@@ -39,7 +39,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .comment(feedback.getComment())
                 .teamSpiritRating(rating_behaviour.getTeamSpiritRating())
                 .attitudeRating(rating_behaviour.getAttitudeRating())
-                .feedbackType(new UserIdAndNameDto("3", feedback.getType()))
+                .feedbackType(new UserIdAndNameDto("3", "BEHAVIOUR"))
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_behaviour.computeOverallRating())
                 .build();

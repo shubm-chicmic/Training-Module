@@ -39,7 +39,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
 //        int feedbackTypeId = feedback.getType().charAt(0) - '1';
-        Set<String> subTaskIds = feedback.getSubtaskIds();
+        Set<String> subTaskIds = feedback.getPhaseIds();
 
         return FeedbackResponse_COURSE.builder()
                 ._id(feedback.get_id())
@@ -49,8 +49,8 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
                 .theoreticalRating(rating_course.getTheoreticalRating())
                 .technicalRating(rating_course.getTechnicalRating())
                 .communicationRating(rating_course.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("1",feedback.getType()))
-                .task(new UserIdAndNameDto(rating_course.getTaskId(), rating_course.getTaskId()))
+                .feedbackType(new UserIdAndNameDto("1","COURSE"))
+                .task(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_course.computeOverallRating())
