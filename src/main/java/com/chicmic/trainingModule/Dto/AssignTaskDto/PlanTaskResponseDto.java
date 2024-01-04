@@ -17,7 +17,7 @@ public class PlanTaskResponseDto {
     private String _id;
     private Integer planType;
     private UserIdAndNameDto plan;
-    private Integer completedTask;
+    private Integer completedTasks;
     private Integer totalTasks;
     private List<UserIdAndNameDto> phases;
     private List<UserIdAndNameDto> mentor;

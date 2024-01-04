@@ -13,4 +13,7 @@ public interface UserProgressRepo extends MongoRepository<UserProgress, String> 
     long countByTraineeIdAndPlanIdAndCourseIdAndProgressType(
             String traineeId, String planId, String courseId, Integer progressType);
 
+    long countByTraineeIdAndPlanIdAndProgressTypeAndStatus(String traineeId, String planId, int progressType, int completed);
+    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndIdAndProgressType(
+            String planId, String courseId, String userId, String id, int i);
 }

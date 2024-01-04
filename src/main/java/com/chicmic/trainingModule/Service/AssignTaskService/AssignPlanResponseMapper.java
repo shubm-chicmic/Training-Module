@@ -39,6 +39,10 @@ public class AssignPlanResponseMapper {
             Test test = testService.getTestById(planTask.getPlan());
             planName = test.getTestName();
             planTask.setEstimatedTime(test.getEstimatedTime());
+        }else {
+            Course course =  courseService.getCourseById(planTask.getPlan());
+            planName = course.getName();
+            planTask.setEstimatedTime(course.getEstimatedTime());
         }
         UserIdAndNameDto planIdAndNameDto = UserIdAndNameDto.builder()
                 .name(planName)
@@ -57,14 +61,14 @@ public class AssignPlanResponseMapper {
             milestonesIdAndName.add(milestoneDetails);
             totalTask += phase.getTotalTasks();
         }
-        Integer completedTask = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
+        Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)
                 .planType(planTask.getPlanType())
                 .phases(milestonesIdAndName)
                 .consumedTime("00:00")
-                .completedTask(completedTask)
+                .completedTasks(completedTasks)
                 .totalTasks(totalTask)
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())

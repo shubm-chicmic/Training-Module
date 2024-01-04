@@ -48,10 +48,12 @@ public class AssignTaskResponseMapper {
         } else {
             trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
         }
-        Integer completedTasks = 0;//userProgressService.getTotalCompletedTasks(traineeId);
+     //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
         for (Plan plan : assignTask.getPlans()) {
             if(plan != null) {
+                Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
+
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())
