@@ -1,6 +1,5 @@
 package com.chicmic.trainingModule.Dto.SessionDto;
 
-import com.chicmic.trainingModule.Entity.Session.MomMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

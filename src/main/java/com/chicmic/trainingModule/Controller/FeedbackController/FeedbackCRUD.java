@@ -3,7 +3,7 @@ package com.chicmic.trainingModule.Controller.FeedbackController;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
 import com.chicmic.trainingModule.Dto.FeedBackDto;
-import com.chicmic.trainingModule.Dto.FeedbackResponse1;
+import com.chicmic.trainingModule.Dto.FeedbackResponse;
 import com.chicmic.trainingModule.Dto.FeedbackResponseForCourse;
 import com.chicmic.trainingModule.Entity.Feedback;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
@@ -39,7 +39,7 @@ public class FeedbackCRUD {
                                     Principal principal
                                     ){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        boolean flag = authentication.getAuthorities().contains("TR");
         sortDirection = (sortDirection!=1)?-1:1;
         if(flag){//trainee
             if(sortKey.equals("reviewerName")||sortKey.equals("reviewerCode")||sortKey.equals("reviewerTeam"))
@@ -122,13 +122,8 @@ public class FeedbackCRUD {
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
         Feedback feedback = feedbackService.getFeedbackById(id);
-        FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
+        FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
         feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
-        //com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse =
-         //       com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse(feedback);
-        //FeedbackResponse1 feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
-        //int pos = (feedback.getFeedbackType().charAt(0) - '1');
-        //feedback.setFeedbackType(FeedbackUtil.FEEDBACK_TYPE_CATEGORY[pos]);
         return new ApiResponse(200,"Feedback fetched successfully",feedbackResponse);
     }
 
@@ -149,7 +144,7 @@ public class FeedbackCRUD {
     public ApiResponse feedback(@Valid  @RequestBody FeedBackDto feedBackDto, Principal principal, @RequestParam(defaultValue = "0",required = false)Integer q){
         //System.out.println(principal.getName() + "///");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        boolean flag = authentication.getAuthorities().contains("TR");
         if(flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
 
@@ -171,7 +166,7 @@ public class FeedbackCRUD {
     public ApiResponse updateFeedback(@Valid @RequestBody FeedBackDto feedBackDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
 //        System.out.println(principal.getName() + "-----------------");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        boolean flag = authentication.getAuthorities().contains("TR");
         if(flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to give feedback.");
 
@@ -195,7 +190,7 @@ public class FeedbackCRUD {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse deleteFeedbackById(@PathVariable String id,Principal principal){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TRAINEE");
+        boolean flag = authentication.getAuthorities().contains("TR");
         if(flag)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You can't delete this feedback.");
 
@@ -230,6 +225,7 @@ public class FeedbackCRUD {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
+
     @GetMapping("/ppt/{courseId}")
     public ApiResponse getFeedbackByPptAndCourseId(@RequestParam String traineeId,@PathVariable String courseId) {
         List<CourseResponse> courseResponseList = feedbackService.findFeedbacksForCourseByCourseIdAndTraineeId(courseId,traineeId);

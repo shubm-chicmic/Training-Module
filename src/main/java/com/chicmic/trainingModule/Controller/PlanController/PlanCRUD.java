@@ -4,16 +4,15 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
+import com.chicmic.trainingModule.Entity.Plan;
 
-import com.chicmic.trainingModule.Entity.Plan.Task;
+import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Service.PlanServices.PlanResponseMapper;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,8 @@ import java.util.*;
 @AllArgsConstructor
 public class PlanCRUD {
     private final PlanService planService;
-    private  final CustomObjectMapper customObjectMapper;
+    private final PlanTaskService planTaskService;
+    private final PlanResponseMapper planResponseMapper;
 //    @GetMapping("/getting")
 //    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
 //       return planService.getPlanCourseByPlanIds(plansIds);
@@ -46,19 +46,21 @@ public class PlanCRUD {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
+            System.out.println(planList);
             Long count = planService.countNonDeletedPlans(searchString);
-            List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
+            List<PlanResponseDto> planResponseDtoList = planResponseMapper.mapPlanToResponseDto(planList, isPhaseRequired);
 //            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         }
         if (planId == null || planId.isEmpty()) {
+
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = planService.countNonDeletedPlans(searchString);
 
-            List<PlanResponseDto> planResponseDtoList = customObjectMapper.mapPlanToResponseDto(planList, isPhaseRequired);
+            List<PlanResponseDto> planResponseDtoList = planResponseMapper.mapPlanToResponseDto(planList, isPhaseRequired);
 //            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
         } else {
@@ -66,7 +68,7 @@ public class PlanCRUD {
             if (plan == null) {
                 return new ApiResponseWithCount(0, HttpStatus.NOT_FOUND.value(), "Plan not found", null, response);
             }
-            PlanResponseDto planResponseDto = customObjectMapper.mapPlanToResponseDto(plan);
+            PlanResponseDto planResponseDto = planResponseMapper.mapPlanToResponseDto(plan);
             return new ApiResponseWithCount(1, HttpStatus.OK.value(), "Plan retrieved successfully", planResponseDto, response);
         }
     }
@@ -75,17 +77,8 @@ public class PlanCRUD {
     public ApiResponse create(@RequestBody PlanDto planDto, Principal principal) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
-        for (Phase phase : planDto.getPhases()){
-            for(Task task : phase.getTasks()) {
-                System.out.println("Test = " + task.getMilestones());
-            }
-        }
-        Plan plan = planService.createPlan(customObjectMapper.convert(planDto, Plan.class), principal);
-        for (Phase phase : plan.getPhases()){
-            for(Task task : phase.getTasks()) {
-                System.out.println("plan = " + task.getMilestones());
-            }
-        }
+
+        Plan plan = planService.createPlan(planDto, principal);
 
         return new ApiResponse(HttpStatus.CREATED.value(), "Plan created successfully", plan);
     }
@@ -117,7 +110,7 @@ public class PlanCRUD {
             }
             planDto.setApproved(plan.getApproved());
 
-            PlanResponseDto planResponseDto = customObjectMapper.mapPlanToResponseDto(planService.updatePlan(planDto, planId));
+            PlanResponseDto planResponseDto = planResponseMapper.mapPlanToResponseDto(planService.updatePlan(planDto, planId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Plan updated successfully", planResponseDto, response);
         } else {
             return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Plan not found", null, response);

@@ -1,12 +1,11 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Session.MomMessage;
-import com.chicmic.trainingModule.Entity.StatusConstants;
+import com.chicmic.trainingModule.Entity.MomMessage;
+import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
 import com.chicmic.trainingModule.Repository.SessionRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
-import com.chicmic.trainingModule.Entity.Session.Session;
+import com.chicmic.trainingModule.Entity.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

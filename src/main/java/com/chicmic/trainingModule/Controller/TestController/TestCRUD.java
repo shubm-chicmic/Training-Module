@@ -4,17 +4,18 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
-import com.chicmic.trainingModule.Entity.Test.Milestone;
-import com.chicmic.trainingModule.Entity.Test.Test;
-import com.chicmic.trainingModule.Entity.Test.TestTask;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Entity.Test;
+import com.chicmic.trainingModule.Service.TestServices.TestResponseMapper;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+
 import java.security.Principal;
 import java.util.*;
 
@@ -23,6 +24,7 @@ import java.util.*;
 @AllArgsConstructor
 public class TestCRUD {
     private final TestService testService;
+    private final TestResponseMapper testResponseMapper;
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -40,7 +42,7 @@ public class TestCRUD {
         if (isDropdown) {
             List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey);
             Long count = testService.countNonDeletedTests(searchString);
-            List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
+            List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         }
@@ -52,7 +54,7 @@ public class TestCRUD {
             System.out.println(testList);
             Long count = testService.countNonDeletedTests(searchString);
 
-            List<TestResponseDto> testResponseDtoList = CustomObjectMapper.mapTestToResponseDto(testList, isPhaseRequired);
+            List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         } else {
@@ -60,7 +62,7 @@ public class TestCRUD {
             if(test == null){
                 return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Test not found", null, response);
             }
-            TestResponseDto testResponseDto = CustomObjectMapper.mapTestToResponseDto(test);
+            TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(test);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Test retrieved successfully", testResponseDto, response);
         }
     }
@@ -68,18 +70,18 @@ public class TestCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
-        List<Milestone> milestones = new ArrayList<>();
-        for (List<TestTask> tasks : testDto.getMilestones()) {
-            Milestone milestone = Milestone.builder()
-                    ._id(String.valueOf(new ObjectId()))
-                    .tasks(tasks)
+        List<Phase<Task>> milestones = new ArrayList<>();
+        for (List<Task> testTasks : testDto.getMilestones()) {
+            Phase<Task> milestone = Phase.<Task>builder()
+                    .entityType(EntityType.TEST)
+                    .tasks(testTasks)
                     .build();
             milestones.add(milestone);
         }
         Test test = Test.builder()
                 .createdBy(principal.getName())
                 .testName(testDto.getTestName())
-                .reviewers(testDto.getReviewers())
+                .approver(testDto.getApprover())
                 .teams(testDto.getTeams())
                 .createdBy(principal.getName())
                 .milestones(milestones)
@@ -103,13 +105,13 @@ public class TestCRUD {
     @PutMapping
     public ApiResponse updateTest(@RequestBody TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
         Test test = testService.getTestById(testId);
-        System.out.println("testDto = " + testDto.getReviewers());
+        System.out.println("testDto = " + testDto.getApprover());
 //        if (testDto.getReviewers() != null && testDto.getReviewers().size() == 0) {
 //            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
 //        }
         if (test != null) {
             if (testDto != null && testDto.getApproved() == true) {
-                Set<String> approver = test.getReviewers();
+                Set<String> approver = test.getApprover();
                 if (approver.contains(principal.getName())) {
                     test = testService.approve(test, principal.getName());
                 } else {
@@ -117,7 +119,7 @@ public class TestCRUD {
                 }
             }
             testDto.setApproved(test.getApproved());
-            TestResponseDto testResponseDto = CustomObjectMapper.mapTestToResponseDto(testService.updateTest(testDto, testId));
+            TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(testService.updateTest(testDto, testId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Test updated successfully", testResponseDto, response);
         }else {
             return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Test not found", null, response);

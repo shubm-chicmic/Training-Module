@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.GithubSampleDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 @Getter

@@ -2,49 +2,71 @@ package com.chicmic.trainingModule.Controller.AssignTaskController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskCompleteDto;
-import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
-import com.chicmic.trainingModule.Dto.PlanDto.PlanRequestDto;
-import com.chicmic.trainingModule.Dto.TraineePlanReponse;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.*;
+import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.AssignTaskService.TaskResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
+import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
+import com.chicmic.trainingModule.Service.TestServices.TestService;
+import com.chicmic.trainingModule.Util.Pagenation;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/training/assignTask")
+@RequestMapping("/v1/training/assignedPlan")
 @AllArgsConstructor
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
-    private final CustomObjectMapper customObjectMapper;
-    private final TraineePlanService trainePlanService;
+    private final PlanService planService;
+    private final CourseService courseService;
+    private final TestService testService;
+    private final PlanTaskService planTaskService;
+    private final AssignTaskResponseMapper assignTaskResponseMapper;
+    private final AssignPlanResponseMapper assignPlanResponseMapper;
+    private final TaskResponseMapper taskResponseMapper;
+
+//    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
 //        trainePlanService.assignMultiplePlansToTrainees();
-        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
-                .reviewers(assignTaskDto.getReviewers()).build();
-        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
+//        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
+//                .reviewers(assignTaskDto.getApprover()).build();
+//        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
 
         System.out.println("assignTaskDto = " + assignTaskDto);
+        Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
-            AssignTask assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
-            if(assignTask == null){
-                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan is Already Assigned", null, response);
-            }
+            AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
         }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
+    }
+    @PutMapping
+    public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response){
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
+        if(assignedPlan != null) {
+            List<Plan> plans = new ArrayList<>();
+            for (String planId : assignTaskDto.getPlan()) {
+                Plan plan = planService.getPlanById(planId);
+                plans.add(plan);
+            }
+            if(plans != null || plans.size() != 0)
+            assignedPlan.setPlans(plans);
+            AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
+            return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);
+        }
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan Not Assigned", null, response);
     }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
@@ -60,48 +82,81 @@ public class AssignTaskCRUD {
             HttpServletResponse response,
             Principal principal
     )  {
-        System.out.println("dropdown key = " + isDropdown);
-        if (isDropdown) {
-            List<AssignTask> assignTaskList = assignTaskService.getAllAssignTasks(searchString, sortDirection, sortKey);
-            Long count = assignTaskService.countNonDeletedAssignTasks();
-            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
-            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(count, HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
-        }if (traineeId != null || !traineeId.isEmpty()){
+
+        if (traineeId != null || !traineeId.isEmpty()){
             System.out.println("im in");
-            AssignTask assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+            AssignedPlan assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
 //            System.out.println(assignTaskList.size());
 //            Long count = assignTaskService.countNonDeletedAssignTasksByTraineeId(traineeId);
-            AssignTaskResponseDto assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
-//            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), assignTaskResponseDtoList + " AssignTasks retrieved", assignTaskResponseDtoList, response);
-        }
-        if(assignTaskId == null || assignTaskId.isEmpty()) {
-            pageNumber /= pageSize;
-            if (pageNumber < 0 || pageSize < 1)
-                return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", traineeId, response);
-            List<AssignTask> assignTaskList = assignTaskService.getAllAssignTasks(pageNumber, pageSize, searchString, sortDirection, sortKey);
-            Long count = assignTaskService.countNonDeletedAssignTasks();
-
-            List<AssignTaskResponseDto> assignTaskResponseDtoList = customObjectMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
-            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(count, HttpStatus.OK.value(), assignTaskResponseDtoList.size() + " AssignTasks retrieved", assignTaskResponseDtoList, response);
-        }
-        else {
-            AssignTask assignTask = assignTaskService.getAssignTaskById(assignTaskId);
-            if(assignTask == null){
-                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "AssignTask not found", null, response);
+            AssignTaskResponseDto assignTaskResponseDto = assignTaskResponseMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
+            int totalPlans = 0;
+            if(assignTaskResponseDto.getPlans() != null || assignTaskResponseDto.getPlans().size() != 0){
+                List<PlanDto> plans = assignTaskResponseDto.getPlans();
+                plans = Pagenation.paginate(plans, pageNumber, pageSize);
+                assignTaskResponseDto.setPlans(plans);
+                totalPlans = plans.size();
             }
-            AssignTaskResponseDto assignTaskResponseDto = customObjectMapper.mapAssignTaskToResponseDto(assignTask, null, principal);
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), "AssignTask retrieved successfully", assignTaskResponseDto, response);
+//            Collections.reverse(assignTaskResponseDtoList);
+            return new ApiResponseWithCount(totalPlans,HttpStatus.OK.value(), assignTaskResponseDto.getPlans().size() + " Plans retrieved", assignTaskResponseDto, response);
         }
+        return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Fount", null, response);
+    }
+    @GetMapping("/plan")
+    public ApiResponseWithCount getPlan(@RequestParam String planId,
+                               @RequestParam String traineeId,
+                               @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
+                               @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+                               HttpServletResponse response
+    ){
+        Plan plan = planService.getPlanById(planId);
+        if(plan != null) {
+           List<Phase<PlanTask>> phases = plan.getPhases();
+           List<PlanTask> planTasks = new ArrayList<>();
+           for (Phase<PlanTask> phase : phases) {
+               if(phase != null) {
+                   planTasks.addAll(phase.getTasks());
+               }
+           }
+           int totalTasks = planTasks.size();
+           planTasks = Pagenation.paginate(planTasks, pageNumber, pageSize);
+
+           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId,traineeId);
+           return new ApiResponseWithCount(totalTasks, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
+        }
+        return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Plan Not Found", null, response);
+
+    }
+    @GetMapping("/planTask")
+    public ApiResponseWithCount getPlanTask(@RequestParam String planTaskId,
+                                        @RequestParam String traineeId,
+                                        @RequestParam String planId,
+                                            @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
+                                            @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+                                        HttpServletResponse response
+    ){
+        PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
+        String courseId = planTask.getPlan();
+        if(planTask != null) {
+            List<Object> phasesList = planTask.getMilestones();
+            List<TaskDto> taskDtoList = new ArrayList<>();
+            List<String> phasesListOfString = new ArrayList<>();
+            for (Object obj : phasesList) {
+                phasesListOfString.add(obj.toString());
+            }
+            List<Phase> phases = courseService.getPhaseByIds(phasesListOfString);
+            List<Task> taskList = new ArrayList<>();
+            for(Phase phase : phases) {
+                taskList.addAll(phase.getTasks());
+            }
+            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList,planId, courseId, traineeId);
+            int totalTaskList = taskDtoList.size();
+            taskDtoList = Pagenation.paginate(taskDtoList, pageNumber, pageSize);
+            return new ApiResponseWithCount(totalTaskList, HttpStatus.OK.value(), "Plan Task Retrieved", taskDtoList, response);
+        }
+        return null;
     }
 
-    @PostMapping("/complete")
-    public ApiResponse completeTask(@RequestBody TaskCompleteDto taskCompleteDto, Principal principal) {
-        AssignTask assignTask = assignTaskService.completeTask(taskCompleteDto, principal);
-        return new ApiResponse(HttpStatus.CREATED.value(), "Task completed successfully", assignTask);
-    }
+
 
 
 }

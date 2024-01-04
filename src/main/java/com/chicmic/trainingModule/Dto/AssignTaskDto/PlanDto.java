@@ -11,13 +11,16 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PlanDto {
-    private Integer planType;
+//    private Integer planType;
     private String name;
     private String _id;
     private String assignPlanId;
-    private List<UserIdAndNameDto> reviewers;
-    private Integer noOfTopics;
+    private List<UserIdAndNameDto> approver;
+    private String consumedTime;
     private String estimatedTime;
+    private Integer totalTasks;
+    private Integer completedTasks;
+    //    private String estimatedTime;
     private Float rating;
     private String feedbackId;
     private Boolean isCompleted = null;

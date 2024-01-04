@@ -1,8 +1,7 @@
 package com.chicmic.trainingModule.Dto.PlanDto;
 
-import com.chicmic.trainingModule.Dto.UserDto;
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Plan.Phase;
+import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import lombok.*;
 
 import java.util.List;
@@ -18,6 +17,17 @@ public class PlanDto {
     private String planName;
     private String description;
     private Set<String> approver;
-    private List<Phase> phases;
+    private List<Phase<PlanTask>> phases;
     private Boolean approved = false;
+
+    @Override
+    public String toString() {
+        return "PlanDto{" +
+                "planName='" + planName + '\'' +
+                ", description='" + description + '\'' +
+                ", approver=" + approver +
+                ", milestones=" + phases +
+                ", approved=" + approved +
+                '}';
+    }
 }

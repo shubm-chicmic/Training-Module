@@ -1,24 +1,73 @@
 package com.chicmic.trainingModule.Dto;
 
+import com.chicmic.trainingModule.Dto.ratings.Rating_BEHAVIOUR;
+import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
+import com.chicmic.trainingModule.Dto.ratings.Rating_PPT;
+import com.chicmic.trainingModule.Dto.ratings.Rating_TEST;
+import com.chicmic.trainingModule.Entity.Feedback;
+import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 
-@Builder
-@Getter @Setter
+@Getter @Setter @Builder
 public class FeedbackResponse {
-    private String _id;
-    private String employeeFullName;
-    private String reviewer;
-    private String employeeCode;
-    private String team;
-    private String type;
-    private String taskName;
-    private String subTask;
-    private Date createdOn;
-    private Float rating;
+    private Trainee trainee;
+    private Trainee reviewer;
+    private int feedbackType;
+    private Course course;
+    private UserIdAndNameDto phase;
+    private Test test;
+    private UserIdAndNameDto milestone;
+    private float communicationRating;
+    private float presentationRating;
+    private float technicalRating;
+    private float theoreticalRating;
+    private float codingRating;
+    private float attitudeRating;
+    private float teamSpiritRating;
     private String comment;
-    private Integer feedbackType;
+
+    public static FeedbackResponse buildResponse(Feedback feedback){
+        //Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
+        UserDto userDto = searchUserById(feedback.getTraineeID());
+
+        int feedbackTypeId = feedback.getType().charAt(0) - '1';
+
+         FeedbackResponse feedbackResponse1 = FeedbackResponse.builder()
+                 .feedbackType((feedback.getType().charAt(0) - '0'))
+                         .trainee(new Trainee(feedback.getTraineeID(),userDto.getName()))
+                 .reviewer(new Trainee(feedback.getCreatedBy(), TrainingModuleApplication.searchNameById(feedback.getCreatedBy())))
+                 .comment(feedback.getComment())
+                 .build();
+
+         if(feedbackTypeId == 0){
+             Rating_COURSE rating_course = (Rating_COURSE)  feedback.getRating();
+            feedbackResponse1.setCourse(new Course(rating_course.getCourseId(), rating_course.getCourseId()));
+            feedbackResponse1.setPhase(new UserIdAndNameDto(rating_course.getPhaseId(),rating_course.getPhaseId()));
+            feedbackResponse1.setTheoreticalRating(rating_course.getTheoreticalRating());
+            feedbackResponse1.setTechnicalRating(rating_course.getTechnicalRating());
+            feedbackResponse1.setCommunicationRating(rating_course.getCommunicationRating());
+         }else if(feedbackTypeId == 1){
+             Rating_TEST rating_test = (Rating_TEST) feedback.getRating();
+             feedbackResponse1.setTest(new Test(rating_test.getTestId(), rating_test.getTestId()));
+             feedbackResponse1.setMilestone(new UserIdAndNameDto(rating_test.getMilestoneId(),rating_test.getMilestoneId()));
+             feedbackResponse1.setTheoreticalRating(rating_test.getTheoreticalRating());
+             feedbackResponse1.setCommunicationRating(rating_test.getCommunicationRating());
+             feedbackResponse1.setCodingRating(rating_test.getCodingRating());
+         }else if (feedbackTypeId == 2){
+             Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
+             feedbackResponse1.setCommunicationRating(rating_ppt.getCommunicationRating());
+             feedbackResponse1.setTechnicalRating(rating_ppt.getTechnicalRating());
+             feedbackResponse1.setPresentationRating(rating_ppt.getPresentationRating());
+             feedbackResponse1.setCourse(new Course(rating_ppt.getCourseId(), rating_ppt.getCourseId()));
+         }else{
+             Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getRating();
+             feedbackResponse1.setAttitudeRating(rating_behaviour.getAttitudeRating());
+             feedbackResponse1.setTeamSpiritRating(rating_behaviour.getTeamSpiritRating());
+         }
+         return feedbackResponse1;
+    }
 }

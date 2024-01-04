@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.SessionDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.List;

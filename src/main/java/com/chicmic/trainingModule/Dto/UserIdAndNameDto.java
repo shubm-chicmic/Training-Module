@@ -7,6 +7,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
+@Builder
 public class UserIdAndNameDto {
     private String _id;
     private String name;

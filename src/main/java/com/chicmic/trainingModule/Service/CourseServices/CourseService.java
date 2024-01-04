@@ -1,25 +1,22 @@
 package com.chicmic.trainingModule.Service.CourseServices;
 
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTask;
-import com.chicmic.trainingModule.Entity.AssignTask.AssignTaskPlanTrack;
-import com.chicmic.trainingModule.Entity.Course.Course;
-import com.chicmic.trainingModule.Entity.Course.CourseTask;
-import com.chicmic.trainingModule.Entity.Course.Phase;
-import com.chicmic.trainingModule.Entity.Plan.Plan;
-import com.chicmic.trainingModule.Entity.Plan.Task;
+import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+
 import com.chicmic.trainingModule.Repository.CourseRepo;
-import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.mongodb.BasicDBObject;
+import com.chicmic.trainingModule.Repository.PhaseRepo;
+import com.chicmic.trainingModule.Repository.SubTaskRepo;
+import com.chicmic.trainingModule.Repository.TaskRepo;
 import lombok.RequiredArgsConstructor;
-import org.bson.Document;
+import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -29,37 +26,67 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 @RequiredArgsConstructor
 public class CourseService {
     private final CourseRepo courseRepo;
     private final MongoTemplate mongoTemplate;
+    private final PhaseRepo phaseRepo;
+    private final TaskRepo taskRepo;
+    private final SubTaskRepo subTaskRepo;
 
     public Course createCourse(Course course) {
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
+        List<Phase<Task>> phases = new ArrayList<>();
+        int count = 0;
+        course.set_id(String.valueOf(new ObjectId()));
+        for (Phase<Task> phase : course.getPhases()) {
+            phase.set_id(String.valueOf(new ObjectId()));
+            count++;
+            List<Task> tasks = new ArrayList<>();
+            for (Task task : phase.getTasks()) {
+                task.set_id(String.valueOf(new ObjectId()));
+                List<SubTask> subTasks = new ArrayList<>();
+                for (SubTask subTask : task.getSubtasks()) {
+                    subTask.setEntityType(EntityType.COURSE);
+                    subTask.setTask(task);
+                    subTasks.add(subTaskRepo.save(subTask));
+                }
+                task.setEntityType(EntityType.COURSE);
+                task.setSubtasks(subTasks);
+                task.setPhase(phase);
+                tasks.add(taskRepo.save(task));
+            }
+            phase.setName("Phase " + count);
+            phase.setEntityType(EntityType.COURSE);
+            phase.setTasks(tasks);
+            phase.setEntity(course);
+            phases.add(phaseRepo.save(phase));
+        }
+        course.setPhases(phases);
+        System.out.println("course in service  " + course);
+
         course = courseRepo.save(course);
         return course;
     }
+
     public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
         Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").is(phaseId));
         Course course = mongoTemplate.findOne(courseQuery, Course.class);
 
         HashMap<String, String> result = new HashMap<>();
-        if (course != null) {
-            result.put("courseName", course.getName());
-            System.out.println(course.getPhases().size());
-            for (Phase phase : course.getPhases()) {
-                if (phase.get_id().equals(phaseId)) {
-                    result.put("phaseName", phase.getName());
-                    break;
-                }
-            }
-        }
+//        if (course != null) {
+//            result.put("courseName", course.getName());
+//            System.out.println(course.getPhases().size());
+//            for (Phase phase : course.getPhases()) {
+//                if (phase.get_id().equals(phaseId)) {
+//                    result.put("phaseName", phase.getName());
+//                    break;
+//                }
+//            }
+//        }
         return result;
     }
 
@@ -105,23 +132,23 @@ public class CourseService {
         List<Course> finalCourseList = new ArrayList<>();
         if(traineeId != null && !traineeId.isEmpty()) {
             Query query1 = new Query(Criteria.where("userId").in(traineeId));
-            AssignTask assignTask = mongoTemplate.findOne(query1, AssignTask.class);
+            AssignedPlan assignTask = mongoTemplate.findOne(query1, AssignedPlan.class);
 //            AssignTask assignTask = AssignTaskService.getAllAssignTasksByTraineeId(traineeId);
-            if(assignTask != null) {
-                for (Plan plan : assignTask.getPlans()) {
-                    for (com.chicmic.trainingModule.Entity.Plan.Phase phase : plan.getPhases()) {
-                        for (Task task : phase.getTasks()) {
-                            if (task.getPlanType() == 1) {
-                                for (Course course : courses) {
-                                    if (course.get_id().equals(((AssignTaskPlanTrack) task.getPlan()).get_id())) {
-                                        finalCourseList.add(course);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+//            if(assignTask != null) {
+//                for (Plan plan : assignTask.getPlans()) {
+//                    for (com.chicmic.trainingModule.Entity.Plan33.Phase phase : plan.getPhases()) {
+//                        for (PlanTask planTask : phase.getTasks()) {
+//                            if (planTask.getPlanType() == 1) {
+//                                for (Course course : courses) {
+//                                    if (course.get_id().equals(((AssignTaskPlanTrack) planTask.getPlan()).get_id())) {
+//                                        finalCourseList.add(course);
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             return finalCourseList;
         }
         return courses;
@@ -143,7 +170,7 @@ public class CourseService {
 
         Criteria approvedCriteria = Criteria.where("isApproved").is(true);
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
-                .and("reviewers").in(userId);
+                .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
 
@@ -186,6 +213,12 @@ public class CourseService {
     public Course getCourseById(String courseId) {
         return courseRepo.findById(courseId).orElse(null);
     }
+    public Phase<Task> getPhaseById(String phaseId) {
+        return phaseRepo.findById(phaseId).orElse(null);
+    }
+    public List<Phase> getPhaseByIds(List<String> phaseId) {
+        return phaseRepo.findAllById(phaseId);
+    }
 
     public Boolean deleteCourseById(String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
@@ -201,9 +234,17 @@ public class CourseService {
     public Course updateCourse(CourseDto courseDto, String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
-//            List<Phase> phases = new ArrayList<>();
             if (courseDto.getPhases() != null) {
-                List<Phase> phases = new ArrayList<>();
+
+//                List<Phase> phases = new ArrayList<>();
+//                for (List<Task> courseTasks : courseDto.getPhases()) {
+//                    Phase phase = Phase.builder()
+//                            .entityType(EntityType.COURSE)
+//                            .tasks(courseTasks)
+//                            .build();
+//                    phases.add(phase);
+//                }
+                List<Phase<Task>> phases = new ArrayList<>();
                 int i = 0, j = 0;
                 System.out.println("Course Phase size = " + course.getPhases().size());
                 System.out.println("CourseDto Phase size = " + courseDto.getPhases().size());
@@ -219,31 +260,17 @@ public class CourseService {
 //                    phases.add(course.getPhases().get(i));
 //                    i++;
 //                }
+                //New Phase is Created
                 while(j < courseDto.getPhases().size()){
-                    Phase phase = Phase.builder()
+                    Phase<Task> phase = Phase.<Task>builder()
                             ._id(String.valueOf(new ObjectId()))
                             .tasks(courseDto.getPhases().get(j))
                             .build();
-                    phases.add(phase);
+                    phases.add(phaseRepo.save(phase));
                     j++;
                 }
                 course.setPhases(phases);
-//                for (int i = 0; i < courseDto.getPhases().size(); i++) {
-//                    Phase phase = course.getPhases().get(i);
-//                    phase.setTasks(courseDto.getPhases().get(i));
-//                }
-//                for (List<CourseTask> courseTasks : courseDto.getPhases()) {
-//                    for (Phase phase : course.getPhases()) {
-//                        phase.setTasks(courseTasks);
-//                    }
-//                    }
-//                    Phase phase = Phase.builder()
-//                            .tasks(courseTasks)
-//                            .build();
-//                    phases.add(phase);
-
             }
-            // Only update properties from the DTO if they are not null
             if (courseDto.getName() != null) {
                 course.setName(courseDto.getName());
             }
@@ -253,15 +280,16 @@ public class CourseService {
             if (courseDto.getGuidelines() != null) {
                 course.setGuidelines(courseDto.getGuidelines());
             }
-            if (courseDto.getReviewers() != null) {
-                course.setReviewers(courseDto.getReviewers());
+            if (courseDto.getApprover() != null) {
+                System.out.println("Insdie update " + courseDto);
+                course.setApprover(courseDto.getApprover());
                 Integer count = 0;
-                for (String reviewer : course.getReviewers()){
+                for (String reviewer : course.getApprover()){
                     if(course.getApprovedBy().contains(reviewer)){
                         count++;
                     }
                 }
-                if(count == course.getReviewers().size()){
+                if(count == course.getApprover().size()){
                     course.setIsApproved(true);
                 }else {
                     course.setIsApproved(false);
@@ -269,16 +297,12 @@ public class CourseService {
 
                 Set<String> approvedBy = new HashSet<>();
                 for (String approver : course.getApprovedBy()){
-                    if(course.getReviewers().contains(approver)){
+                    if(course.getApprover().contains(approver)){
                        approvedBy.add(approver);
                     }
                 }
                 course.setApprovedBy(approvedBy);
             }
-//            if (!phases.isEmpty()) {
-//                course.setPhases(phases);
-//            }
-            // Saving the updated course
             courseRepo.save(course);
             return course;
         }else {
@@ -298,43 +322,12 @@ public class CourseService {
         Set<String> approvedBy = course.getApprovedBy();
         approvedBy.add(userId);
         course.setApprovedBy(approvedBy);
-        if(course.getReviewers().size() == approvedBy.size()) {
+        if(course.getApprover().size() == approvedBy.size()) {
             course.setIsApproved(true);
         }else {
             course.setIsApproved(false);
         }
         return courseRepo.save(course);
-    }
-
-    public List<Phase> getCourseByPhaseIds(String courseId, List<Object> phaseIds) {
-        System.out.println("course id = " + courseId + " " + phaseIds );
-        Course course = mongoTemplate.findById(courseId, Course.class); // Retrieve course by ID
-        System.out.println("course Id = " + course.get_id());
-        System.out.println(course);
-        for (Phase phase : course.getPhases()) {
-            System.out.println("phaseId = " + phase.get_id());
-        }
-        if (course != null) {
-            List<Phase> phases = new ArrayList<>();
-
-            for (Object phaseId : phaseIds) {
-                String strPhaseId = phaseId.toString();
-
-                // Find phase by ID and add it to the list if found in the course's phases
-                Phase foundPhase = course.getPhases().stream()
-                        .filter(phase -> strPhaseId.equals(phase.get_id()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (foundPhase != null) {
-                    phases.add(foundPhase);
-                }
-            }
-
-            return phases;
-        } else {
-            return Collections.emptyList();
-        }
     }
 
 }
