@@ -81,10 +81,20 @@ public class TraineePlanService {
         List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
         for (Document tr : traineePlanResponseList) {
             List<UserIdAndNameDto> planDetails = new ArrayList<>();
+//            assignedPlanList.forEach(ap -> {
+//                if (ap.getUserId().equals(tr.get("_id")))
+//                    ap.getPlans().forEach(p -> planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName())));
+//            });
             assignedPlanList.forEach(ap -> {
-                if (ap.getUserId().equals(tr.get("_id")))
-                    ap.getPlans().forEach(p -> planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName())));
+                if (ap.getUserId().equals(tr.get("_id"))) {
+                    ap.getPlans().forEach(p -> {
+                        if (p != null) {
+                            planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName()));
+                        }
+                    });
+                }
             });
+
             tr.put("plan", planDetails);
         };
         Set<String> userIds = new HashSet<>();

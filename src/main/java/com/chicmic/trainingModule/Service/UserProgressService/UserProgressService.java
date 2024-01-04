@@ -32,7 +32,7 @@ public class UserProgressService {
                courseId,
                 userId,
                 planType
-        ).orElse(null);;
+        ).orElse(null);
         if(userProgress == null){
             return false;
         }
@@ -44,12 +44,19 @@ public class UserProgressService {
         System.out.println("Course Id : = " + courseId);
         System.out.println("Trainee Id : = " + userId);
         System.out.println("Id : = " + id);
-        UserProgress userProgress =  userProgressRepo.findByPlanIdAndCourseIdAndTraineeIdAndId(
+        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndIdAndProgressType(
                 planId,
                 courseId,
                 userId,
-               id
-        ).orElse(null);
+                id,
+                5
+        ).orElse(null);;
+//        UserProgress userProgress =  userProgressRepo.findByPlanIdAndCourseIdAndTraineeIdAndId(
+//                planId,
+//                courseId,
+//                userId,
+//               id
+//        ).orElse(null);
         System.out.println("User Progress : = " + userProgress);
         if(userProgress == null){
             return false;
@@ -70,6 +77,16 @@ public class UserProgressService {
                 courseid,
                 progressType
         ));
+
     }
 
+    public Integer getTotalSubTaskCompletedInPlan(String traineeId, String planId, int progressType) {
+        return Math.toIntExact(userProgressRepo.countByTraineeIdAndPlanIdAndProgressTypeAndStatus(
+                traineeId,
+                planId,
+                progressType,
+                ProgessConstants.Completed
+        ));
+
+    }
 }

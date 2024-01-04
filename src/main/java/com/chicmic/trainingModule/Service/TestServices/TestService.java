@@ -199,31 +199,119 @@ public class TestService {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
             if (testDto.getMilestones() != null) {
-                List<Phase<Task>> milestones = new ArrayList<>();
-                int i = 0, j = 0;
-                System.out.println("TEst Phase size = " + test.getMilestones().size());
-                System.out.println("TEstDto Phase size = " + testDto.getMilestones().size());
+                List<Phase<Task>> phases = new ArrayList<>();
+                int i = 0;
+                for (Phase<Task> coursePhase : test.getMilestones()) {
+                    if (i < testDto.getMilestones().size()) {
+                        List<Task> taskList = testDto.getMilestones().get(i);
+                        int j = 0;
+                        List<Task> tasks = new ArrayList<>();
+                        for (Task task : coursePhase.getTasks()) {
+                            if (j < taskList.size()) {
+                                Task taskOfCourseDto = taskList.get(j);
+                                List<SubTask> subTasksOfDto = taskOfCourseDto.getSubtasks();
+                                List<SubTask> subTasks = new ArrayList<>();
+                                task.setMainTask(taskOfCourseDto.getMainTask());
+                                int k = 0;
+                                for (SubTask subTask : task.getSubtasks()) {
+                                    if (k < subTasksOfDto.size()) {
+                                        SubTask subTaskOfDto = subTasksOfDto.get(k);
+                                        subTask.setSubTask(subTaskOfDto.getSubTask());
+                                        subTask.setEstimatedTime(subTaskOfDto.getEstimatedTime());
+                                        subTask.setLink(subTaskOfDto.getLink());
+                                        subTasks.add(subTaskRepo.save(subTask));
+                                    }
+                                    k++;
+                                }
+                                while (k < subTasksOfDto.size()) {
+                                    SubTask subTask = SubTask.builder()
+                                            .entityType(EntityType.COURSE)
+                                            .subTask(subTasksOfDto.get(k).getSubTask())
+                                            .link(subTasksOfDto.get(k).getLink())
+                                            .task(task)
+                                            .build();
+                                    subTask.setEstimatedTime(subTasksOfDto.get(k).getEstimatedTime());
+                                    subTasks.add(subTaskRepo.save(subTask));
+                                    k++;
+                                }
+                                task.setSubtasks(subTasks);
+                                tasks.add(taskRepo.save(task));
+                            }
+                            j++;
+                        }
+                        while (j < taskList.size()) {
+                            Task task = taskList.get(j);
+                            task.set_id(String.valueOf(new ObjectId()));
+                            List<SubTask> subTasks = new ArrayList<>();
+                            for (SubTask subTask : task.getSubtasks()) {
+                                subTask.setEntityType(EntityType.COURSE);
+                                subTask.setTask(task);
+                                subTasks.add(subTaskRepo.save(subTask));
+                            }
+                            task.setEntityType(EntityType.COURSE);
+                            task.setSubtasks(subTasks);
+                            task.setPhase(coursePhase);
+                            tasks.add(taskRepo.save(task));
 
-                while(i < test.getMilestones().size() && j < testDto.getMilestones().size()){
-                    Phase milestone = test.getMilestones().get(i);
-                    milestone.setTasks(testDto.getMilestones().get(j));
+                            j++;
+                        }
+                        coursePhase.setTasks(tasks);
+                        phases.add(phaseRepo.save(coursePhase));
+                    }
                     i++;
-                    j++;
-                    milestones.add(milestone);
                 }
-//                while(i < course.getPhases().size()){
-//                    phases.add(course.getPhases().get(i));
+                while (i < testDto.getMilestones().size()) {
+                    Phase<Task> phase = new Phase<>();
+                    phase.set_id(String.valueOf(new ObjectId()));
+                    List<Task> tasks = new ArrayList<>();
+                    List<Task> courseDtoTasks = testDto.getMilestones().get(i);
+                    for (Task task : courseDtoTasks) {
+                        task.set_id(String.valueOf(new ObjectId()));
+                        List<SubTask> subTasks = new ArrayList<>();
+                        for (SubTask subTask : task.getSubtasks()) {
+                            subTask.setEntityType(EntityType.COURSE);
+                            subTask.setTask(task);
+                            subTasks.add(subTaskRepo.save(subTask));
+                        }
+                        task.setEntityType(EntityType.COURSE);
+                        task.setSubtasks(subTasks);
+                        task.setPhase(phase);
+                        tasks.add(taskRepo.save(task));
+                    }
+                    phase.setName("Phase " + i);
+                    phase.setEntityType(EntityType.COURSE);
+                    phase.setTasks(tasks);
+                    phase.setEntity(test);
+                    phases.add(phaseRepo.save(phase));
+
+                    i++;
+                }
+                test.setMilestones(phases);
+//                List<Phase<Task>> milestones = new ArrayList<>();
+//                int i = 0, j = 0;
+//                System.out.println("TEst Phase size = " + test.getMilestones().size());
+//                System.out.println("TEstDto Phase size = " + testDto.getMilestones().size());
+//
+//                while(i < test.getMilestones().size() && j < testDto.getMilestones().size()){
+//                    Phase milestone = test.getMilestones().get(i);
+//                    milestone.setTasks(testDto.getMilestones().get(j));
 //                    i++;
+//                    j++;
+//                    milestones.add(milestone);
 //                }
-                while(j < testDto.getMilestones().size()){
-                    Phase<Task> milestone = Phase.<Task>builder()
-                            ._id(String.valueOf(new ObjectId()))
-                            .tasks(testDto.getMilestones().get(j))
-                            .build();
-                    milestones.add(milestone);
-                    j++;
-                }
-                test.setMilestones(milestones);
+////                while(i < course.getPhases().size()){
+////                    phases.add(course.getPhases().get(i));
+////                    i++;
+////                }
+//                while(j < testDto.getMilestones().size()){
+//                    Phase<Task> milestone = Phase.<Task>builder()
+//                            ._id(String.valueOf(new ObjectId()))
+//                            .tasks(testDto.getMilestones().get(j))
+//                            .build();
+//                    milestones.add(milestone);
+//                    j++;
+//                }
+//                test.setMilestones(milestones);
 //                for (List<TestTask> testTasks : testDto.getMilestones()) {
 //                    Milestone milestone = Milestone.builder()
 //                            .tasks(testTasks)
