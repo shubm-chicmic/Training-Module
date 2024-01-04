@@ -23,13 +23,36 @@ public class UserProgressService {
     public UserProgress createUserProgress(UserProgress userProgress) {
         return userProgressRepo.save(userProgress);
     }
+    public UserProgress checkUserProgressExists(String planId, String courseId, String subTaskId, String traineeId) {
+        List<UserProgress> allUserProgress = mongoTemplate.findAll(UserProgress.class);
+        System.out.println("allUserProgress: size " + allUserProgress.size());
+
+        System.out.println("allUserProgress: " + allUserProgress);
+        for (UserProgress userProgress : allUserProgress) {
+            System.out.println("Plan Id : = " + planId);
+            System.out.println("Course Id : = " + courseId);
+            System.out.println("Trainee Id : = " + traineeId);
+            System.out.println("Id : = " + subTaskId);
+            System.out.println("userProgress Plan Id : = " + userProgress.getPlanId());
+            System.out.println("userProgress Course Id : = " + userProgress.getCourseId());
+            System.out.println("userProgress Trainee Id : = " + userProgress.getTraineeId());
+            System.out.println("userProgress Id : = " + userProgress.getSubTaskId());
+            if (userProgress.getPlanId().equals(planId) && userProgress.getCourseId().equals(courseId)
+                && userProgress.getTraineeId().equals(traineeId) && userProgress.getSubTaskId().equals(subTaskId)
+            ) {
+               return  userProgress;
+            }
+
+        }
+        return  null;
+    }
     public UserProgress getUserProgress(UserProgressDto userProgressDto){
-        return userProgressRepo.findByPlanIdAndCourseIdAndTraineeIdAndId(
+        return checkUserProgressExists(
                 userProgressDto.getPlanId(),
                 userProgressDto.getCourseId(),
-                userProgressDto.getTraineeId(),
-                userProgressDto.getId()
-        ).orElse(null);
+                userProgressDto.getSubTaskId(),
+                userProgressDto.getTraineeId()
+        );
     }
 
     public Boolean findIsPlanCompleted(String planId, String courseId, Integer planType, String userId) {
@@ -45,23 +68,30 @@ public class UserProgressService {
         return userProgress.getStatus() == ProgessConstants.Completed;
     }
 
-    public Boolean findIsSubTaskCompleted(String planId, String courseId, String id, String traineeId) {
+    public Boolean findIsSubTaskCompleted(String planId, String courseId, String subTaskId, String traineeId) {
         System.out.println("Plan Id : = " + planId);
         System.out.println("Course Id : = " + courseId);
         System.out.println("Trainee Id : = " + traineeId);
-        System.out.println("Id : = " + id);
+        System.out.println("Id : = " + subTaskId);
         Criteria criteria = Criteria.where("traineeId").is(traineeId)
                 .and("planId").is(planId)
                 .and("courseId").is(courseId)
-                .and("id").is(id)
+                .and("subTaskId").is(subTaskId)
                 .and("progressType").is(5);
 
 
         Query searchQuery = new Query(criteria);
         UserProgress userProgress = mongoTemplate.findOne(searchQuery, UserProgress.class);
-        System.out.println("Userprogress " + userProgress);
+
+        userProgress = checkUserProgressExists(
+                planId,
+                courseId,
+                subTaskId,
+                traineeId
+        );
+        System.out.println("Userprogress dfedf" + userProgress);
 //        if(val > 0)return true;
-        return false;
+//        return false;
 //        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndIdAndProgressType(
 //               userId,
 //                planId,
@@ -76,10 +106,10 @@ public class UserProgressService {
 //               id
 //        ).orElse(null);
 //        System.out.println("User Progress : = " + userProgress);
-//        if(userProgress == null){
-//            return false;
-//        }
-//        return userProgress.getStatus() == ProgessConstants.Completed;
+        if(userProgress == null){
+            return false;
+        }
+        return userProgress.getStatus() == ProgessConstants.Completed;
     }
 
 //    public long getTotalCompletedTasks(String traineeId, String planType, String id) {
@@ -89,11 +119,12 @@ public class UserProgressService {
 //
 //    }
     public Integer getTotalSubTaskCompleted(String traineeId,String planId, String courseid, Integer progressType) {
-        return Math.toIntExact(userProgressRepo.countByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+        return Math.toIntExact(userProgressRepo.countByTraineeIdAndPlanIdAndCourseIdAndProgressTypeAndStatus(
                 traineeId,
                 planId,
                 courseid,
-                progressType
+                progressType,
+                ProgessConstants.Completed
         ));
 
     }

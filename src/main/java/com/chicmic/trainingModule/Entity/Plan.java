@@ -90,4 +90,23 @@ public class Plan {
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
     }
+
+    @Override
+    public String toString() {
+        return "Plan{" +
+                "_id='" + _id + '\'' +
+                ", planName='" + planName + '\'' +
+                ", description='" + description + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", totalTasks=" + totalTasks +
+                ", phases=" + phases +
+                ", approver=" + approver +
+                ", approvedBy=" + approvedBy +
+                ", createdBy='" + createdBy + '\'' +
+                ", deleted=" + deleted +
+                ", approved=" + approved +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

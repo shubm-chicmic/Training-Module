@@ -3,8 +3,10 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class AssignTaskResponseMapper {
     private final FeedbackService feedbackService;
     private final UserProgressService userProgressService;
+    private final CourseService courseService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
 //        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
 //        for (AssignedPlan assignTask : assignTasks) {
@@ -54,7 +57,15 @@ public class AssignTaskResponseMapper {
         for (Plan plan : assignTask.getPlans()) {
             if(plan != null) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
-
+                Integer totalTask = 0;
+                for (Phase<PlanTask> phase : plan.getPhases()) {
+                    for (PlanTask planTask : phase.getTasks()) {
+                        for (Object milestone : planTask.getMilestones()) {
+                            Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                            totalTask += coursePhase.getTotalTasks();
+                        }
+                    }
+                }
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())
@@ -63,7 +74,7 @@ public class AssignTaskResponseMapper {
                         ._id(plan.get_id())
                         .consumedTime("00:00")
                         .estimatedTime(plan.getEstimatedTime())
-                        .totalTasks(plan.getTotalTasks())
+                        .totalTasks(totalTask)
                         .completedTasks(completedTasks)
                         .approver(plan.getApproverDetails())
 //                    .feedbackId()

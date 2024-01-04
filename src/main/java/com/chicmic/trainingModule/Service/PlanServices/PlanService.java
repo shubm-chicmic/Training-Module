@@ -47,6 +47,11 @@ public class PlanService {
             List<PlanTask> tasks = new ArrayList<>();
             for (PlanTask task : phase.getTasks()) {
                 task.set_id(String.valueOf(new ObjectId()));
+//                Integer id = totalTask;
+//                for (Object milestone : task.getMilestones()) {
+//                    Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+//                    totalTask += coursePhase.getTotalTasks();
+//                }
 //                List<UserIdAndNameDto> milestoneDetails = new ArrayList<>();
 //                for (String milestoneId : task.getMilestones()){
 //                    UserIdAndNameDto milestoneDetail = null;
@@ -75,6 +80,7 @@ public class PlanService {
         plan.setPhases(phases);
         plan.setApproved(false);
         plan.setDeleted(false);
+        plan.setDescription(planDto.getDescription());
         plan.setPlanName(planDto.getPlanName());
         plan.setCreatedBy(principal.getName());
         plan.setApprover(planDto.getApprover());
@@ -216,25 +222,37 @@ public class PlanService {
         System.out.println("PlanDto");
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
-            plan = (Plan) CustomObjectMapper.updateFields(planDto, plan);
-            Integer count = 0;
-            for (String reviewer : plan.getApprover()){
-                if(plan.getApprovedBy().contains(reviewer)){
-                    count++;
+            if(planDto.getPlanName() != null){
+                plan.setPlanName(planDto.getPlanName());
+            }
+            if(planDto.getApprover() != null){
+                System.out.println("IM approving");
+                Integer count = 0;
+                for (String reviewer : plan.getApprover()){
+                    if(plan.getApprovedBy().contains(reviewer)){
+                        count++;
+                    }
                 }
-            }
-            if(count == plan.getApprover().size()){
-                plan.setApproved(true);
-            }else {
-                plan.setApproved(false);
-            }
-            Set<String> approvedBy = new HashSet<>();
-            for (String approver : plan.getApprovedBy()){
-                if(plan.getApprover().contains(approver)){
-                    approvedBy.add(approver);
+                if(count == plan.getApprover().size()){
+                    plan.setApproved(true);
+                }else {
+                    plan.setApproved(false);
                 }
+                Set<String> approvedBy = new HashSet<>();
+                for (String approver : plan.getApprovedBy()){
+                    if(plan.getApprover().contains(approver)){
+                        approvedBy.add(approver);
+                    }
+                }
+                plan.setApprovedBy(approvedBy);
+                plan.setApprover(planDto.getApprover());
             }
-            plan.setApprovedBy(approvedBy);
+            if(planDto.getDescription() != null) {
+                plan.setDescription(planDto.getDescription());
+            }
+            if(planDto.getPhases() != null) {
+                plan.setPhases(planDto.getPhases());
+            }
             plan.setUpdatedAt(LocalDateTime.now());
             planRepo.save(plan);
             return plan;

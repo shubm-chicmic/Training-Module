@@ -28,6 +28,7 @@ public class TaskResponseMapper {
         for (Task task : taskList) {
             for (SubTask subTask : task.getSubtasks()){
                 System.out.println("Subtask " + subTask);
+                System.out.println("SubTaskId " + subTask.get_id());
                 Boolean isSubTaskCompleted = userProgressService.findIsSubTaskCompleted(planId, courseId, subTask.get_id(), traineeId);
                 UserIdAndNameDto mainTask = UserIdAndNameDto.builder().name(task.getMainTask())._id(task.get_id()).build();
                 UserIdAndNameDto subTaskIdAndName = UserIdAndNameDto.builder()

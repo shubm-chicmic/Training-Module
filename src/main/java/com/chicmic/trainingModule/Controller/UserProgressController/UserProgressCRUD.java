@@ -27,7 +27,7 @@ public class UserProgressCRUD {
                     .traineeId(userProgressDto.getTraineeId())
                     .planId(userProgressDto.getPlanId())
                     .courseId(userProgressDto.getCourseId())
-                    .id(userProgressDto.getId())
+                    .subTaskId(userProgressDto.getSubTaskId())
                     .startDate(LocalDateTime.now())
                     .progressType(userProgressDto.getProgressType())
                     .status(userProgressDto.getStatus())

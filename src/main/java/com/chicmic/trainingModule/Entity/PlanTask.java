@@ -29,6 +29,7 @@ public class PlanTask {
 //    @Transient
 //    private List<UserIdAndNameDto> milestoneDetails;
     private List<String> mentor;
+    private Integer totalTasks;
     private Integer estimatedTime;
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
