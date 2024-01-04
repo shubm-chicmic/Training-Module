@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -58,6 +59,7 @@ public class AssignTaskCRUD {
                 Plan plan = planService.getPlanById(planId);
                 plans.add(plan);
             }
+            if(plans != null || plans.size() != 0)
             assignedPlan.setPlans(plans);
             AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
             return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);
@@ -104,7 +106,7 @@ public class AssignTaskCRUD {
                    planTasks.addAll(phase.getTasks());
                }
            }
-           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, traineeId);
+           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId,traineeId);
            return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
         }
         return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Plan Not Found", null, response);
@@ -113,18 +115,24 @@ public class AssignTaskCRUD {
     @GetMapping("/planTask")
     public ApiResponseWithCount getPlanTask(@RequestParam String planTaskId,
                                         @RequestParam String traineeId,
+                                        @RequestParam String planId,
+                                        @RequestParam String courseId,
                                         HttpServletResponse response
     ){
         PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
         if(planTask != null) {
-            List<String> phasesList = planTask.getMilestones();
+            List<Object> phasesList = planTask.getMilestones();
             List<TaskDto> taskDtoList = new ArrayList<>();
-            List<Phase> phases = courseService.getPhaseByIds(phasesList);
+            List<String> phasesListOfString = new ArrayList<>();
+            for (Object obj : phasesList) {
+                phasesListOfString.add(obj.toString());
+            }
+            List<Phase> phases = courseService.getPhaseByIds(phasesListOfString);
             List<Task> taskList = new ArrayList<>();
             for(Phase phase : phases) {
                 taskList.addAll(phase.getTasks());
             }
-            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList, traineeId);
+            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList,planId, courseId, traineeId);
             return new ApiResponseWithCount(0, HttpStatus.OK.value(), "Plan Task Retrieved", taskDtoList, response);
         }
         return null;

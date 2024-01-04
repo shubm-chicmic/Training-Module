@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service.UserProgressService;
 
+import com.chicmic.trainingModule.Dto.UserProgressDto;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Entity.UserProgress;
 import com.chicmic.trainingModule.Repository.UserProgressRepo;
@@ -16,20 +17,35 @@ public class UserProgressService {
     public UserProgress createUserProgress(UserProgress userProgress) {
         return userProgressRepo.save(userProgress);
     }
-    public UserProgress getUserProgress(String plan, Integer planType, String userId){
-        return userProgressRepo.findByUserIdAndProgressTypeAndId(userId, planType, plan);
+    public UserProgress getUserProgress(UserProgressDto userProgressDto){
+        return userProgressRepo.findByPlanIdAndCourseIdAndTraineeIdAndId(
+                userProgressDto.getPlanId(),
+                userProgressDto.getCourseId(),
+                userProgressDto.getTraineeId(),
+                userProgressDto.getId()
+        ).orElse(null);
     }
 
-    public Boolean findIsPlanCompleted(String plan, Integer planType, String userId) {
-        UserProgress userProgress = userProgressRepo.findByUserIdAndProgressTypeAndId(userId, planType, plan);
+    public Boolean findIsPlanCompleted(String planId, String courseId, Integer planType, String userId) {
+        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+                planId,
+               courseId,
+                userId,
+                planType
+        ).orElse(null);;
         if(userProgress == null){
             return false;
         }
         return userProgress.getStatus() == ProgessConstants.Completed;
     }
 
-    public Boolean findIsSubTaskCompleted(String id, String userId) {
-        UserProgress userProgress =  userProgressRepo.findByUserIdAndProgressTypeAndId(userId, 5, id);
+    public Boolean findIsSubTaskCompleted(String planId, String courseId, String id, String userId) {
+        UserProgress userProgress =  userProgressRepo.findByPlanIdAndCourseIdAndTraineeIdAndId(
+                planId,
+                courseId,
+                userId,
+               id
+        ).orElse(null);
         if(userProgress == null){
             return false;
         }
@@ -42,8 +58,13 @@ public class UserProgressService {
 //        return userProgressRepo.count(query);
 //
 //    }
-    public Integer getTotalCompletedTasks(String traineeId, String planType, String id) {
-        return null;
+    public Integer getTotalSubTaskCompleted(String traineeId,String planId, String courseid, Integer progressType) {
+        return Math.toIntExact(userProgressRepo.countByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+                traineeId,
+                planId,
+                courseid,
+                progressType
+        ));
     }
 
 }

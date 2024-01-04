@@ -47,24 +47,24 @@ public class PlanService {
             List<PlanTask> tasks = new ArrayList<>();
             for (PlanTask task : phase.getTasks()) {
                 task.set_id(String.valueOf(new ObjectId()));
-                List<UserIdAndNameDto> milestoneDetails = new ArrayList<>();
-                for (String milestoneId : task.getMilestones()){
-                    UserIdAndNameDto milestoneDetail = null;
-                    System.out.println("Milestone : " + milestoneId);
-                    if(task.getPlanType() == 2){
-                        milestoneDetail = UserIdAndNameDto.builder()
-                                .name((testService.getTestById(task.getPlan()).getTestName()))
-                                ._id(milestoneId)
-                                .build();
-                    }else if(task.getPlanType() == 1){
-                        milestoneDetail = UserIdAndNameDto.builder()
-                                .name(courseService.getCourseById(task.getPlan()).getName())
-                                ._id(milestoneId)
-                                .build();
-                    }
-                    milestoneDetails.add(milestoneDetail);
-                }
-                task.setMilestoneDetails(milestoneDetails);
+//                List<UserIdAndNameDto> milestoneDetails = new ArrayList<>();
+//                for (String milestoneId : task.getMilestones()){
+//                    UserIdAndNameDto milestoneDetail = null;
+//                    System.out.println("Milestone : " + milestoneId);
+//                    if(task.getPlanType() == 2){
+//                        milestoneDetail = UserIdAndNameDto.builder()
+//                                .name((testService.getTestById(task.getPlan()).getTestName()))
+//                                ._id(milestoneId)
+//                                .build();
+//                    }else if(task.getPlanType() == 1){
+//                        milestoneDetail = UserIdAndNameDto.builder()
+//                                .name(courseService.getCourseById(task.getPlan()).getName())
+//                                ._id(milestoneId)
+//                                .build();
+//                    }
+//                    milestoneDetails.add(milestoneDetail);
+//                }
+//                task.setMilestoneDetails(milestoneDetails);
                 tasks.add(planTaskRepo.save(task));
             }
             phase.setEntityType(EntityType.PLAN);

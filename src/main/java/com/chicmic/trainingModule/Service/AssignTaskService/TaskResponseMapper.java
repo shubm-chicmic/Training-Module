@@ -22,11 +22,11 @@ public class TaskResponseMapper {
     private final UserProgressService userProgressService;
     private final SubTaskRepo subTaskRepo;
 
-    public  List<TaskDto> mapTaskToResponseDto(List<Task> taskList, String traineeId) {
+    public  List<TaskDto> mapTaskToResponseDto(List<Task> taskList,String planId, String courseId, String traineeId) {
         List<TaskDto> result = new ArrayList<TaskDto>();
         for (Task task : taskList) {
             for (SubTask subTask : task.getSubtasks()){
-                Boolean isSubTaskCompleted = userProgressService.findIsSubTaskCompleted(subTask.get_id(), traineeId);
+                Boolean isSubTaskCompleted = userProgressService.findIsSubTaskCompleted(planId, courseId, subTask.get_id(), traineeId);
                 UserIdAndNameDto mainTask = UserIdAndNameDto.builder().name(task.getMainTask())._id(task.get_id()).build();
                 UserIdAndNameDto subTaskIdAndName = UserIdAndNameDto.builder()
                         ._id(subTask.get_id())
@@ -38,6 +38,7 @@ public class TaskResponseMapper {
                         .build();
                 TaskDto taskDto = TaskDto.builder()
                         .mainTask(mainTask)
+                        .consumedTime("00:00")
                         .estimatedTime(subTask.getEstimatedTime())
                         .reference(subTask.getReference())
                         .subTask(subTaskIdAndName)

@@ -21,12 +21,13 @@ public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal) {
-        UserProgress userProgress = userProgressService.getUserProgress(userProgressDto.getId(), userProgressDto.getProgressType(), userProgressDto.getUserId());
+        UserProgress userProgress = userProgressService.getUserProgress(userProgressDto);
         if(userProgress == null) {
             userProgress = UserProgress.builder()
-                    .userId(userProgressDto.getUserId())
+                    .traineeId(userProgressDto.getTraineeId())
                     .planId(userProgressDto.getPlanId())
                     .courseId(userProgressDto.getCourseId())
+                    .id(userProgressDto.getId())
                     .startDate(LocalDateTime.now())
                     .progressType(userProgressDto.getProgressType())
                     .status(userProgressDto.getStatus())

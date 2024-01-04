@@ -13,6 +13,7 @@ public class TaskDto {
     private UserIdAndNameDto mainTask;
     private String subtaskId;
     private UserIdAndNameDto subTask;
+    private String consumedTime;
     private String estimatedTime;
     private String reference;
     private Boolean isCompleted;

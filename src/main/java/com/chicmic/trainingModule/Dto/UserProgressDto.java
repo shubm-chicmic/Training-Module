@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Dto;
 
+import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import lombok.*;
 
 @Getter
@@ -11,7 +12,7 @@ public class UserProgressDto {
     private Integer progressType;
     private String planId;
     private String courseId;
-    private String userId;
+    private String traineeId;
     private String id;
-    private Integer status;
+    private Integer status = ProgessConstants.NotStarted;
 }

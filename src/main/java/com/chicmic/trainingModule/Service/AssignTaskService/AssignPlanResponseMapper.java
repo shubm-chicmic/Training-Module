@@ -21,14 +21,14 @@ public class AssignPlanResponseMapper {
     private final CourseService courseService;
     private final UserProgressService userProgressService;
 
-    public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks, String traineeId) {
+    public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId) {
         List<PlanTaskResponseDto> assignPlanResponseDtoList = new ArrayList<>();
         for (PlanTask planTask : planTasks) {
-            assignPlanResponseDtoList.add(mapAssignPlanToResponseDto(planTask, traineeId));
+            assignPlanResponseDtoList.add(mapAssignPlanToResponseDto(planTask, planId, traineeId));
         }
         return assignPlanResponseDtoList;
     }
-    public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask, String traineeId) {
+    public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask,String planId, String traineeId) {
         String planName = null;
         if (planTask.getPlanType() == 1) {
             Course course =  courseService.getCourseById(planTask.getPlan());
@@ -43,28 +43,30 @@ public class AssignPlanResponseMapper {
                 .name(planName)
                 ._id(planTask.getPlan())
                 .build();
-        Boolean isPlanCompleted = userProgressService.findIsPlanCompleted(planTask.getPlan(), planTask.getPlanType(), traineeId);
+        Boolean isPlanCompleted = userProgressService.findIsPlanCompleted(planId,planTask.getPlan(), planTask.getPlanType(), traineeId);
 
         List<UserIdAndNameDto> milestonesIdAndName = new ArrayList<>();
-        for (String milestone : planTask.getMilestones()){
-            Phase<Task> phase = courseService.getPhaseById(milestone);
+        for (Object milestone : planTask.getMilestones()){
+            Phase<Task> phase = courseService.getPhaseById((String) milestone);
             UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
                     ._id(phase.get_id())
                     .name(phase.getName())
                     .build();
             milestonesIdAndName.add(milestoneDetails);
         }
+        Integer completedTask = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)
                 .planType(planTask.getPlanType())
                 .phases(milestonesIdAndName)
                 .consumedTime("00:00")
-                .completedTask(0)
+                .completedTask(completedTask)
                 .totalTasks(1)
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
+                .rating(0f)
                 .build();
     }
 }

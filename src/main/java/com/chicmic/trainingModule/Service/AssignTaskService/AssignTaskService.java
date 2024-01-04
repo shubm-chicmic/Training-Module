@@ -22,7 +22,6 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -57,7 +56,7 @@ public class AssignTaskService {
                 .updatedAt(LocalDateTime.now())
                 .plans(plans)
                 .userId(userId)
-                .reviewers(assignTaskDto.getApprover())
+                .reviewers(assignTaskDto.getReviewers())
                 .date(assignTaskDto.getDate())
                 .build();
         return assignTaskRepo.save(assignTask);

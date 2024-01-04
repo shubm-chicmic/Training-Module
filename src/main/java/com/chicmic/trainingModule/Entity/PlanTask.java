@@ -25,9 +25,9 @@ public class PlanTask {
     @NotNull(message = "Plan Id cannot be empty")
     private String plan;
     @NotNull(message = "Milestones cannot be Empty")
-    private List<String> milestones;
+    private List<Object> milestones;
 //    @Transient
-    private List<UserIdAndNameDto> milestoneDetails;
+//    private List<UserIdAndNameDto> milestoneDetails;
     private List<String> mentor;
     private Integer estimatedTime;
 //    public List<UserIdAndNameDto> getMilestones(){
@@ -40,6 +40,10 @@ public class PlanTask {
     public List<UserIdAndNameDto> getMentorDetails() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }
+    public List<UserIdAndNameDto> getMentor() {
+        return ConversionUtility.convertToUserIdAndName(this.mentor);
+    }
+
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;

@@ -1,11 +1,8 @@
 package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
-import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
 import lombok.*;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -19,7 +16,7 @@ import java.time.LocalDateTime;
 public class UserProgress {
     @Id
     private String _id;
-    private String userId;
+    private String traineeId;
     private String planId;
     private String courseId;
     private Integer progressType;

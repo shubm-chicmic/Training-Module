@@ -24,4 +24,5 @@ public class PlanTaskResponseDto {
     private String estimatedTime;
     private String consumedTime;
     private Boolean isCompleted;
+    private float rating;
 }

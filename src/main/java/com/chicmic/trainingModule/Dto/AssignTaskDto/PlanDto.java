@@ -16,6 +16,7 @@ public class PlanDto {
     private String _id;
     private String assignPlanId;
     private List<UserIdAndNameDto> approver;
+    private String consumedTime;
     private String estimatedTime;
     private Integer totalTasks;
     private Integer completedTasks;
