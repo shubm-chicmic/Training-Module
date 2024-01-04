@@ -23,9 +23,9 @@ public class Phase<T> {
     private String _id;
     private Integer entityType;
     private String name;
-    private Integer estimatedTime;
-    private Integer completedTasks;
-    private Integer totalTasks;
+    private Integer estimatedTime = 0;
+    private Integer completedTasks = 0;
+    private Integer totalTasks = 0;
     @DBRef
     @CascadeSave
     private List<T> tasks;

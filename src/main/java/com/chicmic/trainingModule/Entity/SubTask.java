@@ -50,4 +50,17 @@ public class SubTask {
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
+    @Override
+    public String toString() {
+        return "SubTask{" +
+                "_id='" + _id + '\'' +
+                ", entityType=" + entityType +
+                ", subTask='" + subTask + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", link='" + link + '\'' +
+                ", reference='" + reference + '\'' +
+                ", task=" + task +
+                '}';
+    }
 }

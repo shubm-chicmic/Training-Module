@@ -25,4 +25,20 @@ public class UserProgress {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String feedbackId;
+
+    @Override
+    public String toString() {
+        return "UserProgress{" +
+                "_id='" + _id + '\'' +
+                ", traineeId='" + traineeId + '\'' +
+                ", planId='" + planId + '\'' +
+                ", courseId='" + courseId + '\'' +
+                ", progressType=" + progressType +
+                ", id='" + id + '\'' +
+                ", status=" + status +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", feedbackId='" + feedbackId + '\'' +
+                '}';
+    }
 }

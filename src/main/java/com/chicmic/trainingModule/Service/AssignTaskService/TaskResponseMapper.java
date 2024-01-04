@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.TaskDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Entity.SubTask;
 import com.chicmic.trainingModule.Entity.Task;
@@ -26,6 +27,7 @@ public class TaskResponseMapper {
         List<TaskDto> result = new ArrayList<TaskDto>();
         for (Task task : taskList) {
             for (SubTask subTask : task.getSubtasks()){
+                System.out.println("Subtask " + subTask);
                 Boolean isSubTaskCompleted = userProgressService.findIsSubTaskCompleted(planId, courseId, subTask.get_id(), traineeId);
                 UserIdAndNameDto mainTask = UserIdAndNameDto.builder().name(task.getMainTask())._id(task.get_id()).build();
                 UserIdAndNameDto subTaskIdAndName = UserIdAndNameDto.builder()
@@ -36,11 +38,17 @@ public class TaskResponseMapper {
                         ._id(task.getPhase().get_id())
                         .name(task.getPhase().getName())
                         .build();
+                String reference = "";
+                if(subTask.getEntityType() == EntityType.TEST){
+                    reference = subTask.getReference();
+                }else {
+                    reference = subTask.getLink();
+                }
                 TaskDto taskDto = TaskDto.builder()
                         .mainTask(mainTask)
                         .consumedTime("00:00")
                         .estimatedTime(subTask.getEstimatedTime())
-                        .reference(subTask.getReference())
+                        .reference(reference)
                         .subTask(subTaskIdAndName)
                         .phase(phaseDetails)
                         .isCompleted(isSubTaskCompleted)

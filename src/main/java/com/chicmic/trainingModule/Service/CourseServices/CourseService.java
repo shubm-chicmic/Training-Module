@@ -235,6 +235,7 @@ public class CourseService {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
             if (courseDto.getPhases() != null) {
+
 //                List<Phase> phases = new ArrayList<>();
 //                for (List<Task> courseTasks : courseDto.getPhases()) {
 //                    Phase phase = Phase.builder()
@@ -259,12 +260,13 @@ public class CourseService {
 //                    phases.add(course.getPhases().get(i));
 //                    i++;
 //                }
+                //New Phase is Created
                 while(j < courseDto.getPhases().size()){
                     Phase<Task> phase = Phase.<Task>builder()
                             ._id(String.valueOf(new ObjectId()))
                             .tasks(courseDto.getPhases().get(j))
                             .build();
-                    phases.add(phase);
+                    phases.add(phaseRepo.save(phase));
                     j++;
                 }
                 course.setPhases(phases);

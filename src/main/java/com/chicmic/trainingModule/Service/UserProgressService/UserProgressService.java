@@ -40,12 +40,17 @@ public class UserProgressService {
     }
 
     public Boolean findIsSubTaskCompleted(String planId, String courseId, String id, String userId) {
+        System.out.println("Plan Id : = " + planId);
+        System.out.println("Course Id : = " + courseId);
+        System.out.println("Trainee Id : = " + userId);
+        System.out.println("Id : = " + id);
         UserProgress userProgress =  userProgressRepo.findByPlanIdAndCourseIdAndTraineeIdAndId(
                 planId,
                 courseId,
                 userId,
                id
         ).orElse(null);
+        System.out.println("User Progress : = " + userProgress);
         if(userProgress == null){
             return false;
         }

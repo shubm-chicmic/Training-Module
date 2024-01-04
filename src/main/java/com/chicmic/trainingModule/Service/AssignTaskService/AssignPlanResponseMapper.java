@@ -4,6 +4,7 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
@@ -46,6 +47,7 @@ public class AssignPlanResponseMapper {
         Boolean isPlanCompleted = userProgressService.findIsPlanCompleted(planId,planTask.getPlan(), planTask.getPlanType(), traineeId);
 
         List<UserIdAndNameDto> milestonesIdAndName = new ArrayList<>();
+        Integer totalTask = 0;
         for (Object milestone : planTask.getMilestones()){
             Phase<Task> phase = courseService.getPhaseById((String) milestone);
             UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
@@ -53,6 +55,7 @@ public class AssignPlanResponseMapper {
                     .name(phase.getName())
                     .build();
             milestonesIdAndName.add(milestoneDetails);
+            totalTask += phase.getTotalTasks();
         }
         Integer completedTask = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         return PlanTaskResponseDto.builder()
@@ -62,7 +65,7 @@ public class AssignPlanResponseMapper {
                 .phases(milestonesIdAndName)
                 .consumedTime("00:00")
                 .completedTask(completedTask)
-                .totalTasks(1)
+                .totalTasks(totalTask)
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
