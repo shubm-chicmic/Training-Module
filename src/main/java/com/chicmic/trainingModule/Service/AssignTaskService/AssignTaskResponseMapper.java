@@ -9,7 +9,7 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+//import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AssignTaskResponseMapper {
-    private final FeedbackService feedbackService;
+//    private final FeedbackService feedbackService;
     private final UserProgressService userProgressService;
     private final CourseService courseService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
@@ -36,7 +36,7 @@ public class AssignTaskResponseMapper {
 //    }
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
 
             return AssignTaskResponseDto.builder().trainee(trainee).build();
         }
@@ -52,7 +52,7 @@ public class AssignTaskResponseMapper {
 //                    )
 //                    .orElse(null);
         } else {
-            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
+            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
         }
      //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
