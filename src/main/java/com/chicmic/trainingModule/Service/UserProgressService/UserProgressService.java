@@ -23,6 +23,7 @@ public class UserProgressService {
     public UserProgress createUserProgress(UserProgress userProgress) {
         return userProgressRepo.save(userProgress);
     }
+
     public UserProgress checkUserProgressExists(String planId, String courseId, String subTaskId, String traineeId) {
         List<UserProgress> allUserProgress = mongoTemplate.findAll(UserProgress.class);
         System.out.println("allUserProgress: size " + allUserProgress.size());
@@ -59,6 +60,15 @@ public class UserProgressService {
         );
     }
 
+    public UserProgress getUserProgressByTraineeIdAndPlanId(String traineeId, String planId) {
+        return userProgressRepo.findByTraineeIdAndPlanId(traineeId, planId).orElse(null);
+    }
+    public UserProgress getUserProgressByTraineeIdPlanIdAndCourseId(String traineeId, String planId, String courseId) {
+        return userProgressRepo.findByTraineeIdAndPlanIdAndCourseId(traineeId, planId, courseId).orElse(null);
+    }
+    public List<UserProgress> getAllUserProgressByTraineeId(String traineeId) {
+        return userProgressRepo.findByTraineeId(traineeId);
+    }
     public Boolean findIsPlanCompleted(String planId, String courseId, Integer planType, String userId) {
         UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
                 planId,

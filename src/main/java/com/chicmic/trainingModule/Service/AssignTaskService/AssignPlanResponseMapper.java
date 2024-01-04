@@ -5,6 +5,7 @@ import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
@@ -62,6 +63,17 @@ public class AssignPlanResponseMapper {
             totalTask += phase.getTotalTasks();
         }
         Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
+        if(totalTask == completedTasks) {
+            if(userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan()) == null) {
+                UserProgress userProgress = UserProgress.builder()
+                        .planId(planId)
+                        .courseId(planTask.getPlan())
+                        .progressType(planTask.getPlanType())
+                        .status(ProgessConstants.Completed)
+                        .build();
+                userProgressService.createUserProgress(userProgress);
+            }
+        }
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)

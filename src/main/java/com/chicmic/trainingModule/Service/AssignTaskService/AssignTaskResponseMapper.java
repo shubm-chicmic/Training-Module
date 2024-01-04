@@ -6,6 +6,8 @@ import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
@@ -54,6 +56,7 @@ public class AssignTaskResponseMapper {
         }
      //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
+        Integer countOfCompletedPlan = 0;
         for (Plan plan : assignTask.getPlans()) {
             if(plan != null) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
@@ -63,6 +66,19 @@ public class AssignTaskResponseMapper {
                     for (PlanTask planTask : phase.getTasks()) {
                         totalTask += planTask.getTotalTasks();
                     }
+                }
+                Boolean isCompleted = false;
+                if(totalTask == completedTasks) {
+                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id()) == null) {
+                        UserProgress userProgress = UserProgress.builder()
+                                .planId(plan.get_id())
+                                .progressType(EntityType.PLAN)
+                                .status(ProgessConstants.Completed)
+                                .build();
+                        userProgressService.createUserProgress(userProgress);
+                    }
+                    isCompleted = true;
+                    countOfCompletedPlan++;
                 }
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
@@ -76,7 +92,7 @@ public class AssignTaskResponseMapper {
                         .completedTasks(completedTasks)
                         .approver(plan.getApproverDetails())
 //                    .feedbackId()
-                        .isCompleted(false)
+                        .isCompleted(isCompleted)
                         .rating(0f)
                         .build();
                 plans.add(planDto);
@@ -87,11 +103,8 @@ public class AssignTaskResponseMapper {
                 .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
                 .createdBy(assignTask.getCreatedBy())
                 .reviewers(assignTask.getReviewerDetails())
+                .isCompleted(countOfCompletedPlan == plans.size())
                 .plans(plans)
-//                .totalPhases(assignTask.getPlans().size())
-//                .approved(assignTask.getApproved())
-//                .deleted(assignTask.getDeleted())
-//                .approvedBy(approvedBy)
                 .trainee(trainee)
                 .date(assignTask.getDate())
                 .build();

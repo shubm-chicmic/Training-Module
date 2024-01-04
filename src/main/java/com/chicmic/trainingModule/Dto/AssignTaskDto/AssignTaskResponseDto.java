@@ -20,6 +20,7 @@ public class AssignTaskResponseDto {
     private List<UserIdAndNameDto> reviewers;
 //    private Integer completedTask;
 //    private Integer totalTasks;
+    private Boolean isCompleted;
     private List<PlanDto> plans;
 //    private List<Milestone> milestones;
 //    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
