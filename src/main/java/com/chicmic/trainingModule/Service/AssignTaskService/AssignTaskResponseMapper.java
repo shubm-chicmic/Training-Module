@@ -3,9 +3,13 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
-
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +24,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AssignTaskResponseMapper {
+    private final FeedbackService feedbackService;
     private final UserProgressService userProgressService;
+    private final CourseService courseService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
 //        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
 //        for (AssignedPlan assignTask : assignTasks) {
@@ -30,7 +36,7 @@ public class AssignTaskResponseMapper {
 //    }
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
+            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
 
             return AssignTaskResponseDto.builder().trainee(trainee).build();
         }
@@ -46,14 +52,34 @@ public class AssignTaskResponseMapper {
 //                    )
 //                    .orElse(null);
         } else {
-            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
+            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackService.getOverallRatingOfTrainee(traineeId));
         }
      //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
+        Integer countOfCompletedPlan = 0;
         for (Plan plan : assignTask.getPlans()) {
             if(plan != null) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
+                Integer totalTask = 0;
 
+                for (Phase<PlanTask> phase : plan.getPhases()) {
+                    for (PlanTask planTask : phase.getTasks()) {
+                        totalTask += planTask.getTotalTasks();
+                    }
+                }
+                Boolean isCompleted = false;
+                if(totalTask == completedTasks) {
+                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id()) == null) {
+                        UserProgress userProgress = UserProgress.builder()
+                                .planId(plan.get_id())
+                                .progressType(EntityType.PLAN)
+                                .status(ProgessConstants.Completed)
+                                .build();
+                        userProgressService.createUserProgress(userProgress);
+                    }
+                    isCompleted = true;
+                    countOfCompletedPlan++;
+                }
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())
@@ -62,11 +88,11 @@ public class AssignTaskResponseMapper {
                         ._id(plan.get_id())
                         .consumedTime("00:00")
                         .estimatedTime(plan.getEstimatedTime())
-                        .totalTasks(plan.getTotalTasks())
+                        .totalTasks(totalTask)
                         .completedTasks(completedTasks)
                         .approver(plan.getApproverDetails())
 //                    .feedbackId()
-                        .isCompleted(false)
+                        .isCompleted(isCompleted)
                         .rating(0f)
                         .build();
                 plans.add(planDto);
@@ -77,11 +103,8 @@ public class AssignTaskResponseMapper {
                 .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
                 .createdBy(assignTask.getCreatedBy())
                 .reviewers(assignTask.getReviewerDetails())
+                .isCompleted(countOfCompletedPlan == plans.size())
                 .plans(plans)
-//                .totalPhases(assignTask.getPlans().size())
-//                .approved(assignTask.getApproved())
-//                .deleted(assignTask.getDeleted())
-//                .approvedBy(approvedBy)
                 .trainee(trainee)
                 .date(assignTask.getDate())
                 .build();
