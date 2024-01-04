@@ -510,6 +510,7 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
+        if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
         return roundOff_Rating(totalRating/count);
@@ -523,6 +524,7 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
+        if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
         return roundOff_Rating(totalRating/count);
@@ -537,6 +539,7 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
+        if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
         return roundOff_Rating(totalRating/count);
