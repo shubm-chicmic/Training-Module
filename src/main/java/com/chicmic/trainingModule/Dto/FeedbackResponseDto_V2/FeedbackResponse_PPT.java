@@ -1,55 +1,54 @@
-package com.chicmic.trainingModule.Dto.FeedbackResponseDto;
+package com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2;
 
-import com.chicmic.trainingModule.Dto.Reviewer;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Dto.ratings.Rating_PPT;
-import com.chicmic.trainingModule.Dto.ratings.Rating_TEST;
-import com.chicmic.trainingModule.Entity.Feedback;
-import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.FeedbackUtil;
+import com.chicmic.trainingModule.Dto.rating.Rating_PPT;
+import com.chicmic.trainingModule.Entity.Feedback_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
-import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY;
 
-@Getter @Setter @Builder
+@Builder @Getter @Setter
 public class FeedbackResponse_PPT implements FeedbackResponse{
     private String _id;
     private UserDto reviewer;
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto task;
-    private Date createdOn;
+    private String createdOn;
     private Float rating;
     private String comment;
     private Float communicationRating;
     private Float technicalRating;
     private Float presentationRating;
     private Float overallRating;
-
-    public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
-        Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
-        UserDto trainee = searchUserById(feedback.getTraineeID());
+//
+    public  static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
+        Rating_PPT rating_ppt = (Rating_PPT) feedback.getDetails();
+        UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
-        int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
         return FeedbackResponse_PPT.builder()
-                ._id(feedback.getId())
+                ._id(feedback.get_id())
                 .reviewer(reviewer)
                 .trainee(trainee)
                 .comment(feedback.getComment())
                 .technicalRating(rating_ppt.getTechnicalRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("3",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
-                .task(new UserIdAndNameDto(rating_ppt.getCourseId(), rating_ppt.getCourseId()))
+                .feedbackType(new UserIdAndNameDto("4", feedback.getType()))
+                .task(new UserIdAndNameDto(feedback.getDetails().getTaskId(),"PPT"))
                 .createdOn(feedback.getCreatedAt())
-                .rating(feedback.getOverallRating())
+                .rating(rating_ppt.computeOverallRating())
                 .build();
+    }
+    @Override
+    public List<UserIdAndNameDto> getSubTask() {
+        return new ArrayList<>();
     }
 }

@@ -2,7 +2,7 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -17,21 +17,22 @@ import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 @Service
-public class TraineePlanService {
+public class TraineePlanService_V2 {
     private final MongoTemplate mongoTemplate;
-    private final FeedbackService feedbackService;
+    private final FeedbackService_V2 feedbackService;
 
-    public TraineePlanService(MongoTemplate mongoTemplate, FeedbackService feedbackService) {
+    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService_V2 feedbackService) {
         this.mongoTemplate = mongoTemplate;
         this.feedbackService = feedbackService;
     }
-
-    public List<Document> fetchUserPlans(Integer pageNumber,Integer pageSize,String query,Integer sortDirection,String sortKey){
+    public List<Document> fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey){
+        System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
         if(query==null || query.isBlank()) query = ".*";
         int skipValue = (pageNumber - 1) * pageSize;
 
-        List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(), AssignedPlan.class);
+        //query1.fields().include("plans._id")
+        List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(),AssignedPlan.class);
         if (assignedPlanList.size() == 0){
             mongoTemplate.insert(AssignedPlan.builder().userId("12345").date(LocalDateTime.now()).deleted(true),"assignedPlan");
         }
@@ -68,25 +69,51 @@ public class TraineePlanService {
                 context -> new Document("$sort", new Document(sortKey, sortDirection)),
                 context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
                 context -> new Document("$limit", pageSize)
-//                context -> new Document("$facet", new Document(
-//                        "data", Arrays.asList(
-//                        new Document("$sort", new Document(sortKey, sortDirection)),
-//                        new Document("$skip", Integer.max(skipValue,0)),
-//                        new Document("$limit", pageSize)
-//                )
-//                ).append("totalCount", Arrays.asList(
-//                        new Document("$count", "total")
-//                )))
         );
+
+//        Aggregation aggregation = newAggregation(
+//                context -> new Document("$addFields", new Document("userDatas",
+//                        userDatasDocuments
+//                )),
+//                context -> new Document("$unwind", new Document("path", "$userDatas").append("preserveNullAndEmptyArrays", true)),
+//                context -> new Document("$lookup",new Document("from", "plan")
+//                        .append("localField", "plans.$id")
+//                        .append("foreignField", "_id")
+//                        .append("as", "planDetails")
+//                ),
+//                context -> new Document("$group", new Document("_id", "$userDatas._id")
+//                        .append("name", new Document("$first", "$userDatas.name"))
+//                        .append("team", new Document("$first", "$userDatas.team"))
+//                        .append("employeeCode", new Document("$first", "$userDatas.empCode"))
+//                        .append("plan", new Document("$addToSet",
+//                                new Document("$cond", Arrays.asList(
+//                                        new Document("$eq", Arrays.asList("$userId", "$userDatas._id")),
+//                                        new Document("name", new Document("$arrayElemAt", Arrays.asList("$planDetails.planName", 0)))
+//                                                .append("_id", new Document("$toString",new Document("$arrayElemAt", Arrays.asList("$planDetails._id", 0)))),
+//                                        "$$REMOVE"
+//                                ))
+//                        ))
+//                ),
+//                context -> new Document("$match", new Document("$or", Arrays.asList(
+//                        new Document("name", new Document("$regex", namePattern)),
+//                        new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+//                ))),
+//                context -> new Document("$sort", new Document(sortKey, sortDirection)),
+//                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
+//                context -> new Document("$limit", pageSize)
+//        );
+
         List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
-        for (Document tr : traineePlanResponseList) {
+
+        for (Document tr : traineePlanResponseList){
             List<UserIdAndNameDto> planDetails = new ArrayList<>();
             assignedPlanList.forEach(ap -> {
-                if (ap.getUserId().equals(tr.get("_id")))
-                    ap.getPlans().forEach(p -> planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName())));
+                if(ap.getUserId().equals(tr.get("_id")))
+                    ap.getPlans().forEach(p-> planDetails.add(new UserIdAndNameDto(p.get_id(),p.getPlanName())));
             });
-            tr.put("plan", planDetails);
+            tr.put("plan",planDetails);
         };
+
         Set<String> userIds = new HashSet<>();
         Map<String,Integer> userSummary = new HashMap<>();
         int count = 0;
@@ -95,7 +122,7 @@ public class TraineePlanService {
             userIds.add(_id);
             userSummary.put(_id,count++);
 //            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
-            document.put("mentor","N/A");
+            document.put("mentor","Rohit");
             document.put("rating",0.0f);
         }
         List<Document> traineeRatingSummary = feedbackService.calculateEmployeeRatingSummary(userIds);

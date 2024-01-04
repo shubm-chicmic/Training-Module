@@ -1,17 +1,17 @@
-package com.chicmic.trainingModule.Dto.FeedbackResponseDto;
+package com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2;
 
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Dto.ratings.Rating_COURSE;
-import com.chicmic.trainingModule.Entity.Feedback;
+import com.chicmic.trainingModule.Dto.rating.Rating_COURSE;
+import com.chicmic.trainingModule.Entity.Feedback_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
-import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY;
 
 @Getter @Setter @Builder
 public class FeedbackResponse_COURSE implements FeedbackResponse{
@@ -20,35 +20,40 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto task;
-    private UserIdAndNameDto subTask;
+    private List<UserIdAndNameDto> subTask;
     private Float theoreticalRating;
     private Float technicalRating;
     private Float communicationRating;
-    private Date createdOn;
+    private String createdOn;
     private Float rating;
     private String comment;
     private Float overallRating;
 
-    public static FeedbackResponse buildFeedbackResponse(Feedback feedback){
-        Rating_COURSE rating_course = (Rating_COURSE) feedback.getRating();
-        UserDto trainee = searchUserById(feedback.getTraineeID());
+
+    public void setSubTask(List<UserIdAndNameDto> subTask) {
+        this.subTask = subTask;
+    }
+
+    public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
+        Rating_COURSE rating_course = (Rating_COURSE) feedback.getDetails();
+        UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
-        int feedbackTypeId = feedback.getType().charAt(0) - '1';
+//        int feedbackTypeId = feedback.getType().charAt(0) - '1';
+        Set<String> subTaskIds = feedback.getSubtaskIds();
 
         return FeedbackResponse_COURSE.builder()
-                ._id(feedback.getId())
+                ._id(feedback.get_id())
                 .reviewer(reviewer)
                 .trainee(trainee)
                 .comment(feedback.getComment())
                 .theoreticalRating(rating_course.getTheoreticalRating())
                 .technicalRating(rating_course.getTechnicalRating())
                 .communicationRating(rating_course.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("1",FEEDBACK_TYPE_CATEGORY[feedbackTypeId]))
-                .task(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()))
-                .subTask(new UserIdAndNameDto(rating_course.getPhaseId(),rating_course.getPhaseId()))
+                .feedbackType(new UserIdAndNameDto("1",feedback.getType()))
+                .task(new UserIdAndNameDto(rating_course.getTaskId(), rating_course.getTaskId()))
+                .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(feedback.getCreatedAt())
-                .rating(feedback.getOverallRating())
+                .rating(rating_course.computeOverallRating())
                 .build();
     }
-
 }

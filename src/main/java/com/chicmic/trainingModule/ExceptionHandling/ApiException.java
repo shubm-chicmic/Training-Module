@@ -8,7 +8,7 @@ public class ApiException extends RuntimeException {
 
     public ApiException(HttpStatus status, String message) {
         super(message);
-        System.out.println("\u001B[32m" + "asjkabjksans" + "\u001B[0m");
+        System.out.println("\u001B[32m" + "error occured" + "\u001B[0m");
         this.status = status;
     }
 

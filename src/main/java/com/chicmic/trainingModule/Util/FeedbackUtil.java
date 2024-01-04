@@ -2,17 +2,25 @@ package com.chicmic.trainingModule.Util;
 
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
 
 public class FeedbackUtil {
     public static  final String[] FEEDBACK_TYPE_CATEGORY =
             {"COURSE","TEST","PPT","BEHAVIOUR"};
+    public static  final String[] FEEDBACK_TYPE_CATEGORY_V2 =
+            {"COURSE","TEST","BEHAVIOUR","PPT"};
+    public static final Map<String, Integer> FEEDBACKS_V2 = new HashMap<String, Integer>() {{
+        put("COURSE", 1);
+        put("TEST", 2);
+        put("PPT", 4);
+        put("BEHAVIOUR",3);
+        // Add more predefined key-value pairs as needed
+    }};
 
     public static HashSet<String> searchNameAndEmployeeCode(String query){
         HashSet<String> ids = new HashSet<>();
@@ -26,6 +34,10 @@ public class FeedbackUtil {
             }
         }
         return ids;
+    }
+    public static boolean checkRole(String roleName){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().contains(roleName);
     }
     public static String getFeedbackMessageBasedOnOverallRating(Float overallRating){
         if(overallRating==0) return "";
