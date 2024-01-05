@@ -317,7 +317,18 @@ public class FeedbackService_V2 {
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
     }
-
+    public void addSubTaskName(List<CourseResponse_V2> courseResponseList,int type){
+        List<String> courseIds = new ArrayList<>();
+        List<String> testIds = new ArrayList<>();
+        courseResponseList.forEach(f ->{
+//            if (f.getFeedbackType().get_id().equals(VIVA_) || f.getFeedbackType().get_id().equals(PPT_))
+//                courseIds.add(f.getTask().get_id());
+//            else if (f.getFeedbackType().get_id().equals(TEST_)){
+//                testIds.add(f.getTask().get_id());
+//            }
+        });
+        return;
+    }
     public void addTaskNameAndSubTaskName(List<FeedbackResponse> feedbackResponseList){
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
@@ -432,7 +443,7 @@ public class FeedbackService_V2 {
 //               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
             courseResponseList.get(index).setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
         }
-//        courseResponseList = addingPhaseAndTestNameInCourseResponse(courseResponseList);
+        //courseResponseList = addSubTaskName(courseResponseList,);
         return courseResponseList;
     }
 
