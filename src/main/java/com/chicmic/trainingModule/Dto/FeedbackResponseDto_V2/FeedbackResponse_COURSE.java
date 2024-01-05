@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA_;
 
 @Getter @Setter @Builder
 public class FeedbackResponse_COURSE implements FeedbackResponse{
@@ -49,7 +50,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
                 .theoreticalRating(rating_course.getTheoreticalRating())
                 .technicalRating(rating_course.getTechnicalRating())
                 .communicationRating(rating_course.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("1","COURSE"))
+                .feedbackType(new UserIdAndNameDto(VIVA_,"VIVA"))
                 .task(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(feedback.getCreatedAt())

@@ -54,11 +54,22 @@ public class FeedbackCRUD_V2 {
             return feedbackService.findFeedbacksGivenByUser(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
         List<CourseResponse_V2> courseResponseV2List;
-        courseResponseV2List = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,traineeId,FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2[feedbackType-1]);
+        courseResponseV2List = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,traineeId,feedbackType);
             //feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(traineeId,"3");
 
         return new ApiResponse(200,"Feedback fetched successfully", courseResponseV2List);
     }
+    @GetMapping("/user/plan/{userId}")
+    public ApiResponse findFeedbacksOnUserPlan(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
+                                               @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+                                               @RequestParam(value = "planId")String planId,
+                                               @PathVariable String userId){
+        pageNumber /= pageSize;
+        if (pageNumber < 0 || pageSize < 1)
+            throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
+        return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize);
+    }
+
     @GetMapping("/user/{userId}")
     public ApiResponse findCourseAndTestFeedbacksForTrainee(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                                             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -85,7 +96,7 @@ public class FeedbackCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
 
         List<CourseResponse_V2>
-            feedbackList = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,userId, FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2[type - 1]);
+            feedbackList = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,userId, type);
         //List<CourseResponse> responseList = null;//feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList,_id,type);
 
         return new ApiResponse(200,"List of All feedbacks",feedbackList);

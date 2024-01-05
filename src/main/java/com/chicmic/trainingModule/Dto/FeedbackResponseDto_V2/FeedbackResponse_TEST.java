@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.TEST_;
+
 @Builder
 @Getter
 @Setter
@@ -44,7 +46,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
                 .theoreticalRating(rating_test.getTheoreticalRating())
                 .codingRating(rating_test.getCodingRating())
                 .communicationRating(rating_test.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto("2", "TEST"))
+                .feedbackType(new UserIdAndNameDto(TEST_, "TEST"))
                 .task(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(feedback.getCreatedAt())

@@ -16,6 +16,8 @@ import java.util.Set;
 import static com.chicmic.trainingModule.Dto.rating.Rating.getRating;
 import static com.chicmic.trainingModule.Dto.rating.Rating.getSubTaskIds;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2;
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.TEST;
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA;
 
 @Getter @Setter @Builder
 @Document
@@ -50,9 +52,9 @@ public class Feedback_V2 {
                 .overallRating(feedbackDto.computeRating())
                 .isDeleted(false)
                 .build();
-        if (feedbackDto.getFeedbackType().equals("1"))
+        if (feedbackDto.getFeedbackType().equals(VIVA.toString()))
             feedbackV2.setPhaseIds(feedbackDto.getPhase());
-        else if(feedbackDto.getFeedbackType().equals("2"))
+        else if(feedbackDto.getFeedbackType().equals(TEST.toString()))
             feedbackV2.setMilestoneIds(feedbackDto.getMilestone());
 
         return feedbackV2;

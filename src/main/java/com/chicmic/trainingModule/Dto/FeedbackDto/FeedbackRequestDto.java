@@ -10,18 +10,20 @@ import lombok.Setter;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
+
 @Getter @Setter
-@Conditional(conditionalProperty = "feedbackType", values = {"1"}, requiredProperties = {"course","phase","theoreticalRating","technicalRating","communicationRating"},message = "type-1 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"3"}, requiredProperties = {"course","phase","theoreticalRating","technicalRating","communicationRating"},message = "type-1 error")
 @Conditional(conditionalProperty = "feedbackType", values = {"2"}, requiredProperties = {"test","milestone","theoreticalRating","codingRating","communicationRating"},message = "type-2 error")
 @Conditional(conditionalProperty = "feedbackType", values = {"4"}, requiredProperties = {"course","communicationRating","technicalRating","presentationRating"},message = "type-3 error")
-@Conditional(conditionalProperty = "feedbackType", values = {"3"}, requiredProperties = {"teamSpiritRating","attitudeRating"},message = "type-4 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"5"}, requiredProperties = {"teamSpiritRating","attitudeRating"},message = "type-4 error")
 public class FeedbackRequestDto {
     private String _id;
 
     @NotBlank(message = "Trainee field is required.")
     private String trainee;
 
-    @Pattern(regexp = "^[1-4]$",message = "FeedbackType should be lie b/w 1 to 4")
+    @Pattern(regexp = "^[2-5]$",message = "FeedbackType should be lie b/w 2 to 5")
     @NotBlank(message = "FeedbackType field is required.")
     private String feedbackType;
 
@@ -65,13 +67,13 @@ public class FeedbackRequestDto {
     @NotBlank(message = "Comment field is required.")
     private String comment;
     public Float computeRating(){
-        if (feedbackType.equals("1")) {
+        if (feedbackType.equals(VIVA_)) {
             float total = theoreticalRating + technicalRating + communicationRating;
             return total / 3;
-        }else if(feedbackType.equals("2")){
+        }else if(feedbackType.equals(TEST_)){
             float total = communicationRating + theoreticalRating + codingRating;
             return total/3;
-        } else if (feedbackType.equals("4")) {
+        } else if (feedbackType.equals(PPT_)) {
             float total = communicationRating + technicalRating + presentationRating;
             return total/3;
         }

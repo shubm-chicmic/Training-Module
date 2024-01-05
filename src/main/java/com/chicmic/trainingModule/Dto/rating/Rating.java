@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Set;
 
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
+
 public interface Rating {
 //    public String getCourseId();
 
@@ -23,7 +25,7 @@ public interface Rating {
     static Rating getRating(FeedbackRequestDto feedBackDto) {
         String feedBack_type = feedBackDto.getFeedbackType();
         switch (feedBack_type) {
-            case "1": {
+            case VIVA_: {
                 return Rating_COURSE.builder()
                         .courseId(feedBackDto.getCourse())
                         .theoreticalRating(feedBackDto.getTheoreticalRating())
@@ -31,7 +33,7 @@ public interface Rating {
                         .communicationRating(feedBackDto.getCommunicationRating())
                         .build();
             }
-            case "2": {
+            case TEST_: {
                 return Rating_TEST.builder()
                         .testId(feedBackDto.getTest())
                         .theoreticalRating(feedBackDto.getTheoreticalRating())
@@ -39,13 +41,13 @@ public interface Rating {
                         .communicationRating(feedBackDto.getCommunicationRating())
                         .build();
             }
-            case "3": {
+            case BEHAVIUOR_: {
                 return Rating_BEHAVIOUR.builder()
                         .teamSpiritRating(feedBackDto.getTeamSpiritRating())
                         .attitudeRating(feedBackDto.getAttitudeRating())
                         .build();
             }
-            case "4": {
+            case PPT_: {
                 return Rating_PPT.builder()
                         .courseId(feedBackDto.getCourse())
                         .communicationRating(feedBackDto.getCommunicationRating())
@@ -54,15 +56,15 @@ public interface Rating {
                         .build();
             }
         }
-        throw new ApiException(HttpStatus.BAD_REQUEST, "FeedBack_Type should be in b/w 1 to 4");
+        throw new ApiException(HttpStatus.BAD_REQUEST, "FeedBack_Type should be in b/w 2 to 5");
     }
 
     static Set<String> getSubTaskIds(FeedbackRequestDto feedbackDto) {
         String feedBack_type = feedbackDto.getFeedbackType();
         switch (feedBack_type) {
-            case "1":
+            case VIVA_:
                 return feedbackDto.getPhase();
-            case "2":
+            case TEST_:
                 return feedbackDto.getMilestone();
             default:
                 return null;

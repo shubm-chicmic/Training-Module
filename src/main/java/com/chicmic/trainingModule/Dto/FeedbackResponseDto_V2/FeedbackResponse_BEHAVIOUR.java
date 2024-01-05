@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.BEHAVIUOR_;
 
 @Getter @Setter @Builder
 public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
@@ -39,7 +40,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .comment(feedback.getComment())
                 .teamSpiritRating(rating_behaviour.getTeamSpiritRating())
                 .attitudeRating(rating_behaviour.getAttitudeRating())
-                .feedbackType(new UserIdAndNameDto("3", "BEHAVIOUR"))
+                .feedbackType(new UserIdAndNameDto(BEHAVIUOR_, "BEHAVIOUR"))
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_behaviour.computeOverallRating())
                 .build();

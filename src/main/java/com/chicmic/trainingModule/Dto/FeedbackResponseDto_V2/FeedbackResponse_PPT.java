@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
+import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.PPT_;
 
 @Builder @Getter @Setter
 public class FeedbackResponse_PPT implements FeedbackResponse{
@@ -41,7 +42,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
                 .technicalRating(rating_ppt.getTechnicalRating())
                 .communicationRating(rating_ppt.getCommunicationRating())
                 .presentationRating(rating_ppt.getPresentationRating())
-                .feedbackType(new UserIdAndNameDto("4", "PPT"))
+                .feedbackType(new UserIdAndNameDto(PPT_, "PPT"))
                 .task(new UserIdAndNameDto(feedback.getDetails().getCourseId(),feedback.getDetails().getCourseId()))
                 .createdOn(feedback.getCreatedAt())
                 .rating(rating_ppt.computeOverallRating())
