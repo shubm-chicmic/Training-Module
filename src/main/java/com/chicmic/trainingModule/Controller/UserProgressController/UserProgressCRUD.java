@@ -2,6 +2,8 @@ package com.chicmic.trainingModule.Controller.UserProgressController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.UserProgressDto;
+import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Entity.UserProgress;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import lombok.AllArgsConstructor;
@@ -27,11 +29,24 @@ public class UserProgressCRUD {
                     .traineeId(userProgressDto.getTraineeId())
                     .planId(userProgressDto.getPlanId())
                     .courseId(userProgressDto.getCourseId())
-                    .id(userProgressDto.getId())
+                    .subTaskId(userProgressDto.getSubTaskId())
                     .startDate(LocalDateTime.now())
                     .progressType(userProgressDto.getProgressType())
                     .status(userProgressDto.getStatus())
                     .build();
+//            if(userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(userProgressDto) == null){
+//                userProgress = UserProgress.builder()
+//                        .traineeId(userProgressDto.getTraineeId())
+//                        .planId(userProgressDto.getPlanId())
+//                        .courseId(userProgressDto.getCourseId())
+//                        .startDate(LocalDateTime.now())
+//                        .progressType(EntityType.COURSE)
+//                        .status(ProgessConstants.InProgress)
+//                        .build();
+//                userProgressService.createUserProgress(userProgress);
+//                userProgress.setCourseId(null);
+//                userProgressService.createUserProgress(userProgress);
+//            }
         }else {
             userProgress.setStatus(userProgressDto.getStatus());
         }

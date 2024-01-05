@@ -27,7 +27,6 @@ public class AssignedPlan {
     @DBRef
     private List<Plan> plans;
     private Set<String> reviewers = new HashSet<>();
-    private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
@@ -37,7 +36,4 @@ public class AssignedPlan {
         return ConversionUtility.convertToUserIdAndName(this.reviewers);
     }
 
-    public List<UserIdAndNameDto> getApprovedByDetails() {
-        return ConversionUtility.convertToUserIdAndName(this.approvedBy);
-    }
 }

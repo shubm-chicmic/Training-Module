@@ -89,6 +89,9 @@ public class AssignTaskCRUD {
 //            System.out.println(assignTaskList.size());
 //            Long count = assignTaskService.countNonDeletedAssignTasksByTraineeId(traineeId);
             AssignTaskResponseDto assignTaskResponseDto = assignTaskResponseMapper.mapAssignTaskToResponseDto(assignTaskList, traineeId, principal);
+            if(assignTaskResponseDto.getIsCompleted() == true){
+                System.out.println("creating copy of db");
+            }
             int totalPlans = 0;
             if(assignTaskResponseDto.getPlans() != null || assignTaskResponseDto.getPlans().size() != 0){
                 List<PlanDto> plans = assignTaskResponseDto.getPlans();

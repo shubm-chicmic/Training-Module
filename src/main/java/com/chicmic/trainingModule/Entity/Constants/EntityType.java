@@ -5,5 +5,5 @@ public class EntityType {
     public static final int TEST = 2;
     public static final int PLAN = 3;
     public static final int GITHUBSAMPLE = 4;
-    public static final int SESSION = 5;
+    public static final int SESSION = 6;
 }

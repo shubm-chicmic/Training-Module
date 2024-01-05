@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Dto;
 
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -13,6 +14,7 @@ public class UserProgressDto {
     private String planId;
     private String courseId;
     private String traineeId;
-    private String id;
+    @JsonProperty("id") // Map subTaskId to id
+    private String subTaskId;
     private Integer status = ProgessConstants.NotStarted;
 }

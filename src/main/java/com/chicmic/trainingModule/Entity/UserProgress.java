@@ -20,7 +20,7 @@ public class UserProgress {
     private String planId;
     private String courseId;
     private Integer progressType;
-    private String id;
+    private String subTaskId;
     private Integer status = ProgessConstants.NotStarted;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
@@ -34,7 +34,7 @@ public class UserProgress {
                 ", planId='" + planId + '\'' +
                 ", courseId='" + courseId + '\'' +
                 ", progressType=" + progressType +
-                ", id='" + id + '\'' +
+                ", id='" + subTaskId + '\'' +
                 ", status=" + status +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
