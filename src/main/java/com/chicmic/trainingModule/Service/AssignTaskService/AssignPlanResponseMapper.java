@@ -64,7 +64,7 @@ public class AssignPlanResponseMapper {
         }
         Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         if(totalTask == completedTasks) {
-            if(userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan()) == null) {
+            if(userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), EntityType.COURSE) == null) {
                 UserProgress userProgress = UserProgress.builder()
                         .planId(planId)
                         .courseId(planTask.getPlan())
@@ -74,6 +74,9 @@ public class AssignPlanResponseMapper {
                 userProgressService.createUserProgress(userProgress);
             }
         }
+        if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
+            totalTask = 1;
+        }
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)
@@ -82,6 +85,7 @@ public class AssignPlanResponseMapper {
                 .consumedTime("00:00")
                 .completedTasks(completedTasks)
                 .totalTasks(totalTask)
+                .date(planTask.getDate())
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)

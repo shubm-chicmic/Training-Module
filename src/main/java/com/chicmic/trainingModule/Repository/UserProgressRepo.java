@@ -9,8 +9,8 @@ import java.util.Optional;
 public interface UserProgressRepo extends MongoRepository<UserProgress, String> {
     //    Optional<UserProgress> findByPlanIdAndCourseIdAndTraineeIdAndId(
 //            String planId, String courseId, String traineeId, String id);
-    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
-            String traineeId, String planId, String courseId, Integer progressType);
+//    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+//            String traineeId, String planId, String courseId, Integer progressType);
 
     long countByTraineeIdAndPlanIdAndCourseIdAndProgressTypeAndStatus(
             String traineeId, String planId, String courseId, Integer progressType, Integer status);
@@ -23,5 +23,11 @@ public interface UserProgressRepo extends MongoRepository<UserProgress, String> 
     Optional<UserProgress> findByTraineeIdAndPlanId(String traineeId, String planId);
     Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseId(String traineeId, String planId, String courseId);
     List<UserProgress> findByTraineeId(String traineeId);
+    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+            String traineeId, String planId, String courseId, Integer progressType);
+
+    Optional<UserProgress> findByTraineeIdAndPlanIdAndProgressType(
+            String traineeId, String planId, Integer progressType);
+
 
 }

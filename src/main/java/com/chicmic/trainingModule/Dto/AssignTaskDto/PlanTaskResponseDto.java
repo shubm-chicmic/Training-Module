@@ -6,6 +6,7 @@ import lombok.*;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -23,6 +24,7 @@ public class PlanTaskResponseDto {
     private List<UserIdAndNameDto> mentor;
     private String estimatedTime;
     private String consumedTime;
+    private LocalDateTime date;
     private Boolean isCompleted;
     private float rating;
 }

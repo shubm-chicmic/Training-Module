@@ -48,9 +48,11 @@ public class PlanService {
             for (PlanTask task : phase.getTasks()) {
                 task.set_id(String.valueOf(new ObjectId()));
                 Integer totalTask = 0;
-                for (Object milestone : task.getMilestones()) {
-                    Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
-                    totalTask += coursePhase.getTotalTasks();
+                if(task.getMilestones() != null) {
+                    for (Object milestone : task.getMilestones()) {
+                        Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                        totalTask += coursePhase.getTotalTasks();
+                    }
                 }
                 task.setTotalTasks(totalTask);
                 tasks.add(planTaskRepo.save(task));
@@ -283,14 +285,17 @@ public class PlanService {
                 for (PlanTask task : planDto.getPhases().get(i).getTasks()) {
                     task.set_id(String.valueOf(new ObjectId()));
                     Integer totalTask = 0;
-                    for (Object milestone : task.getMilestones()) {
-                        Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
-                        totalTask += coursePhase.getTotalTasks();
+                    if(task.getMilestones() != null) {
+                        for (Object milestone : task.getMilestones()) {
+                            Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                            totalTask += coursePhase.getTotalTasks();
+                        }
                     }
                     task.setTotalTasks(totalTask);
                     tasks.add(planTaskRepo.save(task));
                 }
                 phase.setEntityType(EntityType.PLAN);
+                phase.setName(planDto.getPhases().get(i).getName());
                 phase.setTasks(tasks);
                 phase.setEntity(plan);
                 phases.add(phaseRepo.save(phase));

@@ -60,11 +60,11 @@ public class UserProgressService {
         );
     }
 
-    public UserProgress getUserProgressByTraineeIdAndPlanId(String traineeId, String planId) {
-        return userProgressRepo.findByTraineeIdAndPlanId(traineeId, planId).orElse(null);
+    public UserProgress getUserProgressByTraineeIdAndPlanId(String traineeId, String planId, Integer progressType) {
+        return userProgressRepo.findByTraineeIdAndPlanIdAndProgressType(traineeId, planId, progressType).orElse(null);
     }
-    public UserProgress getUserProgressByTraineeIdPlanIdAndCourseId(String traineeId, String planId, String courseId) {
-        return userProgressRepo.findByTraineeIdAndPlanIdAndCourseId(traineeId, planId, courseId).orElse(null);
+    public UserProgress getUserProgressByTraineeIdPlanIdAndCourseId(String traineeId, String planId, String courseId, Integer progressType) {
+        return userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(traineeId, planId, courseId, progressType).orElse(null);
     }
     public List<UserProgress> getAllUserProgressByTraineeId(String traineeId) {
         return userProgressRepo.findByTraineeId(traineeId);
