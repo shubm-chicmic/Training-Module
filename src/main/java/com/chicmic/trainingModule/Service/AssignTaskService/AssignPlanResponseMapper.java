@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class AssignPlanResponseMapper {
     private final TestService testService;
     private final CourseService courseService;
     private final UserProgressService userProgressService;
+    private final FeedbackService_V2 feedbackServiceV2;
 
     public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId) {
         List<PlanTaskResponseDto> assignPlanResponseDtoList = new ArrayList<>();
@@ -84,7 +86,11 @@ public class AssignPlanResponseMapper {
             totalTask = 1;
             isPlanCompleted =(totalTask == completedTasks);
         }
-
+        Integer feedbackType = null;
+        if(planTask.getPlanType() == 1) {
+            feedbackType = 1;
+        }
+        Float rating = feedbackServiceV2.computeRatingByTaskIdOfTrainee(traineeId, planTask.getPlan(), String.valueOf(feedbackType));
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)
@@ -97,7 +103,8 @@ public class AssignPlanResponseMapper {
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
-                .rating(0f)
+                .feedbackId(null)
+                .rating(rating)
                 .build();
     }
 }

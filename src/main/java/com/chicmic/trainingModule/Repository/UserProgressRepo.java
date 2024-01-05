@@ -20,7 +20,7 @@ public interface UserProgressRepo extends MongoRepository<UserProgress, String> 
 
     //    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndIdAndProgressType(
 //            String traineeId, String planId, String courseId,String id, Integer progressType);
-    Optional<UserProgress> findByTraineeIdAndPlanId(String traineeId, String planId);
+    List<UserProgress> findByTraineeIdAndPlanId(String traineeId, String planId);
     Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseId(String traineeId, String planId, String courseId);
     List<UserProgress> findByTraineeId(String traineeId);
     Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndProgressType(

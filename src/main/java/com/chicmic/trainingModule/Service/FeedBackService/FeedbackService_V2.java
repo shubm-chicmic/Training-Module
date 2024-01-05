@@ -623,7 +623,7 @@ public class FeedbackService_V2 {
         double totalRating = (double) document.get(0).get("overallRating");
         return roundOff_Rating(totalRating/count);
     }
-    Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
+    public Float computeRatingByTaskIdOfTrainee(String traineeId, String courseId, String type){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type)
                 .and("isDeleted").is(false);
         if(type.equals(VIVA_)||type.equals(PPT_))

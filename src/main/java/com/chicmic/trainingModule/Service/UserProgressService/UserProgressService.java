@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -164,5 +165,16 @@ public class UserProgressService {
                 ProgessConstants.Completed
         ));
 
+    }
+
+    public void deleteUserProgressByPlanId(String userId, String planId) {
+        List<UserProgress> userProgressListToDelete = userProgressRepo.findByTraineeIdAndPlanId(userId, planId);
+        if (!userProgressListToDelete.isEmpty()) {
+            List<String> idsToDelete = userProgressListToDelete.stream()
+                    .map(UserProgress::get_id)
+                    .collect(Collectors.toList());
+
+            mongoTemplate.findAllAndRemove(Query.query(Criteria.where("_id").in(idsToDelete)), UserProgress.class);
+        }
     }
 }

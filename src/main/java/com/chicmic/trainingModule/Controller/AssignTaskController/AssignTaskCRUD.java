@@ -12,6 +12,7 @@ import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
+import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.Util.Pagenation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
@@ -36,6 +37,7 @@ public class AssignTaskCRUD {
     private final AssignTaskResponseMapper assignTaskResponseMapper;
     private final AssignPlanResponseMapper assignPlanResponseMapper;
     private final TaskResponseMapper taskResponseMapper;
+    private final UserProgressService userProgressService;
 
 //    private final TraineePlanService trainePlanService;
     @PostMapping
@@ -48,7 +50,14 @@ public class AssignTaskCRUD {
         System.out.println("assignTaskDto = " + assignTaskDto);
         Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
-            AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
+            if(assignTaskService.getAllAssignTasksByTraineeId(userId) == null) {
+                AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
+            }else {
+                error = true;
+            }
+        }
+        if(error) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan is Already Created", null, response);
         }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
     }
@@ -61,8 +70,14 @@ public class AssignTaskCRUD {
                 Plan plan = planService.getPlanById(planId);
                 plans.add(plan);
             }
-            if(plans != null || plans.size() != 0)
-            assignedPlan.setPlans(plans);
+            if(plans != null || plans.size() != 0) {
+                for (Plan plan : assignedPlan.getPlans()){
+                    if(!plans.contains(plan)){
+                        userProgressService.deleteUserProgressByPlanId(userId,plan.get_id());
+                    }
+                }
+                assignedPlan.setPlans(plans);
+            }
             AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
             return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);
         }
