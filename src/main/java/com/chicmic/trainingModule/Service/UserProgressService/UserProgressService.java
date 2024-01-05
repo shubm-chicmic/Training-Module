@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -69,18 +70,30 @@ public class UserProgressService {
     public List<UserProgress> getAllUserProgressByTraineeId(String traineeId) {
         return userProgressRepo.findByTraineeId(traineeId);
     }
-    public Boolean findIsPlanCompleted(String planId, String courseId, Integer planType, String userId) {
-        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+    public Boolean findIsPlanCompleted(String traineeId, String planId, Integer progressType) {
+        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndProgressType(
+             traineeId,
                 planId,
-               courseId,
-                userId,
-                planType
+                progressType
         ).orElse(null);
         if(userProgress == null){
             return false;
         }
         return userProgress.getStatus() == ProgessConstants.Completed;
     }
+    public Boolean findIsCourseCompleted(String traineeId, String planId, String courseId, Integer progressType) {
+        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
+                traineeId,
+                planId,
+                courseId,
+                progressType
+        ).orElse(null);
+        if(userProgress == null){
+            return false;
+        }
+        return userProgress.getStatus() == ProgessConstants.Completed;
+    }
+
 
     public Boolean findIsSubTaskCompleted(String planId, String courseId, String subTaskId, String traineeId) {
         System.out.println("Plan Id : = " + planId);
