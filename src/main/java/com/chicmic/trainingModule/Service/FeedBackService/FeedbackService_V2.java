@@ -335,12 +335,14 @@ public class FeedbackService_V2 {
             if (f.getFeedbackType().get_id().equals(VIVA_) || f.getFeedbackType().get_id().equals(PPT_)){
                 f.getTask().setName(courseDetails.get(0).get(f.getTask().get_id()));
                 //adding phaseName
-                f.getSubTask().forEach( p -> p.setName(courseDetails.get(1).get(p.get_id())));
+                if(f.getFeedbackType().get_id().equals(VIVA_))
+                    f.getSubTask().forEach( p -> p.setName(courseDetails.get(1).get(p.get_id())));
             }
-            else if (f.getFeedbackType().get_id().equals(TEST_))
+            else if (f.getFeedbackType().get_id().equals(TEST_)) {
                 f.getTask().setName(testDetails.get(0).get(f.getTask().get_id()));
                 //adding milestone name
-            f.getSubTask().forEach(m -> m.setName(testDetails.get(1).get(m.get_id())));
+                f.getSubTask().forEach(m -> m.setName(testDetails.get(1).get(m.get_id())));
+            }
         });
     }
     public void addTaskNameAndSubTaskName(FeedbackResponse_V2 f){
@@ -520,17 +522,17 @@ public class FeedbackService_V2 {
                                 .name(TrainingModuleApplication.searchNameById(feedback.getCreatedBy()))
                         .build());
             }
-            int type = FEEDBACKS_V2.get(feedback.getType()) - 1;//feedback.getType().charAt(0) - '1';
+            int type = feedback.getType().charAt(0) - '2';
             ratingDtoList.get(type).incrTotalRating(feedback.getDetails().computeOverallRating());
             ratingDtoList.get(type).incrcount();
             totalRating += feedback.getDetails().computeOverallRating();
         }
         float overallRating = compute_rating(totalRating,feedbackList.size());
         RatingReponseDto ratingReponseDto = RatingReponseDto.builder().overall(overallRating)
-                .course(compute_rating(ratingDtoList.get(0).getTotalRating(),ratingDtoList.get(0).getCount()))
-                .test(compute_rating(ratingDtoList.get(1).getTotalRating(),ratingDtoList.get(1).getCount()))
-                .presentation(compute_rating(ratingDtoList.get(3).getTotalRating(),ratingDtoList.get(2).getCount()))
-                .behaviour(compute_rating(ratingDtoList.get(2).getTotalRating(),ratingDtoList.get(3).getCount()))
+                .course(compute_rating(ratingDtoList.get(1).getTotalRating(),ratingDtoList.get(1).getCount()))
+                .test(compute_rating(ratingDtoList.get(0).getTotalRating(),ratingDtoList.get(0).getCount()))
+                .presentation(compute_rating(ratingDtoList.get(2).getTotalRating(),ratingDtoList.get(2).getCount()))
+                .behaviour(compute_rating(ratingDtoList.get(3).getTotalRating(),ratingDtoList.get(3).getCount()))
                 .attendance(0f)
                 .comment(getFeedbackMessageBasedOnOverallRating(overallRating))
                 .build();
