@@ -35,21 +35,32 @@ public class PlanResponseMapper {
         for (Phase<PlanTask> phase : phases) {
             for (PlanTask planTask : phase.getTasks()) {
                 List<Object> milestoneDetails = new ArrayList<>();
-                for (Object milestoneId : planTask.getMilestones()){
-                    UserIdAndNameDto milestoneDetail = null;
-                    System.out.println("Milestone : " + milestoneId);
-                    if(planTask.getPlanType() == 2){
+                if(planTask.getMilestones() != null) {
+                    for (Object milestoneId : planTask.getMilestones()) {
+                        UserIdAndNameDto milestoneDetail = null;
+                        System.out.println("Milestone Hello Response: " + milestoneId);
                         milestoneDetail = UserIdAndNameDto.builder()
-                                .name((testService.getTestById(planTask.getPlan()).getTestName()))
+                                .name(courseService.getPhaseById((String)milestoneId).getName())
                                 ._id((String) milestoneId)
                                 .build();
-                    }else if(planTask.getPlanType() == 1){
-                        milestoneDetail = UserIdAndNameDto.builder()
-                                .name(courseService.getCourseById(planTask.getPlan()).getName())
-                                ._id((String) milestoneId)
-                                .build();
+//                        if (planTask.getPlanType() == 2) {
+//                            milestoneDetail = UserIdAndNameDto.builder()
+//                                    .name((testService.getTestById(planTask.getPlan()).getTestName()))
+//                                    ._id((String) milestoneId)
+//                                    .build();
+//                        } else if (planTask.getPlanType() == 1) {
+//                            milestoneDetail = UserIdAndNameDto.builder()
+//                                    .name(courseService.getCourseById(planTask.getPlan()).getName())
+//                                    ._id((String) milestoneId)
+//                                    .build();
+//                        }else if (planTask.getPlanType() == 3) {
+//                            milestoneDetail = UserIdAndNameDto.builder()
+//                                    .name((courseService.getCourseById(planTask.getPlan()).getName()))
+//                                    ._id((String) milestoneId)
+//                                    .build();
+//                        }
+                        milestoneDetails.add(milestoneDetail);
                     }
-                    milestoneDetails.add(milestoneDetail);
                 }
                 planTask.setMilestones(milestoneDetails);
             }

@@ -34,23 +34,31 @@ public class UserProgressCRUD {
                     .progressType(userProgressDto.getProgressType())
                     .status(userProgressDto.getStatus())
                     .build();
-//            if(userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(userProgressDto) == null){
-//                userProgress = UserProgress.builder()
-//                        .traineeId(userProgressDto.getTraineeId())
-//                        .planId(userProgressDto.getPlanId())
-//                        .courseId(userProgressDto.getCourseId())
-//                        .startDate(LocalDateTime.now())
-//                        .progressType(EntityType.COURSE)
-//                        .status(ProgessConstants.InProgress)
-//                        .build();
-//                userProgressService.createUserProgress(userProgress);
-//                userProgress.setCourseId(null);
-//                userProgressService.createUserProgress(userProgress);
-//            }
+
         }else {
             userProgress.setStatus(userProgressDto.getStatus());
         }
         userProgress = userProgressService.createUserProgress(userProgress);
+        if(userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(
+                userProgressDto.getTraineeId(),
+                userProgressDto.getPlanId(),
+                userProgressDto.getCourseId(),
+                EntityType.COURSE
+        ) == null){
+            UserProgress courseProgress = UserProgress.builder()
+                    .traineeId(userProgressDto.getTraineeId())
+                    .planId(userProgressDto.getPlanId())
+                    .courseId(userProgressDto.getCourseId())
+                    .startDate(LocalDateTime.now())
+                    .progressType(EntityType.COURSE)
+                    .status(ProgessConstants.InProgress)
+                    .build();
+            userProgressService.createUserProgress(courseProgress);
+            courseProgress.set_id(null);
+            courseProgress.setCourseId(null);
+            courseProgress.setProgressType(EntityType.PLAN);
+            userProgressService.createUserProgress(courseProgress);
+        }
         return new ApiResponse(HttpStatus.OK.value(), "UserProgress created successfully", userProgress);
     }
 

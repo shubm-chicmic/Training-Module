@@ -69,7 +69,7 @@ public class AssignTaskResponseMapper {
                 }
                 Boolean isCompleted = false;
                 if(totalTask == completedTasks) {
-                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id()) == null) {
+                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id(), EntityType.PLAN) == null) {
                         UserProgress userProgress = UserProgress.builder()
                                 .planId(plan.get_id())
                                 .progressType(EntityType.PLAN)
