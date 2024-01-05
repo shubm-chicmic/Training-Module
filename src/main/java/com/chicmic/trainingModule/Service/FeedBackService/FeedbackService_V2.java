@@ -624,9 +624,14 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
     Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type)
+                .and("isDeleted").is(false);
+        if(type.equals(VIVA_)||type.equals(PPT_))
+            criteria.and("details.courseId").is(courseId);
+        else if (type.equals(TEST_))
+            criteria.and("details.testId").is(courseId);
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("type").is(type)
-                        .and("isDeleted").is(false).and("details.taskId").is(courseId)),
+                Aggregation.match(criteria),
                 Aggregation.group("traineeId")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
