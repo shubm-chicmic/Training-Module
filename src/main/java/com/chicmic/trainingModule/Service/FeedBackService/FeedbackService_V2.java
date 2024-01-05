@@ -555,6 +555,7 @@ public class FeedbackService_V2 {
     }
 
     public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
+        if(courseId == null) return null;
 
         Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
         Query query = new Query(criteria);
@@ -571,7 +572,7 @@ public class FeedbackService_V2 {
             System.out.println(phases.size() + "------>");
             phases.forEach(ps -> {
                 ps.getTasks().forEach(pt -> {
-                    if (pt != null && pt instanceof PlanTask && pt.getPlanType() == COURSE && pt.getPlan().equals(courseId))
+                    if (pt != null && pt instanceof PlanTask && pt.getPlanType() == type && pt.getPlan().equals(courseId))
                         planId.set(p.get_id());
                 });
             });
@@ -602,6 +603,7 @@ public class FeedbackService_V2 {
     }
     Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
         Criteria criteria = new Criteria().orOperator(taskIds);
+        if (taskIds.size() == 0) return 0f;
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria),
                 Aggregation.group("traineeId")
