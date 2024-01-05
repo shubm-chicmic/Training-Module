@@ -26,10 +26,12 @@ public class AssignPlanResponseMapper {
     private final FeedbackService_V2 feedbackServiceV2;
 
     public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId) {
+        System.out.println("planTasks: " + planTasks.size());
         List<PlanTaskResponseDto> assignPlanResponseDtoList = new ArrayList<>();
         for (PlanTask planTask : planTasks) {
             assignPlanResponseDtoList.add(mapAssignPlanToResponseDto(planTask, planId, traineeId));
         }
+        System.out.println("assignPlanResponseDtoList: " + assignPlanResponseDtoList.size());
         return assignPlanResponseDtoList;
     }
     public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask,String planId, String traineeId) {
@@ -79,18 +81,33 @@ public class AssignPlanResponseMapper {
                 planProgress.setStatus(ProgessConstants.Completed);
                 userProgressService.createUserProgress(planProgress);
             }
-            isPlanCompleted = planProgress.getStatus() == ProgessConstants.Completed;
+            if(planProgress != null) {
+                isPlanCompleted = planProgress.getStatus() == ProgessConstants.Completed;
+            }
         }
 
+
+        Integer feedbackType = null;
+        if(planTask.getPlanType() == 1) {
+            feedbackType = 3;
+        }else if (planTask.getPlanType() == 2) {
+            feedbackType = 2;
+        }else if (planTask.getPlanType() == 3) {
+            feedbackType = 3;
+        }else if (planTask.getPlanType() == 4){
+            feedbackType = 4;
+        }
+        Float rating = feedbackServiceV2.computeRatingByTaskIdOfTrainee(traineeId, planTask.getPlan(), String.valueOf(feedbackType));
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
+            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), EntityType.COURSE);
+            if(userProgress != null) {
+                completedTasks = (userProgress.getStatus() == ProgessConstants.Completed) ? 1 : 0;
+            }else {
+                completedTasks = 0;
+            }
             totalTask = 1;
             isPlanCompleted =(totalTask == completedTasks);
         }
-        Integer feedbackType = null;
-        if(planTask.getPlanType() == 1) {
-            feedbackType = 1;
-        }
-        Float rating = feedbackServiceV2.computeRatingByTaskIdOfTrainee(traineeId, planTask.getPlan(), String.valueOf(feedbackType));
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)

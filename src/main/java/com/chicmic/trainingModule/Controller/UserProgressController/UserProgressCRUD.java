@@ -23,6 +23,9 @@ public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal) {
+        if(userProgressDto.getProgressType() != 3 || userProgressDto.getProgressType() != 4){
+
+        }
         UserProgress userProgress = userProgressService.getUserProgress(userProgressDto);
         if(userProgress == null) {
             userProgress = UserProgress.builder()

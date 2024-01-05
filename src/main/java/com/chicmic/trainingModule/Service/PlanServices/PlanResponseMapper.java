@@ -62,6 +62,11 @@ public class PlanResponseMapper {
                         milestoneDetails.add(milestoneDetail);
                     }
                 }
+                if(planTask.getPlanType() == 2) {
+                    planTask.setPlanName(testService.getTestById(planTask.getPlan()).getTestName());
+                }else {
+                    planTask.setPlanName(courseService.getCourseById(planTask.getPlan()).getName());
+                }
                 planTask.setMilestones(milestoneDetails);
             }
         }
@@ -69,9 +74,9 @@ public class PlanResponseMapper {
                 ._id(plan.get_id())
                 .planName(plan.getPlanName())
                 .description(plan.getDescription())
-                .estimatedTime("00:00")
+                .estimatedTime(plan.getEstimatedTime())
                 .noOfPhases(plan.getPhases().size())
-                .noOfTasks(0)
+                .noOfTasks(plan.getTotalTasks())
                 .approver(plan.getApproverDetails())
                 .totalPhases(plan.getPhases().size())
                 .phases(phases)

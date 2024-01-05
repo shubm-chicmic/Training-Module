@@ -209,6 +209,7 @@ public class PlanService {
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
             if (planDto.getPlanName() != null) {
+                System.out.println("PlanDto Name = " + planDto.getPlanName());
                 plan.setPlanName(planDto.getPlanName());
             }
             if (planDto.getApprover() != null) {
@@ -273,6 +274,7 @@ public class PlanService {
                             j++;
                         }
                         planPhase.setTasks(tasks);
+                        planPhase.setName(planDto.getPhases().get(i).getName());
                         phases.add(phaseRepo.save(planPhase));
                     }
                     i++;

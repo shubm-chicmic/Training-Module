@@ -80,6 +80,7 @@ public class AssignTaskResponseMapper {
                     isCompleted = true;
                     countOfCompletedPlan++;
                 }
+
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())

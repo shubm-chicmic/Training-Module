@@ -110,12 +110,16 @@ public class AssignTaskCRUD {
             int totalPlans = 0;
             if(assignTaskResponseDto.getPlans() != null && assignTaskResponseDto.getPlans().size() != 0){
                 List<PlanDto> plans = assignTaskResponseDto.getPlans();
+                totalPlans = plans.size();
                 plans = Pagenation.paginate(plans, pageNumber, pageSize);
                 assignTaskResponseDto.setPlans(plans);
-                totalPlans = plans.size();
             }
 //            Collections.reverse(assignTaskResponseDtoList);
-            return new ApiResponseWithCount(totalPlans,HttpStatus.OK.value(), assignTaskResponseDto.getPlans().size() + " Plans retrieved", assignTaskResponseDto, response);
+            Integer planSize = 0;
+            if(assignTaskResponseDto.getPlans() != null) {
+                planSize = assignTaskResponseDto.getPlans().size();
+            }
+            return new ApiResponseWithCount(totalPlans,HttpStatus.OK.value(), planSize + " Plans retrieved", assignTaskResponseDto, response);
         }
         return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Fount", null, response);
     }
@@ -137,7 +141,7 @@ public class AssignTaskCRUD {
            }
            int totalTasks = planTasks.size();
            planTasks = Pagenation.paginate(planTasks, pageNumber, pageSize);
-
+            System.out.println("PlanTasks: " + planTasks.size());
            List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId,traineeId);
            return new ApiResponseWithCount(totalTasks, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
         }

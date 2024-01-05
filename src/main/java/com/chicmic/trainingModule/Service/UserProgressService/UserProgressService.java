@@ -32,14 +32,7 @@ public class UserProgressService {
 
         System.out.println("allUserProgress: " + allUserProgress);
         for (UserProgress userProgress : allUserProgress) {
-            System.out.println("Plan Id : = " + planId);
-            System.out.println("Course Id : = " + courseId);
-            System.out.println("Trainee Id : = " + traineeId);
-            System.out.println("Id : = " + subTaskId);
-            System.out.println("userProgress Plan Id : = " + userProgress.getPlanId());
-            System.out.println("userProgress Course Id : = " + userProgress.getCourseId());
-            System.out.println("userProgress Trainee Id : = " + userProgress.getTraineeId());
-            System.out.println("userProgress Id : = " + userProgress.getSubTaskId());
+
             if(userProgress.getPlanId() != null && userProgress.getCourseId() != null
                     && userProgress.getTraineeId() != null && userProgress.getSubTaskId() != null
             ) {

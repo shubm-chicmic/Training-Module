@@ -26,6 +26,8 @@ public class PlanTask {
     private Integer planType;
     @NotNull(message = "Plan Id cannot be empty")
     private String plan;
+    @Transient
+    private String planName;
     @NotNull(message = "Milestones cannot be Empty")
     private List<Object> milestones;
 //    @Transient
