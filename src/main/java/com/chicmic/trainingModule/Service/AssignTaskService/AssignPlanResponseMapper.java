@@ -82,7 +82,9 @@ public class AssignPlanResponseMapper {
 
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
             totalTask = 1;
+            isPlanCompleted =(totalTask == completedTasks);
         }
+
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .plan(planIdAndNameDto)
