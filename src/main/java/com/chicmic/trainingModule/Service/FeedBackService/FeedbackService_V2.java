@@ -73,7 +73,7 @@ public class FeedbackService_V2 {
             criteria.and("details.courseId").is(courseId);
 
         String testId = feedback_v2.getDetails().getTestId();
-        if(feedback_v2.getMilestoneIds() != null)
+        if(testId != null)
                 criteria.and("details.testId").is(testId);
 
         if (feedback_v2.getPhaseIds() != null)
@@ -559,13 +559,14 @@ public class FeedbackService_V2 {
 //        return roundOff_Rating(totalRating/count);
         return ((float) temp) / 100;
     }
+
     public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
 
         Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
         Query query = new Query(criteria);
         System.out.println(traineeId + "////");
         AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
-        int tmp = (type == 1)?3:type;
+//        int tmp = (type == 1)?3:type;
         if (assignedPlan == null)
             throw new ApiException(HttpStatus.BAD_REQUEST,"No plan assigned!!");
         var plans =  assignedPlan.getPlans();
@@ -576,7 +577,7 @@ public class FeedbackService_V2 {
             System.out.println(phases.size() + "------>");
             phases.forEach(ps -> {
                 System.out.println(ps.get_id() + "////");
-                if (ps.getEntityType() == tmp && ps.get_id().equals(courseId))
+                if (ps.getEntityType() == type && ps.get_id().equals(courseId))
                     planId.set(p.get_id());
             });
         });
