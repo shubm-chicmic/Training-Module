@@ -71,7 +71,7 @@ public class DashboardService_V2 {
             });
         });
         //aggregation query!!!
-        Criteria criteria2 = new Criteria().orOperator(criteriaList);
+        Criteria criteria2 = (!criteriaList.isEmpty())?new Criteria().orOperator(criteriaList):new Criteria();
         List<UserProgress> userProgresses = mongoTemplate.find(new Query(criteria2),UserProgress.class);
 
         //compute overall rating of a trainee!!!
@@ -98,11 +98,13 @@ public class DashboardService_V2 {
         Map<String,String> positions = new HashMap<>();
         for (int i=0;i<courseList.size();i++) positions.put(courseList.get(i).get_id(),courseList.get(i).getName());
         courseDtoList.forEach(c -> {
+            //c.setProgress(0);
+            int total = c.getProgress();
             c.setProgress(0);
+
             documentList.forEach(d ->{
                 if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId"))){
                     int completed = (d.get("count")==null)?0:(Integer) d.get("count");
-                    int total = c.getProgress();
                     if (total!=0) c.setProgress(completed * 100 / total);
                 }
             });
