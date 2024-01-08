@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/v2/training/dashboard")
+@RequestMapping("/v1/training/dashboard")
 public class DashboardCRUD_V2 {
     private final DashboardService_V2 dashboardService;
 
