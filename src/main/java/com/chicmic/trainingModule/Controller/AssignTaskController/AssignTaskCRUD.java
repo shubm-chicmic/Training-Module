@@ -158,8 +158,9 @@ public class AssignTaskCRUD {
                                         HttpServletResponse response
     ){
         PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
-        String courseId = planTask.getPlan();
+
         if(planTask != null) {
+            String courseId = planTask.getPlan();
             List<Object> phasesList = planTask.getMilestones();
             List<TaskDto> taskDtoList = new ArrayList<>();
             List<String> phasesListOfString = new ArrayList<>();

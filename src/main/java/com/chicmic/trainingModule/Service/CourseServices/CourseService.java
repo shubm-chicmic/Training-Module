@@ -230,7 +230,8 @@ public class CourseService {
     }
 
     public Course getCourseById(String courseId) {
-        return courseRepo.findById(courseId).orElse(null);
+        Course course =  courseRepo.findById(courseId).orElse(null);
+        return course != null && course.getIsDeleted() ? null : course;
     }
 
     public Phase<Task> getPhaseById(String phaseId) {

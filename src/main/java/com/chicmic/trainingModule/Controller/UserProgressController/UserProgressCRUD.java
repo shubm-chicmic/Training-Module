@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.UserProgress;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     private final PlanTaskService planTaskService;
+    private final FeedbackService_V2 feedbackServiceV2;
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal, HttpServletResponse response) {
         Boolean checked = false;
@@ -50,6 +52,10 @@ public class UserProgressCRUD {
 
             }else {
                 userProgress.setStatus(userProgressDto.getStatus());
+            }
+            if(userProgress.getStatus() == ProgessConstants.Completed){
+                //delete feedback
+
             }
             userProgress = userProgressService.createUserProgress(userProgress);
         }else {

@@ -191,7 +191,8 @@ public class TestService {
     }
 
     public Test getTestById(String testId) {
-        return testRepo.findById(testId).orElse(null);
+        Test test = testRepo.findById(testId).orElse(null);
+        return test != null && test.getDeleted() ? null : test;
     }
 
     public Boolean deleteTestById(String testId) {

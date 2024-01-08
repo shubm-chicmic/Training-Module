@@ -185,7 +185,8 @@ public class PlanService {
         if (planId == null) {
             return null;
         }
-        return planRepo.findById(planId).orElse(null);
+        Plan plan =  planRepo.findById(planId).orElse(null);
+        return plan != null && plan.getDeleted() ? null : plan;
     }
 
     public List<Plan> getPlanByIds(List<String> planIds) {
