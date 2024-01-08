@@ -8,10 +8,12 @@ import java.util.Date;
 @Getter @Setter @Builder
 public class CourseDto {
     private String name;
+    private String planId;
     private Integer progress;
 
-    public CourseDto(String name, Integer progress) {
+    public CourseDto(String name,String planId ,Integer progress) {
         this.name = name;
+        this.planId = planId;
         this.progress = progress;
     }
 }

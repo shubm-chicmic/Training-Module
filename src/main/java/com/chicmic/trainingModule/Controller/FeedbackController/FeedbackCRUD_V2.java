@@ -139,9 +139,11 @@ public class FeedbackCRUD_V2 {
 
         Feedback_V2 feedbackV2 = feedbackService.deleteFeedbackById(id, principal.getName());
         int type = FeedbackUtil.FEEDBACKS_V2.get(feedbackV2.getType());
+        String taskId = (feedbackV2.getDetails().getCourseId()==null)?feedbackV2.getDetails().getTestId():
+                feedbackV2.getDetails().getCourseId();
 
-       // var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),feedbackV2.getDetails().ge,type);
-        return new ApiResponse(200,"Feedback deleted successfully",null);
+        var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),taskId,type);
+        return new ApiResponse(200,"Feedback deleted successfully",response);
     }
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){

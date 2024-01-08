@@ -3,10 +3,7 @@ package com.chicmic.trainingModule.Service.FeedBackService;
 import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
-import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
-import com.chicmic.trainingModule.Dto.DashboardDto.FeedbackResponseDto;
-import com.chicmic.trainingModule.Dto.DashboardDto.RatingDto;
-import com.chicmic.trainingModule.Dto.DashboardDto.RatingReponseDto;
+import com.chicmic.trainingModule.Dto.DashboardDto.*;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.FeedbackDto.RatingAndCountDto;
 import com.chicmic.trainingModule.Dto.FeedbackDto.TaskIdAndTypeDto;
@@ -16,10 +13,7 @@ import com.chicmic.trainingModule.Dto.rating.Rating;
 import com.chicmic.trainingModule.Dto.rating.Rating_COURSE;
 import com.chicmic.trainingModule.Dto.rating.Rating_PPT;
 import com.chicmic.trainingModule.Dto.rating.Rating_TEST;
-import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Entity.Feedback_V2;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.Plan;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
@@ -210,7 +204,7 @@ public class FeedbackService_V2 {
                ph.getTasks().forEach(tk ->{
                    if(tk != null) {
                        String taskId = (tk.getPlanType().equals(TEST))?"testId":"courseId";
-                       criteriaList.add(Criteria.where("type").is(tk.getPlanType().toString()).and(taskId).is(tk.getPlan()).and("traineeId").is(traineeId).and("isDeleted").is(false));
+                       criteriaList.add(Criteria.where("type").is(tk.getPlanType().toString()).and(String.format("details.%s",taskId)).is(tk.getPlan()).and("traineeId").is(traineeId).and("isDeleted").is(false));
                    }
                });
             }
@@ -561,6 +555,7 @@ public class FeedbackService_V2 {
     }
 
     public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
+        if(courseId == null) return null;
 
         Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
         Query query = new Query(criteria);
@@ -576,28 +571,41 @@ public class FeedbackService_V2 {
             var phases = p.getPhases();
             System.out.println(phases.size() + "------>");
             phases.forEach(ps -> {
-                System.out.println(ps.get_id() + "////");
-                if (ps.getEntityType() == type && ps.get_id().equals(courseId))
-                    planId.set(p.get_id());
+                ps.getTasks().forEach(pt -> {
+                    if (pt != null && pt instanceof PlanTask && pt.getPlanType() == type && pt.getPlan().equals(courseId))
+                        planId.set(p.get_id());
+                });
             });
         });
 
         Set<String> taskIds = new HashSet<>();
+        Set<Criteria> criteriaList = new HashSet<>();
         plans.forEach((p)->{
             if(p.get_id().equals(planId.get())) {
                 var phases = p.getPhases();
-                phases.forEach(ps -> taskIds.add(ps.get_id()));
+                phases.forEach(ps ->{
+                    ps.getTasks().forEach(pt -> {
+                        if (pt != null && pt instanceof PlanTask && pt.getPlanType()>=1 && pt.getPlanType()<=4){
+                            String taskId = (pt.getPlanType().equals(TEST))?"testId":"courseId";
+                            int ftype = (pt.getPlanType()==1)?3:pt.getPlanType();
+                            criteriaList.add(Criteria.where("type").is(Integer.toString(ftype)).and(String.format("details.%s",taskId)).is(pt.getPlan()).and("traineeId").is(traineeId).and("isDeleted").is(false));
+                        }
+                    });
+                });
             }
         });
+
         Map<String,Float> response = new HashMap<>();
-        response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,taskIds));
+        response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,criteriaList));
         response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
-        response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, FEEDBACK_TYPE_CATEGORY_V2[type-1]));
+        response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, Integer.toString(type)));
         return response;
     }
-    Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<String> taskIds){
+    Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
+        Criteria criteria = new Criteria().orOperator(taskIds);
+        if (taskIds.size() == 0) return 0f;
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false).and("details.taskId").in(taskIds)),
+                Aggregation.match(criteria),
                 Aggregation.group("traineeId")
                         .sum("overallRating").as("overallRating")
                         .count().as("count")
