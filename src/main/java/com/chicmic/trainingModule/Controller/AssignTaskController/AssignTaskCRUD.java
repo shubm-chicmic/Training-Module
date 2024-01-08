@@ -50,7 +50,8 @@ public class AssignTaskCRUD {
         System.out.println("assignTaskDto = " + assignTaskDto);
         Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
-            if(assignTaskService.getAllAssignTasksByTraineeId(userId) == null) {
+            AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
+            if(assignedPlan == null || (assignedPlan != null && assignedPlan.getPlans().size() == 0)) {
                 AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
             }else {
                 error = true;

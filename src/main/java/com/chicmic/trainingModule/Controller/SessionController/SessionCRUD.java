@@ -39,7 +39,7 @@ public class SessionCRUD {
         if(sessionId == null || sessionId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
-                return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
             List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = sessionService.countNonDeletedSessions(searchString);
 
@@ -49,7 +49,7 @@ public class SessionCRUD {
         }else {
             Session session = sessionService.getSessionById(sessionId);
             if(session == null){
-                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Session not found", null, response);
+                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
             }
             SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(session);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response);

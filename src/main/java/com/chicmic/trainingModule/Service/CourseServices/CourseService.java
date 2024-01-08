@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -89,6 +91,33 @@ public class CourseService {
 //        }
         return result;
     }
+    public List<String>  getCoursesAndTestsByTraineeId(String traineeId, Integer planType) {
+        Query query1 = new Query(Criteria.where("userId").in(traineeId));
+        AssignedPlan assignTask = mongoTemplate.findOne(query1, AssignedPlan.class);
+        List<Plan> plans = assignTask.getPlans();
+
+        return plans.stream()
+                .flatMap(plan -> plan.getPhases().stream()
+                        .flatMap(phase -> phase.getTasks().stream()
+                                .filter(task -> task.getPlanType().equals(planType))
+                                .map(PlanTask::getPlan)))
+                .collect(Collectors.toList());
+//        Aggregation aggregation = Aggregation.newAggregation(
+//                Aggregation.match(Criteria.where("userId").is(traineeId)),
+//                Aggregation.unwind("plans"),
+//                Aggregation.lookup("plan", "plans", "_id", "courses"),
+//                Aggregation.unwind("courses"),
+//                Aggregation.lookup("phase", "courses.phases._id", "_id", "phases"),
+//                Aggregation.unwind("phases"),
+//                Aggregation.unwind("phases.tasks"),
+//                Aggregation.replaceRoot("phases.tasks"),
+//                Aggregation.match(Criteria.where("planType").is(1).orOperator(Criteria.where("planType").is(2)))
+//        );
+//
+//        AggregationResults<PlanTask> results = mongoTemplate.aggregate(aggregation, AssignedPlan.class, PlanTask.class);
+//        return results.getMappedResults();
+
+    }
 
     public List<Course> getAllCourses(String query, Integer sortDirection, String sortKey, String traineeId) {
         Criteria criteria = Criteria.where("name").regex(query, "i")
@@ -131,24 +160,14 @@ public class CourseService {
 //        }
         List<Course> finalCourseList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
-            Query query1 = new Query(Criteria.where("userId").in(traineeId));
-            AssignedPlan assignTask = mongoTemplate.findOne(query1, AssignedPlan.class);
-//            AssignTask assignTask = AssignTaskService.getAllAssignTasksByTraineeId(traineeId);
-//            if(assignTask != null) {
-//                for (Plan plan : assignTask.getPlans()) {
-//                    for (com.chicmic.trainingModule.Entity.Plan33.Phase phase : plan.getPhases()) {
-//                        for (PlanTask planTask : phase.getTasks()) {
-//                            if (planTask.getPlanType() == 1) {
-//                                for (Course course : courses) {
-//                                    if (course.get_id().equals(((AssignTaskPlanTrack) planTask.getPlan()).get_id())) {
-//                                        finalCourseList.add(course);
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+            List<String> courseIds = getCoursesAndTestsByTraineeId(traineeId, EntityType.COURSE);
+            if(courseIds != null && courseIds.size() > 0) {
+                for (Course course : courses) {
+                    if (courseIds.contains(course.get_id())) {
+                        finalCourseList.add(course);
+                    }
+                }
+            }
             return finalCourseList;
         }
         return courses;

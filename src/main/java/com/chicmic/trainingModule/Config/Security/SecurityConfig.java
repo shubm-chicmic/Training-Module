@@ -39,7 +39,7 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/assignTask/complete").permitAll());
+        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/userProgress").permitAll());
         http.authorizeHttpRequests(requests->requests.requestMatchers("/v2/training","/v2/training/**").authenticated());
         http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.PUT,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
         http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));

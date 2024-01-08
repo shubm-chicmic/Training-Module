@@ -36,11 +36,12 @@ public class TestCRUD {
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
             HttpServletResponse response,
+            @RequestParam(required = false) String taineeId,
             Principal principal
     )  {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
-            List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey);
+            List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey, taineeId);
             Long count = testService.countNonDeletedTests(searchString);
             List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
@@ -114,15 +115,18 @@ public class TestCRUD {
                 Set<String> approver = test.getApprover();
                 if (approver.contains(principal.getName())) {
                     test = testService.approve(test, principal.getName());
+                    TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(test);
+                    return new ApiResponse(HttpStatus.OK.value(), "Test approved successfully", test, response);
+
                 } else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this test", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this test", null, response);
                 }
             }
             testDto.setApproved(test.getApproved());
             TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(testService.updateTest(testDto, testId));
-            return new ApiResponse(HttpStatus.CREATED.value(), "Test updated successfully", testResponseDto, response);
+            return new ApiResponse(HttpStatus.OK.value(), "Test updated successfully", testResponseDto, response);
         }else {
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Test not found", null, response);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Test not found", null, response);
         }
     }
 }

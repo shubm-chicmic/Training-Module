@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Repository.*;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +35,7 @@ public class TestService {
     private final PhaseRepo phaseRepo;
     private final TaskRepo taskRepo;
     private final SubTaskRepo subTaskRepo;
+    private final CourseService courseService;
 
     public Test createTest(Test test) {
         test.setCreatedAt(LocalDateTime.now());
@@ -69,7 +71,7 @@ public class TestService {
         return test;
     }
 
-    public List<Test> getAllTests(String query, Integer sortDirection, String sortKey) {
+    public List<Test> getAllTests(String query, Integer sortDirection, String sortKey, String traineeId) {
         Criteria criteria = Criteria.where("testName").regex(query, "i")
                 .and("deleted").is(false);
 
@@ -85,7 +87,18 @@ public class TestService {
         Query searchQuery = new Query(finalCriteria);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-
+        List<Test> testList = new ArrayList<>();
+        if (traineeId != null && !traineeId.isEmpty()) {
+            List<String> testIds = courseService.getCoursesAndTestsByTraineeId(traineeId, EntityType.TEST);
+            if(testIds != null && testIds.size() > 0) {
+                for (Test test : tests) {
+                    if (testIds.contains(test.get_id())) {
+                        testList.add(test);
+                    }
+                }
+            }
+            return testList;
+        }
         if (!sortKey.isEmpty()) {
             Comparator<Test> testComparator = Comparator.comparing(test -> {
                 try {

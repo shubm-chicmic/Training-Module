@@ -52,6 +52,7 @@ public class Task {
     }
 
     public void setEstimatedTime(String estimatedTime) {
+        System.out.println("estimatedTime = " + estimatedTime);
         estimatedTime = estimatedTime.trim();
         int hours = 0;
         int minutes = 0;

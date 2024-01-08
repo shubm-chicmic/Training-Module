@@ -61,10 +61,13 @@ public class AssignTaskResponseMapper {
             if(plan != null) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
                 Integer totalTask = 0;
-
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
-                        totalTask += planTask.getTotalTasks();
+                        if(planTask.getPlanType() != 3 || planTask.getPlanType() != 4) {
+                            totalTask += planTask.getTotalTasks();
+                        }else {
+                            totalTask += 1;
+                        }
                     }
                 }
                 Boolean isCompleted = false;

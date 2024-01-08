@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Dto.UserProgressDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,8 +58,22 @@ public class AssignPlanResponseMapper {
 
         List<UserIdAndNameDto> milestonesIdAndName = new ArrayList<>();
         Integer totalTask = 0;
+        Integer completedTasks = 0;
+        if(planTask.getMilestones() == null){
+            planTask.setMilestones(new ArrayList<>());
+        }
         for (Object milestone : planTask.getMilestones()){
             Phase<Task> phase = courseService.getPhaseById((String) milestone);
+            List<Task> tasks = phase.getTasks();
+            List<SubTask> subTasks = tasks.stream()
+                    .flatMap(task -> task.getSubtasks().stream())
+                    .collect(Collectors.toList());
+
+            for (SubTask subTask : subTasks) {
+                if(userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(),traineeId)){
+                    completedTasks++;
+                }
+            }
             UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
                     ._id(phase.get_id())
                     .name(phase.getName())
@@ -65,7 +81,7 @@ public class AssignPlanResponseMapper {
             milestonesIdAndName.add(milestoneDetails);
             totalTask += phase.getTotalTasks();
         }
-        Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
+//        Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         Boolean isPlanCompleted = false;
         if(totalTask == completedTasks) {
             UserProgress planProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), EntityType.COURSE);
@@ -99,7 +115,7 @@ public class AssignPlanResponseMapper {
         }
         Float rating = feedbackServiceV2.computeRatingByTaskIdOfTrainee(traineeId, planTask.getPlan(), String.valueOf(feedbackType));
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
-            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), EntityType.COURSE);
+            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
             if(userProgress != null) {
                 completedTasks = (userProgress.getStatus() == ProgessConstants.Completed) ? 1 : 0;
             }else {
