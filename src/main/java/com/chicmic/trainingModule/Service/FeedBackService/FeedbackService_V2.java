@@ -214,6 +214,18 @@ public class FeedbackService_V2 {
         });
         return criteriaList;
     }
+    public boolean feedbackExistOnParticularPhaseOfTrainee(String traineeId,String taskId,List<String> subtaskIds,String type){
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type);
+        if (type.equals(VIVA_)||type.equals(PPT_)) {
+            criteria.and("details.courseId").is(taskId);
+            if (type.equals(VIVA_))
+                criteria.and("phaseIds").all(subtaskIds);
+        } else if (type.equals(TEST_)) {
+            criteria.and("details.testId").is(taskId);
+            criteria.and("milestoneIds").all(subtaskIds);
+        }
+        return mongoTemplate.exists(new Query(criteria),Feedback_V2.class);
+    }
 
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String traineeId) {
         List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->

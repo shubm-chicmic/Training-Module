@@ -61,7 +61,7 @@ public class DashboardService_V2 {
             p.getPhases().forEach(ps -> {
                 ps.getTasks().forEach(pt -> {
                     if (pt != null && pt instanceof PlanTask && pt.getPlanType() == COURSE) {
-                        courseDtoList.add(new CourseDto(pt.getPlan(), p.get_id(),pt.getTotalTasks()));
+                        courseDtoList.add(new CourseDto(pt.getPlan(), p.get_id(),ps.get_id(),pt.getTotalTasks()));
                         criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()));
                     }
                 });
@@ -77,10 +77,10 @@ public class DashboardService_V2 {
         //compute overall rating of a trainee!!!
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria2),
-                Aggregation.group("courseId","planId")
+                Aggregation.group("courseId","planId","phaseId")
                         .count().as("count"),
                 Aggregation.project("count").andExclude("_id").and("_id.courseId").as("courseId")
-                        .and("_id.planId").as("planId")
+                        .and("_id.planId").as("planId").and("_id.planId").as("planId")
         );
 
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "userProgress", Document.class);
@@ -103,7 +103,7 @@ public class DashboardService_V2 {
             c.setProgress(0);
 
             documentList.forEach(d ->{
-                if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId"))){
+                if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId")) && Objects.equals(c.getPhaseId(),(String) d.get("phaseId"))){
                     int completed = (d.get("count")==null)?0:(Integer) d.get("count");
                     if (total!=0) c.setProgress(completed * 100 / total);
                 }
