@@ -134,7 +134,7 @@ public class AssignPlanResponseMapper {
                 .completedTasks(completedTasks)
                 .totalTasks(totalTask)
                 .date(planTask.getDate())
-                .estimatedTime(planTask.getEstimatedTime())
+                .estimatedTime(planTask.getMilestonesEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
                 .feedbackId(null)

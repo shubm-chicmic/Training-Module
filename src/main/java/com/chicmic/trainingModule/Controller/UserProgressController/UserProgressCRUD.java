@@ -27,6 +27,7 @@ public class UserProgressCRUD {
     private final PlanTaskService planTaskService;
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal, HttpServletResponse response) {
+        Boolean checked = false;
         if(userProgressDto.getProgressType() == 3 || userProgressDto.getProgressType() == 4){
             PlanTask planTask = planTaskService.getPlanTaskById(userProgressDto.getSubTaskId());
             userProgressDto.setSubTaskId(null);
@@ -89,7 +90,8 @@ public class UserProgressCRUD {
                 userProgressService.createUserProgress(courseProgress);
             }
         }
-        return new ApiResponse(HttpStatus.OK.value(), "UserProgress created successfully", null, response);
+        checked = userProgressDto.getStatus() == ProgessConstants.Completed;
+        return new ApiResponse(HttpStatus.OK.value(), checked ? "Task marked complete successfully" : "Task marked incomplete successfully.", userProgressDto, response);
     }
 
 }

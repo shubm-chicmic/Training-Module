@@ -36,6 +36,7 @@ public class PlanTask {
     private Integer totalTasks;
     private LocalDateTime date;
     private Integer estimatedTime;
+    private Integer milestonesEstimatedTime;
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
 //        for (String milestone : milestones) {
@@ -70,6 +71,12 @@ public class PlanTask {
         this.estimatedTime = totalSeconds;
     }
     public String getEstimatedTime() {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
+    }
+    public String getMilestonesEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
 
