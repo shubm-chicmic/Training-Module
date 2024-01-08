@@ -54,7 +54,6 @@ public class PlanService {
                         totalTask += coursePhase.getTotalTasks();
                     }
                 }
-
                 task.setTotalTasks(totalTask);
                 tasks.add(planTaskRepo.save(task));
             }

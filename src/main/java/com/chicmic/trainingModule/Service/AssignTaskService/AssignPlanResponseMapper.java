@@ -124,6 +124,7 @@ public class AssignPlanResponseMapper {
             totalTask = 1;
             isPlanCompleted =(totalTask == completedTasks);
         }
+
         //TODO plantask estimated time is pending 51 hours
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
@@ -134,7 +135,7 @@ public class AssignPlanResponseMapper {
                 .completedTasks(completedTasks)
                 .totalTasks(totalTask)
                 .date(planTask.getDate())
-                .estimatedTime(planTask.getMilestonesEstimatedTime())
+                .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
                 .feedbackId(null)

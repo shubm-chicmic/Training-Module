@@ -36,7 +36,6 @@ public class PlanTask {
     private Integer totalTasks;
     private LocalDateTime date;
     private Integer estimatedTime;
-    private Integer milestonesEstimatedTime;
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
 //        for (String milestone : milestones) {
