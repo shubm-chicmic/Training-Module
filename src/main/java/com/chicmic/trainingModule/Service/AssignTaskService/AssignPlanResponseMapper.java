@@ -40,15 +40,21 @@ public class AssignPlanResponseMapper {
         String planName = null;
         if (planTask.getPlanType() == 1) {
             Course course =  courseService.getCourseById(planTask.getPlan());
-            planName = course.getName();
+            if(course != null) {
+                planName = course.getName();
+            }
 //            planTask.setEstimatedTime(course.getEstimatedTime());
         }else if (planTask.getPlanType() == 2) {
             Test test = testService.getTestById(planTask.getPlan());
-            planName = test.getTestName();
+            if(test != null) {
+                planName = test.getTestName();
+            }
 //            planTask.setEstimatedTime(test.getEstimatedTime());
         }else {
             Course course =  courseService.getCourseById(planTask.getPlan());
-            planName = course.getName();
+            if(course != null) {
+                planName = course.getName();
+            }
 //            planTask.setEstimatedTime(course.getEstimatedTime());
         }
         UserIdAndNameDto planIdAndNameDto = UserIdAndNameDto.builder()

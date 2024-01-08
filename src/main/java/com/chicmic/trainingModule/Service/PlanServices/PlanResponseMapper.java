@@ -2,9 +2,7 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.Plan;
-import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
@@ -63,9 +61,11 @@ public class PlanResponseMapper {
                     }
                 }
                 if(planTask.getPlanType() == 2) {
-                    planTask.setPlanName(testService.getTestById(planTask.getPlan()).getTestName());
+                    Test test = testService.getTestById(planTask.getPlan());
+                    planTask.setPlanName(test == null ? "Test Not Found" : test.getTestName());
                 }else {
-                    planTask.setPlanName(courseService.getCourseById(planTask.getPlan()).getName());
+                    Course course = courseService.getCourseById(planTask.getPlan());
+                    planTask.setPlanName(course == null ? "Course Not Found" : course.getName());
                 }
                 planTask.setMilestones(milestoneDetails);
             }

@@ -55,7 +55,14 @@ public class UserProgressCRUD {
             }
             if(userProgress.getStatus() == ProgessConstants.Completed){
                 //delete feedback
-
+                Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTrainee(
+                        userProgress.getTraineeId(),
+                        planTask.getPlan(),
+                        planTask.getMentorIds(),
+                        String.valueOf(userProgressDto.getProgressType())
+                );
+                if(isFeedbackExist)
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Feedback already Given", null);
             }
             userProgress = userProgressService.createUserProgress(userProgress);
         }else {
