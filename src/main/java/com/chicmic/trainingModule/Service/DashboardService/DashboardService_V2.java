@@ -1,9 +1,7 @@
 package com.chicmic.trainingModule.Service.DashboardService;
 
 
-import com.chicmic.trainingModule.Dto.DashboardDto.CourseDto;
-import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
-import com.chicmic.trainingModule.Dto.DashboardDto.PlanDto;
+import com.chicmic.trainingModule.Dto.DashboardDto.*;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
@@ -16,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import javax.print.Doc;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,12 +30,19 @@ public class DashboardService_V2 {
         this.feedbackService = feedbackService;
         this.mongoTemplate = mongoTemplate;
     }
-
     public DashboardResponse getTraineeRatingSummary(String traineeId){
         //checking traineeId is valid or not
         UserDto userDto = TrainingModuleApplication.searchUserById(traineeId);
-        DashboardResponse dashboardResponse = feedbackService.findFeedbacksSummaryOfTrainee(traineeId);
+
+        DashboardResponse dashboardResponse = DashboardResponse.builder().build();
         dashboardResponse.setName(userDto.getName());
+
+        RatingReponseDto ratingReponseDto = feedbackService.getOverallRatingOfTraineeForDashboard(traineeId);
+        List<FeedbackResponseDto> feedbackResponseDtoList = feedbackService.findFirstFiveFeedbacksOfTrainee(traineeId);
+
+        dashboardResponse.setRating(ratingReponseDto);
+        dashboardResponse.setFeedbacks(feedbackResponseDtoList);
+
         //get
         Criteria criteria = Criteria.where("userId").is(traineeId);
         Query query = new Query(criteria);
@@ -68,6 +74,7 @@ public class DashboardService_V2 {
         Criteria criteria2 = new Criteria().orOperator(criteriaList);
         List<UserProgress> userProgresses = mongoTemplate.find(new Query(criteria2),UserProgress.class);
 
+        //compute overall rating of a trainee!!!
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria2),
                 Aggregation.group("courseId","planId")
@@ -75,6 +82,7 @@ public class DashboardService_V2 {
                 Aggregation.project("count").andExclude("_id").and("_id.courseId").as("courseId")
                         .and("_id.planId").as("planId")
         );
+
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "userProgress", Document.class);
         List<Document> documentList = aggregationResults.getMappedResults();
         Map<String,Integer> progress = new HashMap<>();
@@ -90,11 +98,12 @@ public class DashboardService_V2 {
         Map<String,String> positions = new HashMap<>();
         for (int i=0;i<courseList.size();i++) positions.put(courseList.get(i).get_id(),courseList.get(i).getName());
         courseDtoList.forEach(c -> {
+            c.setProgress(0);
             documentList.forEach(d ->{
                 if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId"))){
                     int completed = (d.get("count")==null)?0:(Integer) d.get("count");
                     int total = c.getProgress();
-                    c.setProgress(completed * 100 / total);
+                    if (total!=0) c.setProgress(completed * 100 / total);
                 }
             });
         });
