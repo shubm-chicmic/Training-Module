@@ -138,13 +138,14 @@ public class FeedbackCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
         Feedback_V2 feedbackV2 = feedbackService.deleteFeedbackById(id, principal.getName());
-        int type = FeedbackUtil.FEEDBACKS_V2.get(feedbackV2.getType());
+        int type = feedbackV2.getType().charAt(0) - '0';//FeedbackUtil.FEEDBACKS_V2.get(feedbackV2.getType());
         String taskId = (feedbackV2.getDetails().getCourseId()==null)?feedbackV2.getDetails().getTestId():
                 feedbackV2.getDetails().getCourseId();
 
         var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),taskId,type);
         return new ApiResponse(200,"Feedback deleted successfully",response);
     }
+
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
         FeedbackResponse_V2 feedback = feedbackService.getFeedbackById(id);
@@ -154,13 +155,13 @@ public class FeedbackCRUD_V2 {
         //feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         return new ApiResponse(200,"Feedback fetched successfully",feedback);
     }
-    @GetMapping("/user/phase/{phaseId}")
-    public ApiResponse getFeedbackByPhase(@RequestParam String traineeId, @RequestParam String courseId,@PathVariable String phaseId) {
+    @GetMapping("/user/viva/{courseId}")
+    public ApiResponse getFeedbackByPhase(@RequestParam String traineeId, @PathVariable String courseId,@RequestParam List<String> phaseId) {
         List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
-    @GetMapping("/milestone/{milestoneId}")
-    public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @RequestParam String testId,@PathVariable String milestoneId) {
+    @GetMapping("/user/test/{testId}")
+    public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @PathVariable String testId,@RequestParam List<String> milestoneId) {
         List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }

@@ -9,10 +9,9 @@ import java.util.Date;
 public class CourseDto {
     private String name;
     private String planId;
-    private String phaseId;
     private Integer progress;
 
-    public CourseDto(String name,String planId ,String phaseId,Integer progress) {
+    public CourseDto(String name,String planId ,Integer progress) {
         this.name = name;
         this.planId = planId;
         this.progress = progress;

@@ -191,6 +191,7 @@ public class FeedbackService_V2 {
 
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
+
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
     }
 
@@ -273,7 +274,8 @@ public class FeedbackService_V2 {
 
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
-        return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
+        Float overallRating = computeOverallRatingOfTrainee(traineeId);
+        return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count,overallRating);
     }
 
     public ApiResponse findFeedbacksGivenByUser(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
@@ -326,6 +328,7 @@ public class FeedbackService_V2 {
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
     }
+
     public void addSubTaskName(List<CourseResponse_V2> courseResponseList,int type){
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
@@ -501,24 +504,25 @@ public class FeedbackService_V2 {
         return aggregationResults.getMappedResults();
     }
 
-    public List<CourseResponse_V2> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,String phaseId,String traineeId){
-        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is("COURSE")
+    public List<CourseResponse_V2> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,List<String> phaseIds,String traineeId){
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(VIVA_)
                 .and("isDeleted").is(false)
-                .and("details.taskId").is(courseId);//.and("details.taskId").is(phaseId);
-        criteria.elemMatch(new Criteria().and("subtaskIds").in(phaseId));
+                .and("details.courseId").is(courseId);//.and("details.taskId").is(phaseId);
+        //criteria.elemMatch(new Criteria().and("phaseIds").in(phaseIds));
+        criteria.and("phaseIds").in(phaseIds);
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
 
        // List<CourseResponse_V2> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
        List<CourseResponse_V2> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
-        return null;
+        return courseResponseList;
     }
 
-    public List<CourseResponse_V2> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String milestoneid,String traineeId){
+    public List<CourseResponse_V2> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,List<String> milestoneIds,String traineeId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is("TEST")
                 .and("isDeleted").is(false)
                 .and("details.taskId").is(testId);
-        criteria.elemMatch(new Criteria().and("subtaskIds").in(milestoneid));
+        criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query,Feedback_V2.class);
         List<CourseResponse_V2> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
@@ -536,7 +540,7 @@ public class FeedbackService_V2 {
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> documentList =  aggregationResults.getMappedResults();
         RatingReponseDto ratingReponseDto = RatingReponseDto.builder().build();
-        double total = 0;
+
         for (Document d : documentList){
             if (TEST_.equals(d.get("_id")))
                 ratingReponseDto.setTest(compute_rating((Double) d.get("rating"),(Integer) d.get("count")));
@@ -546,10 +550,9 @@ public class FeedbackService_V2 {
                 ratingReponseDto.setPresentation(compute_rating((Double) d.get("rating"),(Integer) d.get("count")));
             else
                 ratingReponseDto.setBehaviour(compute_rating((Double) d.get("rating"),(Integer) d.get("count")));
-            total += (Double) d.get("rating");
         };
         //float total = ratingReponseDto.getTest() + ratingReponseDto.getCourse() + ratingReponseDto.getPresentation() + ratingReponseDto.getBehaviour();
-        ratingReponseDto.setOverall(compute_rating(total,documentList.size()));
+        ratingReponseDto.setOverall(computeOverallRatingOfTrainee(traineeId));
         ratingReponseDto.setComment(getFeedbackMessageBasedOnOverallRating(ratingReponseDto.getOverall()));
         return ratingReponseDto;
     }
