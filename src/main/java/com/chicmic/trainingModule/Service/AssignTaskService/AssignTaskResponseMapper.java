@@ -63,7 +63,7 @@ public class AssignTaskResponseMapper {
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
-                        if(planTask.getPlanType() != 3 || planTask.getPlanType() != 4) {
+                        if(planTask != null && (planTask.getPlanType() != 3 || planTask.getPlanType() != 4)) {
                             totalTask += planTask.getTotalTasks();
                         }else {
                             totalTask += 1;

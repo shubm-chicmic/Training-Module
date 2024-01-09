@@ -32,6 +32,10 @@ public class PlanResponseMapper {
         List<Phase<PlanTask>> phases = plan.getPhases();
         for (Phase<PlanTask> phase : phases) {
             for (PlanTask planTask : phase.getTasks()) {
+                if(planTask == null){
+                    System.out.println("planTask is null  " + phase.get_id());
+                    continue;
+                }
                 List<Object> milestoneDetails = new ArrayList<>();
                 if(planTask.getMilestones() != null) {
                     for (Object milestoneId : planTask.getMilestones()) {

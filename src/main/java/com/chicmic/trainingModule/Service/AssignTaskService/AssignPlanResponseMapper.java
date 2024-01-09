@@ -38,6 +38,9 @@ public class AssignPlanResponseMapper {
     }
     public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask,String planId, String traineeId) {
         String planName = null;
+        if(planTask == null) {
+            return null;
+        }
         if (planTask.getPlanType() == 1) {
             Course course =  courseService.getCourseById(planTask.getPlan());
             if(course != null) {
