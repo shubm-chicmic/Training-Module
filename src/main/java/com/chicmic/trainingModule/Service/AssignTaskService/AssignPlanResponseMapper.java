@@ -154,7 +154,7 @@ public class AssignPlanResponseMapper {
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
                 .feedbackId(null)
-                .rating(feedbackV2.getOverallRating())
+                .rating(feedbackV2 == null ? 0f : feedbackV2.getOverallRating())
                 .build();
     }
 }

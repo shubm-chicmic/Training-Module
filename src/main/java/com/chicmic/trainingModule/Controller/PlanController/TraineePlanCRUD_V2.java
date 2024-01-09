@@ -30,13 +30,12 @@ public class TraineePlanCRUD_V2 {
                                         @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
                                         @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
                                         @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
-                                        @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey){
+                                        @RequestParam(value = "sortKey", defaultValue = "employeeCode", required = false) String sortKey){
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         System.out.println("request reaches here!!");
         sortDirection = (sortDirection!=1)?-1:1;
-        if(sortKey==null || sortKey.isBlank()) sortKey = "team";
         List<Document> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
         long count = 4l;
         //count  = mongoTemplate.count(new Query(), AssignedPlan.class);
