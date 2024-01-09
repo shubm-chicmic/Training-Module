@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskResponseMa
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.AssignTaskService.TaskResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
@@ -31,7 +32,7 @@ import java.util.List;
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
     private final PlanService planService;
-    private final CourseService courseService;
+    private final PhaseService phaseService;
     private final TestService testService;
     private final PlanTaskService planTaskService;
     private final AssignTaskResponseMapper assignTaskResponseMapper;
@@ -167,7 +168,7 @@ public class AssignTaskCRUD {
             for (Object obj : phasesList) {
                 phasesListOfString.add(obj.toString());
             }
-            List<Phase> phases = courseService.getPhaseByIds(phasesListOfString);
+            List<Phase> phases = phaseService.getPhaseByIds(phasesListOfString);
             List<Task> taskList = new ArrayList<>();
             for(Phase phase : phases) {
                 taskList.addAll(phase.getTasks());

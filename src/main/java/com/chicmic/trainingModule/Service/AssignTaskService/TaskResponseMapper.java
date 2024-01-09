@@ -36,8 +36,8 @@ public class TaskResponseMapper {
                         .name(subTask.getSubTask())
                         .build();
                 UserIdAndNameDto phaseDetails = UserIdAndNameDto.builder()
-                        ._id(task.getPhase().get_id())
-                        .name(task.getPhase().getName())
+//                        ._id(task.getPhase().get_id())
+//                        .name(task.getPhase().getName())
                         .build();
                 String reference = "";
                 if(subTask.getEntityType() == EntityType.TEST){

@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/training/userProgress")
@@ -54,11 +56,14 @@ public class UserProgressCRUD {
                 userProgress.setStatus(userProgressDto.getStatus());
             }
             if(userProgress.getStatus() == ProgessConstants.Completed){
+                List<String> milestonesIds = planTask.getMilestones().stream()
+                        .map(Object::toString)
+                        .collect(Collectors.toList());
                 //delete feedback
                 Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTrainee(
                         userProgress.getTraineeId(),
                         planTask.getPlan(),
-                        planTask.getMentorIds(),
+                        milestonesIds,
                         String.valueOf(userProgressDto.getProgressType())
                 );
                 if(isFeedbackExist)

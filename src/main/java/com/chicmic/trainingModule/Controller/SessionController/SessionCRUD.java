@@ -41,7 +41,7 @@ public class SessionCRUD {
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
             List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            Long count = sessionService.countNonDeletedSessions(searchString);
+            Long count = sessionService.countNonDeletedSessions(searchString, principal.getName());
 
             List<SessionResponseDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToResponseDto(sessionList);
 //            Collections.reverse(sessionResponseDtoList);

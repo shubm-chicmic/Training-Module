@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Dto.CourseDto;
 
+import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,7 +21,7 @@ public class CourseDto {
     private Set<String> approver;
     private String figmaLink;
     private String guidelines;
-    private List<List<Task>> phases;
+    private List<Phase<Task>> phases;
     private Boolean approved = false;
 
     @Override

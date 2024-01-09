@@ -42,7 +42,7 @@ public class TestCRUD {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey, taineeId);
-            Long count = testService.countNonDeletedTests(searchString);
+            Long count = testService.countNonDeletedTests(searchString, principal.getName());
             List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
@@ -53,7 +53,7 @@ public class TestCRUD {
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<Test> testList = testService.getAllTests(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             System.out.println(testList);
-            Long count = testService.countNonDeletedTests(searchString);
+            Long count = testService.countNonDeletedTests(searchString, principal.getName());
 
             List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
             Collections.reverse(testResponseDtoList);
@@ -71,21 +71,14 @@ public class TestCRUD {
     @PostMapping
     public ApiResponse create(@RequestBody TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
-        List<Phase<Task>> milestones = new ArrayList<>();
-        for (List<Task> testTasks : testDto.getMilestones()) {
-            Phase<Task> milestone = Phase.<Task>builder()
-                    .entityType(EntityType.TEST)
-                    .tasks(testTasks)
-                    .build();
-            milestones.add(milestone);
-        }
+
         Test test = Test.builder()
                 .createdBy(principal.getName())
                 .testName(testDto.getTestName())
                 .approver(testDto.getApprover())
                 .teams(testDto.getTeams())
                 .createdBy(principal.getName())
-                .milestones(milestones)
+                .milestones(testDto.getMilestones())
                 .deleted(false)
                 .approved(false)
                 .build();

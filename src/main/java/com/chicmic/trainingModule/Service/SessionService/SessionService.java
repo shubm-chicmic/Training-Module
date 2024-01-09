@@ -187,9 +187,31 @@ public class SessionService {
             return null;
         }
     }
-    public long countNonDeletedSessions(String query) {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("title").regex(query, "i")
-                .and("isDeleted").is(false));
+    public long countNonDeletedSessions(String query, String userId) {
+        Criteria criteria = Criteria.where("title").regex(query, "i")
+                .and("isDeleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true)
+                .andOperator(
+                        new Criteria().orOperator(
+                                Criteria.where("createdBy").is(userId),
+                                Criteria.where("reviewers").in(userId),
+                                Criteria.where("trainees").in(userId),
+                                Criteria.where("sessionBy").in(userId)
+
+                        )
+                );
+        Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+
+        MatchOperation matchStage = Aggregation.match(finalCriteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Session> aggregationResults = mongoTemplate.aggregate(aggregation, "session", Session.class);

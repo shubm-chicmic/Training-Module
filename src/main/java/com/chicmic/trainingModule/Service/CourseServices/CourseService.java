@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Repository.CourseRepo;
 import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.SubTaskRepo;
 import com.chicmic.trainingModule.Repository.TaskRepo;
+import com.chicmic.trainingModule.Service.PhaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
@@ -34,45 +35,24 @@ import java.util.stream.Collectors;
 public class CourseService {
     private final CourseRepo courseRepo;
     private final MongoTemplate mongoTemplate;
-    private final PhaseRepo phaseRepo;
-    private final TaskRepo taskRepo;
-    private final SubTaskRepo subTaskRepo;
+    private final PhaseService phaseService;
+
 
     public Course createCourse(Course course) {
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
-        List<Phase<Task>> phases = new ArrayList<>();
-        int count = 0;
         course.set_id(String.valueOf(new ObjectId()));
-        for (Phase<Task> phase : course.getPhases()) {
-            phase.set_id(String.valueOf(new ObjectId()));
-            count++;
-            List<Task> tasks = new ArrayList<>();
-            for (Task task : phase.getTasks()) {
-                task.set_id(String.valueOf(new ObjectId()));
-                List<SubTask> subTasks = new ArrayList<>();
-                for (SubTask subTask : task.getSubtasks()) {
-                    subTask.setEntityType(EntityType.COURSE);
-                    subTask.setTask(task);
-                    subTasks.add(subTaskRepo.save(subTask));
-                }
-                task.setEntityType(EntityType.COURSE);
-                task.setSubtasks(subTasks);
-                task.setPhase(phase);
-                tasks.add(taskRepo.save(task));
-            }
-            phase.setName("Phase " + count);
-            phase.setEntityType(EntityType.COURSE);
-            phase.setTasks(tasks);
-            phase.setEntity(course);
-            phases.add(phaseRepo.save(phase));
-        }
-        course.setPhases(phases);
-        System.out.println("course in service  " + course);
 
+        List<Phase<Task>> phases = phaseService.createPhases(course.getPhases(), course, EntityType.COURSE);
+        course.setPhases(phases);
+
+        System.out.println("course in service " + course);
         course = courseRepo.save(course);
         return course;
     }
+
+
+
 
     public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
         Query courseQuery = new Query(Criteria.where("_id").is(courseId).and("phases._id").is(phaseId));
@@ -136,28 +116,6 @@ public class CourseService {
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
 
-//        if (!sortKey.isEmpty()) {
-//            Comparator<Course> courseComparator = Comparator.comparing(course -> {
-//                try {
-//                    Field field = Course.class.getDeclaredField(sortKey);
-//                    field.setAccessible(true);
-//                    Object value = field.get(course);
-//                    if (value instanceof String) {
-//                        return ((String) value).toLowerCase();
-//                    }
-//                    return value.toString();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    return "";
-//                }
-//            });
-//
-//            if (sortDirection == 1) {
-//                courses.sort(courseComparator.reversed());
-//            } else {
-//                courses.sort(courseComparator);
-//            }
-//        }
         List<Course> finalCourseList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
             List<String> courseIds = getCoursesAndTestsByTraineeId(traineeId, EntityType.COURSE);
@@ -234,13 +192,7 @@ public class CourseService {
         return course != null && course.getIsDeleted() ? null : course;
     }
 
-    public Phase<Task> getPhaseById(String phaseId) {
-        return phaseRepo.findById(phaseId).orElse(null);
-    }
 
-    public List<Phase> getPhaseByIds(List<String> phaseId) {
-        return phaseRepo.findAllById(phaseId);
-    }
 
     public Boolean deleteCourseById(String courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
@@ -257,130 +209,8 @@ public class CourseService {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
             if (courseDto.getPhases() != null) {
-
-                List<Phase<Task>> phases = new ArrayList<>();
-                int i = 0;
-                for (Phase<Task> coursePhase : course.getPhases()) {
-                    if (i < courseDto.getPhases().size()) {
-                        List<Task> taskList = courseDto.getPhases().get(i);
-                        int j = 0;
-                        List<Task> tasks = new ArrayList<>();
-                        for (Task task : coursePhase.getTasks()) {
-                            if (j < taskList.size()) {
-                                Task taskOfCourseDto = taskList.get(j);
-                                List<SubTask> subTasksOfDto = taskOfCourseDto.getSubtasks();
-                                List<SubTask> subTasks = new ArrayList<>();
-                                task.setMainTask(taskOfCourseDto.getMainTask());
-                                int k = 0;
-                                for (SubTask subTask : task.getSubtasks()) {
-                                    if (k < subTasksOfDto.size()) {
-                                        SubTask subTaskOfDto = subTasksOfDto.get(k);
-                                        subTask.setSubTask(subTaskOfDto.getSubTask());
-                                        subTask.setEstimatedTime(subTaskOfDto.getEstimatedTime());
-                                        subTask.setLink(subTaskOfDto.getLink());
-                                        subTasks.add(subTaskRepo.save(subTask));
-                                    }
-                                    k++;
-                                }
-                                while (k < subTasksOfDto.size()) {
-                                    SubTask subTask = SubTask.builder()
-                                            .entityType(EntityType.COURSE)
-                                            .subTask(subTasksOfDto.get(k).getSubTask())
-                                            .link(subTasksOfDto.get(k).getLink())
-                                            .task(task)
-                                            .build();
-                                    subTask.setEstimatedTime(subTasksOfDto.get(k).getEstimatedTime());
-                                    subTasks.add(subTaskRepo.save(subTask));
-                                    k++;
-                                }
-                                task.setSubtasks(subTasks);
-                                tasks.add(taskRepo.save(task));
-                            }
-                            j++;
-                        }
-                        while (j < taskList.size()) {
-                            Task task = taskList.get(j);
-                            task.set_id(String.valueOf(new ObjectId()));
-                            List<SubTask> subTasks = new ArrayList<>();
-                            for (SubTask subTask : task.getSubtasks()) {
-                                subTask.setEntityType(EntityType.COURSE);
-                                subTask.setTask(task);
-                                subTasks.add(subTaskRepo.save(subTask));
-                            }
-                            task.setEntityType(EntityType.COURSE);
-                            task.setSubtasks(subTasks);
-                            task.setPhase(coursePhase);
-                            tasks.add(taskRepo.save(task));
-
-                            j++;
-                        }
-                        coursePhase.setTasks(tasks);
-                        phases.add(phaseRepo.save(coursePhase));
-                    }
-                    i++;
-                }
-                while (i < courseDto.getPhases().size()) {
-                    Phase<Task> phase = new Phase<>();
-                    phase.set_id(String.valueOf(new ObjectId()));
-                    List<Task> tasks = new ArrayList<>();
-                    List<Task> courseDtoTasks = courseDto.getPhases().get(i);
-                    for (Task task : courseDtoTasks) {
-                        task.set_id(String.valueOf(new ObjectId()));
-                        List<SubTask> subTasks = new ArrayList<>();
-                        for (SubTask subTask : task.getSubtasks()) {
-                            subTask.setEntityType(EntityType.COURSE);
-                            subTask.setTask(task);
-                            subTasks.add(subTaskRepo.save(subTask));
-                        }
-                        task.setEntityType(EntityType.COURSE);
-                        task.setSubtasks(subTasks);
-                        task.setPhase(phase);
-                        tasks.add(taskRepo.save(task));
-                    }
-                    phase.setName("Phase " + i);
-                    phase.setEntityType(EntityType.COURSE);
-                    phase.setTasks(tasks);
-                    phase.setEntity(course);
-                    phases.add(phaseRepo.save(phase));
-
-                    i++;
-                }
+                List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE);
                 course.setPhases(phases);
-
-//                List<Phase> phases = new ArrayList<>();
-//                for (List<Task> courseTasks : courseDto.getPhases()) {
-//                    Phase phase = Phase.builder()
-//                            .entityType(EntityType.COURSE)
-//                            .tasks(courseTasks)
-//                            .build();
-//                    phases.add(phase);
-//                }
-//                List<Phase<Task>> phases = new ArrayList<>();
-//                int i = 0, j = 0;
-//                System.out.println("Course Phase size = " + course.getPhases().size());
-//                System.out.println("CourseDto Phase size = " + courseDto.getPhases().size());
-//
-//                while(i < course.getPhases().size() && j < courseDto.getPhases().size()){
-//                    Phase phase = course.getPhases().get(i);
-//                    phase.setTasks(courseDto.getPhases().get(j));
-//                    i++;
-//                    j++;
-//                    phases.add(phase);
-//                }
-////                while(i < course.getPhases().size()){
-////                    phases.add(course.getPhases().get(i));
-////                    i++;
-////                }
-//                //New Phase is Created
-//                while(j < courseDto.getPhases().size()){
-//                    Phase<Task> phase = Phase.<Task>builder()
-//                            ._id(String.valueOf(new ObjectId()))
-//                            .tasks(courseDto.getPhases().get(j))
-//                            .build();
-//                    phases.add(phaseRepo.save(phase));
-//                    j++;
-//                }
-//                course.setPhases(phases);
             }
             if (courseDto.getName() != null) {
                 course.setName(courseDto.getName());
@@ -421,9 +251,23 @@ public class CourseService {
         }
     }
 
-    public long countNonDeletedCourses(String query) {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("name").regex(query, "i")
-                .and("isDeleted").is(false));
+    public long countNonDeletedCourses(String query, String userId) {
+
+        Criteria criteria = Criteria.where("name").regex(query, "i")
+                .and("isDeleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                .and("createdBy").is(userId);
+
+        // Combining the conditions
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        MatchOperation matchStage = Aggregation.match(finalCriteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Course> aggregationResults = mongoTemplate.aggregate(aggregation, "course", Course.class);

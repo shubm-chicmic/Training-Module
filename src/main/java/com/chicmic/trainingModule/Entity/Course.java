@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -40,6 +41,7 @@ public class Course {
     private Integer estimatedTime;
     private Integer completedTasks;
     private Integer totalTasks;
+
 //    public Course() {
 //        Phase.count = 0;
 //    }
@@ -49,6 +51,14 @@ public class Course {
 
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
+    public List<Phase<Task>> getPhases() {
+        if (phases == null) {
+            return null;
+        }
+        return phases.stream()
+                .filter(phase -> !phase.getIsDeleted())
+                .collect(Collectors.toList());
     }
     public void setPhases(List<Phase<Task>> phases) {
         this.phases = phases;

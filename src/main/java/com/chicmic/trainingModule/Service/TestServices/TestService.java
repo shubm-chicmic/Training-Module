@@ -52,18 +52,17 @@ public class TestService {
                 List<SubTask> subTasks = new ArrayList<>();
                 for (SubTask subTask : task.getSubtasks()) {
                     subTask.setEntityType(EntityType.TEST);
-                    subTask.setTask(task);
                     subTasks.add(subTaskRepo.save(subTask));
                 }
                 task.setEntityType(EntityType.TEST);
                 task.setSubtasks(subTasks);
-                task.setPhase(milestone);
+//                task.setPhase(milestone);
                 tasks.add(taskRepo.save(task));
             }
             milestone.setName("Milestone " + count);
             milestone.setEntityType(EntityType.TEST);
             milestone.setTasks(tasks);
-            milestone.setEntity(test);
+//            milestone.setEntity(test);
             milestones.add(phaseRepo.save(milestone));
         }
         test.setMilestones(milestones);
@@ -89,6 +88,7 @@ public class TestService {
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
         List<Test> testList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
+            System.out.println("\u001B[33m traineeId is coming in test \u001B[0m" + traineeId);
             List<String> testIds = courseService.getCoursesAndTestsByTraineeId(traineeId, EntityType.TEST);
             if(testIds != null && testIds.size() > 0) {
                 for (Test test : tests) {
@@ -210,94 +210,94 @@ public class TestService {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
             if (testDto.getMilestones() != null) {
-                List<Phase<Task>> phases = new ArrayList<>();
-                int i = 0;
-                for (Phase<Task> coursePhase : test.getMilestones()) {
-                    if (i < testDto.getMilestones().size()) {
-                        List<Task> taskList = testDto.getMilestones().get(i);
-                        int j = 0;
-                        List<Task> tasks = new ArrayList<>();
-                        for (Task task : coursePhase.getTasks()) {
-                            if (j < taskList.size()) {
-                                Task taskOfCourseDto = taskList.get(j);
-                                List<SubTask> subTasksOfDto = taskOfCourseDto.getSubtasks();
-                                List<SubTask> subTasks = new ArrayList<>();
-                                task.setMainTask(taskOfCourseDto.getMainTask());
-                                int k = 0;
-                                for (SubTask subTask : task.getSubtasks()) {
-                                    if (k < subTasksOfDto.size()) {
-                                        SubTask subTaskOfDto = subTasksOfDto.get(k);
-                                        subTask.setSubTask(subTaskOfDto.getSubTask());
-                                        subTask.setEstimatedTime(subTaskOfDto.getEstimatedTime());
-                                        subTask.setLink(subTaskOfDto.getLink());
-                                        subTasks.add(subTaskRepo.save(subTask));
-                                    }
-                                    k++;
-                                }
-                                while (k < subTasksOfDto.size()) {
-                                    SubTask subTask = SubTask.builder()
-                                            .entityType(EntityType.COURSE)
-                                            .subTask(subTasksOfDto.get(k).getSubTask())
-                                            .link(subTasksOfDto.get(k).getLink())
-                                            .task(task)
-                                            .build();
-                                    subTask.setEstimatedTime(subTasksOfDto.get(k).getEstimatedTime());
-                                    subTasks.add(subTaskRepo.save(subTask));
-                                    k++;
-                                }
-                                task.setSubtasks(subTasks);
-                                tasks.add(taskRepo.save(task));
-                            }
-                            j++;
-                        }
-                        while (j < taskList.size()) {
-                            Task task = taskList.get(j);
-                            task.set_id(String.valueOf(new ObjectId()));
-                            List<SubTask> subTasks = new ArrayList<>();
-                            for (SubTask subTask : task.getSubtasks()) {
-                                subTask.setEntityType(EntityType.COURSE);
-                                subTask.setTask(task);
-                                subTasks.add(subTaskRepo.save(subTask));
-                            }
-                            task.setEntityType(EntityType.COURSE);
-                            task.setSubtasks(subTasks);
-                            task.setPhase(coursePhase);
-                            tasks.add(taskRepo.save(task));
-
-                            j++;
-                        }
-                        coursePhase.setTasks(tasks);
-                        phases.add(phaseRepo.save(coursePhase));
-                    }
-                    i++;
-                }
-                while (i < testDto.getMilestones().size()) {
-                    Phase<Task> phase = new Phase<>();
-                    phase.set_id(String.valueOf(new ObjectId()));
-                    List<Task> tasks = new ArrayList<>();
-                    List<Task> courseDtoTasks = testDto.getMilestones().get(i);
-                    for (Task task : courseDtoTasks) {
-                        task.set_id(String.valueOf(new ObjectId()));
-                        List<SubTask> subTasks = new ArrayList<>();
-                        for (SubTask subTask : task.getSubtasks()) {
-                            subTask.setEntityType(EntityType.COURSE);
-                            subTask.setTask(task);
-                            subTasks.add(subTaskRepo.save(subTask));
-                        }
-                        task.setEntityType(EntityType.COURSE);
-                        task.setSubtasks(subTasks);
-                        task.setPhase(phase);
-                        tasks.add(taskRepo.save(task));
-                    }
-                    phase.setName("Phase " + i);
-                    phase.setEntityType(EntityType.COURSE);
-                    phase.setTasks(tasks);
-                    phase.setEntity(test);
-                    phases.add(phaseRepo.save(phase));
-
-                    i++;
-                }
-                test.setMilestones(phases);
+//                List<Phase<Task>> phases = new ArrayList<>();
+//                int i = 0;
+//                for (Phase<Task> testMilestone : test.getMilestones()) {
+//                    if (i < testDto.getMilestones().size()) {
+//                        List<Task> taskList = testDto.getMilestones().get(i);
+//                        int j = 0;
+//                        List<Task> tasks = new ArrayList<>();
+//                        for (Task task : testMilestone.getTasks()) {
+//                            if (j < taskList.size()) {
+//                                Task taskOfCourseDto = taskList.get(j);
+//                                List<SubTask> subTasksOfDto = taskOfCourseDto.getSubtasks();
+//                                List<SubTask> subTasks = new ArrayList<>();
+//                                task.setMainTask(taskOfCourseDto.getMainTask());
+//                                int k = 0;
+//                                for (SubTask subTask : task.getSubtasks()) {
+//                                    if (k < subTasksOfDto.size()) {
+//                                        SubTask subTaskOfDto = subTasksOfDto.get(k);
+//                                        subTask.setSubTask(subTaskOfDto.getSubTask());
+//                                        subTask.setEstimatedTime(subTaskOfDto.getEstimatedTime());
+//                                        subTask.setReference(subTaskOfDto.getReference());
+//                                        subTasks.add(subTaskRepo.save(subTask));
+//                                    }
+//                                    k++;
+//                                }
+//                                while (k < subTasksOfDto.size()) {
+//                                    SubTask subTask = SubTask.builder()
+//                                            .entityType(EntityType.TEST)
+//                                            .subTask(subTasksOfDto.get(k).getSubTask())
+//                                            .reference(subTasksOfDto.get(k).getReference())
+//                                            .task(task)
+//                                            .build();
+//                                    subTask.setEstimatedTime(subTasksOfDto.get(k).getEstimatedTime());
+//                                    subTasks.add(subTaskRepo.save(subTask));
+//                                    k++;
+//                                }
+//                                task.setSubtasks(subTasks);
+//                                tasks.add(taskRepo.save(task));
+//                            }
+//                            j++;
+//                        }
+//                        while (j < taskList.size()) {
+//                            Task task = taskList.get(j);
+//                            task.set_id(String.valueOf(new ObjectId()));
+//                            List<SubTask> subTasks = new ArrayList<>();
+//                            for (SubTask subTask : task.getSubtasks()) {
+//                                subTask.setEntityType(EntityType.TEST);
+//                                subTask.setTask(task);
+//                                subTasks.add(subTaskRepo.save(subTask));
+//                            }
+//                            task.setEntityType(EntityType.TEST);
+//                            task.setSubtasks(subTasks);
+//                            task.setPhase(testMilestone);
+//                            tasks.add(taskRepo.save(task));
+//
+//                            j++;
+//                        }
+//                        testMilestone.setName("Milestone " + (i + 1));
+//                        testMilestone.setTasks(tasks);
+//                        phases.add(phaseRepo.save(testMilestone));
+//                    }
+//                    i++;
+//                }
+//                while (i < testDto.getMilestones().size()) {
+//                    Phase<Task> phase = new Phase<>();
+//                    phase.set_id(String.valueOf(new ObjectId()));
+//                    List<Task> tasks = new ArrayList<>();
+//                    List<Task> courseDtoTasks = testDto.getMilestones().get(i);
+//                    for (Task task : courseDtoTasks) {
+//                        task.set_id(String.valueOf(new ObjectId()));
+//                        List<SubTask> subTasks = new ArrayList<>();
+//                        for (SubTask subTask : task.getSubtasks()) {
+//                            subTask.setEntityType(EntityType.TEST);
+//                            subTask.setTask(task);
+//                            subTasks.add(subTaskRepo.save(subTask));
+//                        }
+//                        task.setEntityType(EntityType.TEST);
+//                        task.setSubtasks(subTasks);
+//                        task.setPhase(phase);
+//                        tasks.add(taskRepo.save(task));
+//                    }
+//                    phase.setName("Milestone " + (i + 1));
+//                    phase.setEntityType(EntityType.TEST);
+//                    phase.setTasks(tasks);
+//                    phase.setEntity(test);
+//                    phases.add(phaseRepo.save(phase));
+//                    i++;
+//                }
+//                test.setMilestones(phases);
 //                List<Phase<Task>> milestones = new ArrayList<>();
 //                int i = 0, j = 0;
 //                System.out.println("TEst Phase size = " + test.getMilestones().size());
@@ -367,9 +367,21 @@ public class TestService {
         }
     }
 
-    public long countNonDeletedTests(String query) {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("testName").regex(query, "i")
-                .and("deleted").is(false));
+    public long countNonDeletedTests(String query, String userId) {
+        Criteria criteria = Criteria.where("testName").regex(query, "i")
+                .and("deleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+        Criteria reviewersCriteria = Criteria.where("approved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("approved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        MatchOperation matchStage = Aggregation.match(finalCriteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Test> aggregationResults = mongoTemplate.aggregate(aggregation, "test", Test.class);

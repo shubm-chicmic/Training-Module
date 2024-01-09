@@ -40,7 +40,7 @@ public class GithubSampleCRUD {
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            Long count = githubSampleService.countNonDeletedGithubSamples(searchString);
+            Long count = githubSampleService.countNonDeletedGithubSamples(searchString, principal.getName());
 
             List<GithubSampleResponseDto> githubSampleResponseDtoList = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSampleList);
 //            Collections.reverse(githubSampleResponseDtoList);

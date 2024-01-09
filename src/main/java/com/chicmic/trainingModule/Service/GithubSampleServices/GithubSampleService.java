@@ -132,9 +132,20 @@ public class GithubSampleService {
         }
     }
 
-    public long countNonDeletedGithubSamples(String query) {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("projectName").regex(query, "i")
-                .and("isDeleted").is(false));
+    public long countNonDeletedGithubSamples(String query, String userId) {
+        Criteria criteria = Criteria.where("projectName").regex(query, "i")
+                .and("isDeleted").is(false);
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                .and("createdBy").is(userId);
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+
+        MatchOperation matchStage = Aggregation.match(finalCriteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<GithubSample> aggregationResults = mongoTemplate.aggregate(aggregation, "githubSample", GithubSample.class);

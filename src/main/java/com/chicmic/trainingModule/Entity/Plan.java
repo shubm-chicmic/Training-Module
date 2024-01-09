@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -37,6 +38,14 @@ public class Plan {
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public List<Phase<PlanTask>> getPhases() {
+        if (phases == null) {
+            return null;
+        }
+        return phases.stream()
+                .filter(phase -> !phase.getIsDeleted())
+                .collect(Collectors.toList());
+    }
     public void setPhases(List<Phase<PlanTask>> phases) {
         this.phases = phases;
         updateTotalTasks();

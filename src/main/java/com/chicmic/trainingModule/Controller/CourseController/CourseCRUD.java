@@ -4,17 +4,12 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
-
-import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Course;
 
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Service.CourseServices.CourseResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,7 +46,7 @@ public class CourseCRUD {
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Course> courseList = courseService.getAllCourses(searchString, sortDirection, sortKey, traineeId);
-            Long count = courseService.countNonDeletedCourses(searchString);
+            Long count = courseService.countNonDeletedCourses(searchString, principal.getName());
             List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         }
@@ -60,7 +55,7 @@ public class CourseCRUD {
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            Long count = courseService.countNonDeletedCourses(searchString);
+            Long count = courseService.countNonDeletedCourses(searchString, principal.getName());
 
             List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
@@ -79,20 +74,20 @@ public class CourseCRUD {
     public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase<Task>> phases = new ArrayList<>();
-        for (List<Task> courseTasks : courseDto.getPhases()) {
-            Phase<Task> phase = Phase.<Task>builder()
-                    .entityType(EntityType.COURSE)
-                    .tasks(courseTasks)
-                    .build();
-            phases.add(phase);
-        }
+//        for (List<Task> courseTasks : courseDto.getPhases()) {
+//            Phase<Task> phase = Phase.<Task>builder()
+//                    .entityType(EntityType.COURSE)
+//                    .tasks(courseTasks)
+//                    .build();
+//            phases.add(phase);
+//        }
         Course course = Course.builder()
                 .createdBy(principal.getName())
                 .name(courseDto.getName())
                 .figmaLink(courseDto.getFigmaLink())
                 .guidelines(courseDto.getGuidelines())
                 .approver(courseDto.getApprover())
-                .phases(phases)
+                .phases(courseDto.getPhases())
                 .isDeleted(false)
                 .isApproved(false)
                 .build();

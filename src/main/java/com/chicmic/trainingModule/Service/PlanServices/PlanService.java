@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class PlanService {
     private final PhaseRepo phaseRepo;
     private final PlanTaskRepo planTaskRepo;
     private final CourseService courseService;
+    private final PhaseService phaseService;
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
 
@@ -50,7 +52,7 @@ public class PlanService {
                 Integer totalTask = 0;
                 if(task.getMilestones() != null) {
                     for (Object milestone : task.getMilestones()) {
-                        Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                        Phase<Task> coursePhase = phaseService.getPhaseById((String) milestone);
                         totalTask += coursePhase.getTotalTasks();
                     }
                 }
@@ -59,7 +61,7 @@ public class PlanService {
             }
             phase.setEntityType(EntityType.PLAN);
             phase.setTasks(tasks);
-            phase.setEntity(plan);
+//            phase.setEntity(plan);
             phases.add(phaseRepo.save(phase));
         }
         plan.setPhases(phases);
@@ -290,7 +292,7 @@ public class PlanService {
                     Integer totalTask = 0;
                     if(task.getMilestones() != null) {
                         for (Object milestone : task.getMilestones()) {
-                            Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
+                            Phase<Task> coursePhase = phaseService.getPhaseById((String) milestone);
                             totalTask += coursePhase.getTotalTasks();
                         }
                     }
@@ -300,7 +302,7 @@ public class PlanService {
                 phase.setEntityType(EntityType.PLAN);
                 phase.setName(planDto.getPhases().get(i).getName());
                 phase.setTasks(tasks);
-                phase.setEntity(plan);
+//                phase.setEntity(plan);
                 phases.add(phaseRepo.save(phase));
                 i++;
             }
@@ -340,9 +342,21 @@ public class PlanService {
     }
 
 
-    public long countNonDeletedPlans(String query) {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("planName").regex(query, "i")
-                .and("deleted").is(false));
+    public long countNonDeletedPlans(String query, String userId) {
+        Criteria criteria = Criteria.where("planName").regex(query, "i")
+                .and("deleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+        Criteria reviewersCriteria = Criteria.where("approved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("approved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        MatchOperation matchStage = Aggregation.match(finalCriteria);
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         return mongoTemplate.aggregate(aggregation, "plan", Plan.class).getMappedResults().size();
     }

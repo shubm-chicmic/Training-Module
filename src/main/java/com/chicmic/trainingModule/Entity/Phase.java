@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -32,6 +33,22 @@ public class Phase<T> {
     @DBRef
     @JsonIgnore
     private Object entity;
+    private Boolean isDeleted = false;
+    public List<T> getTasks() {
+        if (tasks == null) {
+            return null;
+        }
+        return tasks.stream()
+                .filter(task -> {
+                    if (task instanceof Task) {
+                        return !((Task) task).getIsDeleted();
+                    } else if (task instanceof PlanTask) {
+                        return !((PlanTask) task).getIsDeleted();
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
+    }
     public void setTasks(List<T> tasks) {
         this.tasks = tasks;
         updateTotalSubTasks();

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -38,6 +39,14 @@ public class Test {
     private Integer totalTasks;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public List<Phase<Task>> getMilestones() {
+        if (milestones == null) {
+            return null;
+        }
+        return milestones.stream()
+                .filter(phase -> !phase.getIsDeleted()) // Filter out deleted milestones
+                .collect(Collectors.toList());
+    }
     public void setMilestones(List<Phase<Task>> milestones) {
         this.milestones = milestones;
         updateTotalTasks();

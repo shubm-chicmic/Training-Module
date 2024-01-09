@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -29,6 +30,16 @@ public class Task {
     @DBRef
     @CascadeSave
     private List<SubTask> subtasks;
+    private Boolean isDeleted = false;
+    public List<SubTask> getSubtasks() {
+        if (subtasks == null) {
+            return null;
+        }
+        return subtasks.stream()
+                .filter(subTask -> !subTask.getIsDeleted())
+                .collect(Collectors.toList());
+    }
+
     public void setSubtasks(List<SubTask> subtasks) {
         this.subtasks = subtasks;
         updateTotalEstimateTime();

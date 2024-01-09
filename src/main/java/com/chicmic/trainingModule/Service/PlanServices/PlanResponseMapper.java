@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class PlanResponseMapper {
     private final TestService testService;
     private final CourseService courseService;
+    private final PhaseService phaseService;
 
     public List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
         List<PlanResponseDto> planResponseDtoList = new ArrayList<>();
@@ -42,7 +44,7 @@ public class PlanResponseMapper {
                         UserIdAndNameDto milestoneDetail = null;
                         System.out.println("Milestone Hello Response: " + milestoneId);
                         milestoneDetail = UserIdAndNameDto.builder()
-                                .name(courseService.getPhaseById((String)milestoneId).getName())
+                                .name(phaseService.getPhaseById((String)milestoneId).getName())
                                 ._id((String) milestoneId)
                                 .build();
 //                        if (planTask.getPlanType() == 2) {
