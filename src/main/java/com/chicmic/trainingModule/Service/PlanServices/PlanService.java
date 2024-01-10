@@ -40,30 +40,10 @@ public class PlanService {
     private final MongoTemplate mongoTemplate;
 
     public Plan createPlan(PlanDto planDto, Principal principal) {
-        List<Phase<PlanTask>> phases = new ArrayList<>();
         Plan plan = Plan.builder()
                 ._id(String.valueOf(new ObjectId()))
                 .build();
-        for (Phase<PlanTask> phase : planDto.getPhases()) {
-            phase.set_id(String.valueOf(new ObjectId()));
-            List<PlanTask> tasks = new ArrayList<>();
-            for (PlanTask task : phase.getTasks()) {
-                task.set_id(String.valueOf(new ObjectId()));
-                Integer totalTask = 0;
-                if(task.getMilestones() != null) {
-                    for (Object milestone : task.getMilestones()) {
-                        Phase<Task> coursePhase = phaseService.getPhaseById((String) milestone);
-                        totalTask += coursePhase.getTotalTasks();
-                    }
-                }
-                task.setTotalTasks(totalTask);
-                tasks.add(planTaskRepo.save(task));
-            }
-            phase.setEntityType(EntityType.PLAN);
-            phase.setTasks(tasks);
-//            phase.setEntity(plan);
-            phases.add(phaseRepo.save(phase));
-        }
+        List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
         plan.setPhases(phases);
         plan.setApproved(false);
         plan.setDeleted(false);
@@ -241,73 +221,9 @@ public class PlanService {
                 plan.setDescription(planDto.getDescription());
             }
             if (planDto.getPhases() != null) {
-                List<Phase<PlanTask>> phases = new ArrayList<>();
-                int i = 0;
-                for (Phase<PlanTask> planPhase : plan.getPhases()) {
-                    if (i < planDto.getPhases().size()) {
-                        List<PlanTask> taskList = planDto.getPhases().get(i).getTasks();
-                        List<PlanTask> tasks = new ArrayList<>();
-
-                        int j = 0;
-                        for (PlanTask planTask : planPhase.getTasks()) {
-                            if (j < taskList.size()) {
-                                PlanTask planTaskDto = taskList.get(j);
-                                planTask.setPlanType(planTask.getPlanType());
-                                planTask.setPlan(planTaskDto.getPlan());
-                                planTask.setEstimatedTime(planTaskDto.getEstimatedTime());
-                                planTask.setMilestones(planTaskDto.getMilestones());
-                                planTask.setMentor(planTaskDto.getMentorIds());
-                                planTask.setDate(planTaskDto.getDate());
-                                tasks.add(planTaskRepo.save(planTask));
-                            }
-                            j++;
-                        }
-                        while (j < taskList.size()) {
-                            PlanTask planTaskDto = taskList.get(j);
-                            PlanTask planTask = PlanTask.builder()
-                                    .mentor(planTaskDto.getMentorIds())
-                                    .planType(planTaskDto.getPlanType())
-                                    .plan(planTaskDto.getPlan())
-                                    .date(planTaskDto.getDate())
-                                    .build();
-                            planTask.setEstimatedTime(planTaskDto.getEstimatedTime());
-                            planTask.setMilestones(planTaskDto.getMilestones());
-                            tasks.add(planTaskRepo.save(planTask));
-
-                            j++;
-                        }
-                        planPhase.setTasks(tasks);
-                        planPhase.setName(planDto.getPhases().get(i).getName());
-                        phases.add(phaseRepo.save(planPhase));
-                    }
-                    i++;
-                }
-
-            while (i < planDto.getPhases().size()) {
-                Phase<PlanTask> phase = new Phase<>();
-                phase.set_id(String.valueOf(new ObjectId()));
-                List<PlanTask> tasks = new ArrayList<>();
-                for (PlanTask task : planDto.getPhases().get(i).getTasks()) {
-                    task.set_id(String.valueOf(new ObjectId()));
-                    Integer totalTask = 0;
-                    if(task.getMilestones() != null) {
-                        for (Object milestone : task.getMilestones()) {
-                            Phase<Task> coursePhase = phaseService.getPhaseById((String) milestone);
-                            totalTask += coursePhase.getTotalTasks();
-                        }
-                    }
-                    task.setTotalTasks(totalTask);
-                    tasks.add(planTaskRepo.save(task));
-                }
-                phase.setEntityType(EntityType.PLAN);
-                phase.setName(planDto.getPhases().get(i).getName());
-                phase.setTasks(tasks);
-//                phase.setEntity(plan);
-                phases.add(phaseRepo.save(phase));
-                i++;
+                List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
+                plan.setPhases(phases);
             }
-            plan.setPhases(phases);
-        }
         plan.setUpdatedAt(LocalDateTime.now());
         planRepo.save(plan);
         return plan;

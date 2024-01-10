@@ -209,6 +209,8 @@ public class CourseService {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
             if (courseDto.getPhases() != null) {
+                System.out.println("Course Dto ");
+                System.out.println(courseDto.getPhases());
                 List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE);
                 course.setPhases(phases);
             }

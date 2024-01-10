@@ -72,10 +72,18 @@ public class AssignTaskCRUD {
                 Plan plan = planService.getPlanById(planId);
                 plans.add(plan);
             }
+
             if(plans != null || plans.size() != 0) {
-                for (Plan plan : assignedPlan.getPlans()){
-                    if(!plans.contains(plan)){
-                        userProgressService.deleteUserProgressByPlanId(userId,plan.get_id());
+                List<String> planIds = new ArrayList<>();
+                for (Plan plan : assignedPlan.getPlans()) {
+                    if(plan != null) {
+                        planIds.add(plan.get_id());
+                    }
+                }
+                for (String planId : planIds){
+                    if(!assignTaskDto.getPlan().contains(planId)){
+                        System.out.println("Plan Id " + planId);
+                        userProgressService.deleteUserProgressByPlanId(userId,planId);
                     }
                 }
                 assignedPlan.setPlans(plans);

@@ -114,17 +114,16 @@ public class Phase<T> {
     }
 
 
-//    @Override
-//    public String toString() {
-//        return "Phase{" +
-//                "_id='" + _id + '\'' +
-//                ", entityType=" + entityType +
-//                ", name='" + name + '\'' +
-//                ", estimatedTime=" + estimatedTime +
-//                ", completedTasks=" + completedTasks +
-//                ", totalTasks=" + totalTasks +
-//                ", tasks=" + tasks +
-//                ", entity=" + entity +
-//                '}';
-//    }
+    @Override
+    public String toString() {
+        return "Phase{" +
+                "_id='" + _id + '\'' +
+                ", entityType=" + entityType +
+                ", name='" + name + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", completedTasks=" + completedTasks +
+                ", totalTasks=" + totalTasks +
+                ", tasks=" + tasks +
+                '}';
+    }
 }

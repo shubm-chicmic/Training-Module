@@ -75,7 +75,7 @@ public class AssignPlanResponseMapper {
             planTask.setMilestones(new ArrayList<>());
         }
         for (Object milestone : planTask.getMilestones()){
-            Phase<Task> phase = phaseService.getPhaseById((String) milestone);
+            Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
             List<Task> tasks = phase.getTasks();
             List<SubTask> subTasks = tasks.stream()
                     .flatMap(task -> task.getSubtasks().stream())

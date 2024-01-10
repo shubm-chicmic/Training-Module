@@ -81,4 +81,15 @@ public class Task {
         this.estimatedTime = totalSeconds;
     }
 
+    @Override
+    public String toString() {
+        return "Task{" +
+                "_id='" + _id + '\'' +
+                ", entityType=" + entityType +
+                ", mainTask='" + mainTask + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", subtasks=" + subtasks +
+                ", isDeleted=" + isDeleted +
+                '}';
+    }
 }

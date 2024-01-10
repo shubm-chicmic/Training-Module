@@ -61,7 +61,6 @@ public class SubTask {
                 ", estimatedTime=" + estimatedTime +
                 ", link='" + link + '\'' +
                 ", reference='" + reference + '\'' +
-                ", task=" + task +
                 '}';
     }
 }

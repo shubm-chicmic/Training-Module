@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -37,7 +38,12 @@ public class PlanTask {
     private LocalDateTime date;
     private Integer estimatedTime;
     private Boolean isDeleted = false;
-
+    @DBRef
+    @JsonIgnore
+    private Phase<PlanTask> phase;
+    @DBRef
+    @JsonIgnore
+    private List<Plan> plans = new ArrayList<>();
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
 //        for (String milestone : milestones) {

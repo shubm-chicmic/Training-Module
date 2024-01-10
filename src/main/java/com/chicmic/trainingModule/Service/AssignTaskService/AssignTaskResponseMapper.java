@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -64,7 +65,11 @@ public class AssignTaskResponseMapper {
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
                         if(planTask != null && (planTask.getPlanType() != 3 || planTask.getPlanType() != 4)) {
-                            totalTask += planTask.getTotalTasks();
+                            if(planTask.getTotalTasks() == null) {
+                                totalTask += 0;
+                            }else {
+                                totalTask += planTask.getTotalTasks();
+                            }
                         }else {
                             totalTask += 1;
                         }
