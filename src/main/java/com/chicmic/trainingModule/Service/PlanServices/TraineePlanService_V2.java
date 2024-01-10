@@ -111,7 +111,7 @@ public class TraineePlanService_V2 {
             assignedPlanList.forEach(ap -> {
                 if(ap.getUserId().equals(tr.get("_id")))
                     ap.getPlans().forEach(p-> {
-                                if (p!= null)
+                                if (p!= null && !p.getDeleted())
                                     planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName()));
                             }
                     );

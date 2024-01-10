@@ -30,6 +30,7 @@ public class DashboardCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not allowed to view other dashboard!!");
 
         DashboardResponse dashboardResponse = dashboardService.getTraineeRatingSummary(traineeId);
+
         return new ApiResponse(200,"Trainee Rating summary",dashboardResponse);
     }
 }

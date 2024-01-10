@@ -7,7 +7,9 @@ import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Entity.Course;
 
 import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +26,7 @@ import java.util.*;
 @AllArgsConstructor
 public class CourseCRUD {
     private final CourseService courseService;
+    private final PlanTaskRepo planTaskRepo;
     private final CourseResponseMapper courseResponseMapper;
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
@@ -97,13 +100,18 @@ public class CourseCRUD {
     }
 
     @DeleteMapping("/{courseId}")
-    public ApiResponse delete(@PathVariable String courseId) {
+    public ApiResponse delete(@PathVariable String courseId, HttpServletResponse response) {
         System.out.println("courseId = " + courseId);
+        List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
+        if(planTasks.size() > 0){
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course is already assigned to a plan", null, response
+            );
+        }
         Boolean deleted = courseService.deleteCourseById(courseId);
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Course deleted successfully", null);
         }
-        return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Course not found", null);
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course not found", null);
     }
 
     @PutMapping

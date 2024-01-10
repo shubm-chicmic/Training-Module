@@ -35,6 +35,6 @@ public class PhaseCRUD {
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), name + " deleted successfully", null, response);
         }
-        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), name +" not found", null, response);
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), name +" not deleted", null, response);
     }
 }

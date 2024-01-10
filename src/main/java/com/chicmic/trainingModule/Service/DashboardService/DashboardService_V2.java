@@ -79,7 +79,7 @@ public class DashboardService_V2 {
                     ps.getTasks().forEach(pt -> {
                         if (pt != null && pt instanceof PlanTask && pt.getPlanType() == COURSE) {
                             int prog = courseProgress.get(pt.getPlan()) == null ? 0 : courseProgress.get(pt.getPlan());
-                            courseProgress.put(pt.getPlan(), prog + pt.getTotalTasks());
+                            courseProgress.put(pt.getPlan(), prog + pt.getMilestones().size());//pt.getTotalTasks()
                             //courseDtoList.add(new CourseDto(pt.getPlan(), p.get_id(),pt.getTotalTasks()));
                             criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()).and("status").is(3));
                         }
@@ -159,7 +159,7 @@ public class DashboardService_V2 {
                 List<Object> subTaskIds = new ArrayList<>();
                 pd.getSubtasks().forEach(st->{
                     String subTaskId = (String) st;
-                    subTaskIds.add(courseDetails.get(1).get(subTaskId));
+                    subTaskIds.add(testDetails.get(1).get(subTaskId));
                 });
                 pd.setSubtasks(subTaskIds);
             }

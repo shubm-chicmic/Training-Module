@@ -44,7 +44,7 @@ public class PlanResponseMapper {
                         UserIdAndNameDto milestoneDetail = null;
                         System.out.println("Milestone Hello Response: " + milestoneId);
                         milestoneDetail = UserIdAndNameDto.builder()
-                                .name(phaseService.getPhaseById((String)milestoneId).getName())
+                                .name((phaseService.getPhaseById((String)milestoneId)) == null ? null : phaseService.getPhaseById((String)milestoneId).getName())
                                 ._id((String) milestoneId)
                                 .build();
 //                        if (planTask.getPlanType() == 2) {

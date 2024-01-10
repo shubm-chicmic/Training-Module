@@ -28,7 +28,7 @@ public class AssignPlanResponseMapper {
     private final CourseService courseService;
     private final PhaseService phaseService;
     private final UserProgressService userProgressService;
-    private final FeedbackProgressService feedbackServiceV2;
+    private final FeedbackProgressService feedbackProgressService;
 
     public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId) {
         System.out.println("planTasks: " + planTasks.size());
@@ -74,15 +74,16 @@ public class AssignPlanResponseMapper {
         if(planTask.getMilestones() == null){
             planTask.setMilestones(new ArrayList<>());
         }
-        for (Object milestone : planTask.getMilestones()){
+        for (Object milestone : planTask.getMilestones()) {
             Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
-            List<Task> tasks = phase.getTasks();
+            if (phase != null){
+                List<Task> tasks = phase.getTasks();
             List<SubTask> subTasks = tasks.stream()
                     .flatMap(task -> task.getSubtasks().stream())
                     .collect(Collectors.toList());
 
             for (SubTask subTask : subTasks) {
-                if(userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(),traineeId)){
+                if (userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(), traineeId)) {
                     completedTasks++;
                 }
             }
@@ -92,6 +93,7 @@ public class AssignPlanResponseMapper {
                     .build();
             milestonesIdAndName.add(milestoneDetails);
             totalTask += phase.getTotalTasks();
+        }
         }
 //        Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         Boolean isPlanCompleted = false;
@@ -128,7 +130,7 @@ public class AssignPlanResponseMapper {
         List<String> milestonesIds = planTask.getMilestones().stream()
                 .map(Object::toString)
                 .collect(Collectors.toList());
-        Feedback_V2 feedbackV2 = feedbackServiceV2.feedbackOfParticularPhaseOfTrainee(traineeId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType));
+        Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType));
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
             if(userProgress != null) {
@@ -154,7 +156,7 @@ public class AssignPlanResponseMapper {
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
                 .feedbackId(null)
-                .rating(feedbackV2 == null ? 0f : feedbackV2.getOverallRating())
+                .rating(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
                 .build();
     }
 }

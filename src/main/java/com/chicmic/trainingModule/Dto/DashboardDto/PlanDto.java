@@ -4,12 +4,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Builder @Getter @Setter
 public class PlanDto implements Comparable<PlanDto>{
     private String name;
-    private String date;
-    private String phase;
+    private LocalDateTime date;
+    private String taskName;
     private Integer type;
+    private List<Object> subtasks;
     @JsonProperty("isComplete")
     private boolean isComplete;
 

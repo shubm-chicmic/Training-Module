@@ -603,7 +603,7 @@ public class FeedbackService_V2 {
 //        //return roundOff_Rating(totalRating/feedbackList.size());
 //    }
 
-    private static Float compute_rating(double totalRating,int count){
+    public static Float compute_rating(double totalRating,int count){
         if(totalRating==0) return 0f;
         int temp = (int)(totalRating/count * 100);
 //        return roundOff_Rating(totalRating/count);
@@ -712,7 +712,9 @@ public class FeedbackService_V2 {
         if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+//        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating/count,1);
+
     }
     public Float computeRatingByTaskIdOfTrainee(String traineeId, String courseId, String type){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type)
