@@ -34,6 +34,7 @@ public class Feedback_V2 {
     private String createdAt;
     private String updateAt;
     private String createdBy;
+    private String planId;
     private boolean isDeleted;
 
     public static Feedback_V2 buildFeedbackFromFeedbackRequestDto(FeedbackRequestDto feedbackDto,String reviewer){
@@ -50,6 +51,7 @@ public class Feedback_V2 {
                 .updateAt(formatter.format(date))
                 .createdBy(reviewer)
                 .overallRating(feedbackDto.computeRating())
+                .planId(feedbackDto.getPlanId())
                 .isDeleted(false)
                 .build();
         if (feedbackDto.getFeedbackType().equals(VIVA.toString()))

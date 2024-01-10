@@ -6,13 +6,13 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService_V2;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.management.Query;
 import java.util.List;
 
 @RequestMapping("/v1/training/traineeList")
@@ -38,8 +38,7 @@ public class TraineePlanCRUD_V2 {
         sortDirection = (sortDirection!=1)?-1:1;
         if(sortKey==null || sortKey.isBlank()) sortKey = "team";
         List<Document> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
-        long count = 4l;
-        //count  = mongoTemplate.count(new Query(), AssignedPlan.class);
+        long count  = mongoTemplate.count(new Query(),AssignedPlan.class);
         return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
     }
 }

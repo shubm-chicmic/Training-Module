@@ -22,6 +22,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto task;
     private List<UserIdAndNameDto> subTask;
+    private UserIdAndNameDto plan;
     private Float theoreticalRating;
     private Float technicalRating;
     private Float communicationRating;

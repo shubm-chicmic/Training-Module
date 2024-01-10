@@ -59,10 +59,11 @@ public class FeedbackCRUD_V2 {
 
         return new ApiResponse(200,"Feedback fetched successfully", courseResponseV2List);
     }
-    @GetMapping("/user/plan/{userId}")
+
+    @GetMapping("/user/{userId}/plan/{planId}")
     public ApiResponse findFeedbacksOnUserPlan(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                                @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
-                                               @RequestParam(value = "planId")String planId,
+                                               @PathVariable(value = "planId")String planId,
                                                @PathVariable String userId){
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
@@ -108,12 +109,13 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        System.out.println("Fasfasfas..................");
-        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto,principal.getName());
+//        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
+        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, "61fba5d5f4f70d6c0b3eff3d");
         if(q==0)
             return new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
-        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
 
@@ -128,7 +130,8 @@ public class FeedbackCRUD_V2 {
             return new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
 
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
-        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
         return new ApiResponse(200,"Feedback updated successfully",response);
     }
 
@@ -142,27 +145,26 @@ public class FeedbackCRUD_V2 {
         String taskId = (feedbackV2.getDetails().getCourseId()==null)?feedbackV2.getDetails().getTestId():
                 feedbackV2.getDetails().getCourseId();
 
-        var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),taskId,type);
+        //var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),taskId,type);
+        var response = feedbackService.computeOverallRating(feedbackV2.getTraineeId(),taskId,feedbackV2.getPlanId(),type);
         return new ApiResponse(200,"Feedback deleted successfully",response);
     }
 
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
         FeedbackResponse_V2 feedback = feedbackService.getFeedbackById(id);
-
-        //FeedbackResponse_V2 feedbackResponseV2 = FeedbackResponse_V2.buildResponse(feedback);
-        // FeedbackResponse feedbackResponse = feedbackService.buildFeedbackResponseForSpecificFeedback(feedback);
-        //feedbackResponse = feedbackService.addingPhaseAndTestNameInResponse(feedbackResponse);
         return new ApiResponse(200,"Feedback fetched successfully",feedback);
     }
-    @GetMapping("/user/viva/{courseId}")
-    public ApiResponse getFeedbackByPhase(@RequestParam String traineeId, @PathVariable String courseId,@RequestParam List<String> phaseId) {
-        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,phaseId,traineeId);
+
+    @GetMapping("/user/{traineeId}/course/{courseId}")
+    public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String courseId,@RequestParam String planId) {
+        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,planId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
-    @GetMapping("/user/test/{testId}")
-    public ApiResponse getFeedbackByMileStone(@RequestParam String traineeId, @PathVariable String testId,@RequestParam List<String> milestoneId) {
-        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,milestoneId,traineeId);
+
+    @GetMapping("/user/{traineeId}/test/{testId}")
+    public ApiResponse getFeedbackByTest(@PathVariable String traineeId, @PathVariable String testId,@RequestParam String planId) {
+        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,planId,traineeId);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
 }

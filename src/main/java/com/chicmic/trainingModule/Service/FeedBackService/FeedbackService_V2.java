@@ -16,9 +16,11 @@ import com.chicmic.trainingModule.Dto.rating.Rating_TEST;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
+import com.mongodb.client.*;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -52,11 +54,13 @@ public class FeedbackService_V2 {
     private final MongoTemplate mongoTemplate;
     private final TestService testService;
     private final CourseService courseService;
+    private final PlanService planService;
 
-    public FeedbackService_V2(MongoTemplate mongoTemplate, TestService testService, CourseService courseService) {
+    public FeedbackService_V2(MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PlanService planService) {
         this.mongoTemplate = mongoTemplate;
         this.testService = testService;
         this.courseService = courseService;
+        this.planService = planService;
     }
 
     public boolean feedbackExist(Feedback_V2 feedback_v2, String reviewer){
@@ -86,11 +90,13 @@ public class FeedbackService_V2 {
         TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
 
         Feedback_V2 feedback = buildFeedbackFromFeedbackRequestDto(feedbackDto,reviewerId);
-        //course assigned or not!!
 
-        //course assigned to a trainee or not!!
-//        if (feedbackDto.getFeedbackType().equals("1")||feedbackDto.getFeedbackType().equals("2"))
-//            courseExist(feedbackDto.getTrainee(),feedbackDto.getFeedbackType().charAt(0) - '0',feedback.getDetails().getTaskId());
+        Query query = new Query(Criteria.where("_id").is(feedback.getPlanId()));
+        query.fields().include("planName");
+
+        Plan plan = mongoTemplate.findOne(query,Plan.class);
+        if(plan == null && !feedbackDto.getFeedbackType().equals(BEHAVIUOR_)) throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid planId!!");
+        //course assigned or not!!
 
         //checking feedback exist or not!!
         boolean flag = feedbackExist(feedback,reviewerId);
@@ -98,6 +104,8 @@ public class FeedbackService_V2 {
 
         Feedback_V2 feedbackV2 =  mongoTemplate.insert(feedback,"feedback_V2");
         FeedbackResponse feedbackResponse = buildFeedbackResponse(feedbackV2);
+        if (!feedbackV2.getType().equals(BEHAVIUOR_))
+            feedbackResponse.setPlan(new UserIdAndNameDto(feedback.getPlanId(), plan.getPlanName()));
         addTaskNameAndSubTaskName(asList(feedbackResponse));
         return feedbackResponse;
     }
@@ -114,6 +122,12 @@ public class FeedbackService_V2 {
         if(feedbackV2 == null)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You can't update this feedback!!");
 
+        Query query = new Query(Criteria.where("_id").is(feedbackV2.getPlanId()));
+        query.fields().include("planName");
+
+        Plan plan = mongoTemplate.findOne(query,Plan.class);
+        if(plan == null && !feedbackV2.getType().equals(BEHAVIUOR_)) throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid planId!!");
+
         Date date = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
 
@@ -129,9 +143,12 @@ public class FeedbackService_V2 {
 
         Feedback_V2 feedback_v2 = mongoTemplate.findAndModify(new Query(criteria),update,options,Feedback_V2.class);
         FeedbackResponse feedbackResponse = buildFeedbackResponse(feedback_v2);
+        if (!feedbackV2.getType().equals(BEHAVIUOR_))
+            feedbackResponse.setPlan(new UserIdAndNameDto(feedback_v2.getPlanId(), plan.getPlanName()));
         addTaskNameAndSubTaskName(asList(feedbackResponse));
         return feedbackResponse;
     }
+
     public Feedback_V2 deleteFeedbackById(String _id,String reviewerId){
         Criteria criteria = Criteria.where("_id").is(_id).and("createdBy").is(reviewerId);
         Query query = new Query(criteria);
@@ -147,13 +164,24 @@ public class FeedbackService_V2 {
         if (feedbackV2 == null)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback doesn't exist!!");
 
+        Query query = new Query(Criteria.where("_id").is(feedbackV2.getPlanId()));
+        query.fields().include("planName");
+
+        Plan plan = mongoTemplate.findOne(query,Plan.class);
+        if(plan == null && !feedbackV2.getType().equals(BEHAVIUOR_)) throw new ApiException(HttpStatus.BAD_REQUEST,"Invalid planId!!");
+
         FeedbackResponse_V2 feedbackResponseV2 = FeedbackResponse_V2.buildResponse(feedbackV2);
+
+        if (!feedbackV2.getType().equals(BEHAVIUOR_))
+            feedbackResponseV2.setPlan(new UserIdAndNameDto(feedbackV2.getPlanId(), plan.getPlanName()));
+
        // addTaskNameAndSubTaskName(Arrays.asList(feedbackResponseV2))
         addTaskNameAndSubTaskName(feedbackResponseV2);
         return feedbackResponseV2;
     }
+
     public ApiResponse findFeedbacksOnUserPlan(String traineeId,String planId,Integer pageNumber, Integer pageSize){
-        List<Criteria> criteriaList = getAllTaskIdsInPlan(traineeId,planId);
+//        List<Criteria> criteriaList = getAllTaskIdsInPlan(traineeId,planId);
         List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
                         new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
                                 .append("id",userDto.get_id()))
@@ -161,7 +189,8 @@ public class FeedbackService_V2 {
 
 //        Criteria criteria = Criteria.where("traineeId").is(traineeId)
 //                .and("isDeleted").is(false);
-        Criteria criteria = new Criteria().orOperator(criteriaList);
+//        Criteria criteria = new Criteria().orOperator(criteriaList);
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId).and("isDeleted").is(false);
         int skipValue = (pageNumber - 1) * pageSize;
 
         Aggregation aggregation = newAggregation(
@@ -269,8 +298,13 @@ public class FeedbackService_V2 {
         // Execute the aggregation
         List<Feedback_V2> feedbackList = mongoTemplate.aggregate(aggregation, "feedback_V2", Feedback_V2.class).getMappedResults();
         List<FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
-        for (Feedback_V2 feedbackV2 : feedbackList)
-            feedbackResponse_v2List.add(buildFeedbackResponse(feedbackV2));
+        for (Feedback_V2 feedbackV2 : feedbackList) {
+            FeedbackResponse feedbackResponse = buildFeedbackResponse(feedbackV2);
+            if (!feedbackV2.getType().equals(BEHAVIUOR_))
+                feedbackResponse.setPlan(new UserIdAndNameDto(feedbackV2.getPlanId(),feedbackV2.getPlanId()));
+            feedbackResponse_v2List.add(feedbackResponse);
+        }
+
 
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
@@ -329,30 +363,24 @@ public class FeedbackService_V2 {
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
     }
 
-    public void addSubTaskName(List<CourseResponse_V2> courseResponseList,int type){
-        List<String> courseIds = new ArrayList<>();
-        List<String> testIds = new ArrayList<>();
-        courseResponseList.forEach(f ->{
-//            if (f.getFeedbackType().get_id().equals(VIVA_) || f.getFeedbackType().get_id().equals(PPT_))
-//                courseIds.add(f.getTask().get_id());
-//            else if (f.getFeedbackType().get_id().equals(TEST_)){
-//                testIds.add(f.getTask().get_id());
-//            }
-        });
-        return;
-    }
+
     public void addTaskNameAndSubTaskName(List<FeedbackResponse> feedbackResponseList){
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
+        List<String> planIds = new ArrayList<>();
         feedbackResponseList.forEach(f ->{
             if (f.getFeedbackType().get_id().equals(VIVA_) || f.getFeedbackType().get_id().equals(PPT_))
                 courseIds.add(f.getTask().get_id());
             else if (f.getFeedbackType().get_id().equals(TEST_)){
                 testIds.add(f.getTask().get_id());
             }
+            //update condition!!!
+            if(f.getPlan() != null)//if (!f.getFeedbackType().get_id().equals(BEHAVIUOR_))
+                planIds.add(f.getPlan().get_id());
         });
         var testDetails = testService.findTestsByIds(testIds);
         var courseDetails = courseService.findCoursesByIds(courseIds);
+        var planDetails = planService.getPlanName(planIds);
 
         feedbackResponseList.forEach(f->{
             if (f.getFeedbackType().get_id().equals(VIVA_) || f.getFeedbackType().get_id().equals(PPT_)){
@@ -366,11 +394,16 @@ public class FeedbackService_V2 {
                 //adding milestone name
                 f.getSubTask().forEach(m -> m.setName(testDetails.get(1).get(m.get_id())));
             }
+            if (f.getPlan()!=null) {
+                String planId = f.getPlan().get_id();
+                f.getPlan().setName(planDetails.get(planId));
+            }
         });
     }
     public void addTaskNameAndSubTaskName(FeedbackResponse_V2 f){
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
+
         if (f.getFeedbackType() == VIVA || f.getFeedbackType() == PPT)
             courseIds.add(f.getCourse().get_id());
         else if (f.getFeedbackType() == TEST){
@@ -504,12 +537,13 @@ public class FeedbackService_V2 {
         return aggregationResults.getMappedResults();
     }
 
-    public List<CourseResponse_V2> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String courseId,List<String> phaseIds,String traineeId){
+    public List<CourseResponse_V2> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String planTaskId,String planId,String traineeId){
+        PlanTask planTask = findMilestonesFromPlanTask(planTaskId);
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(VIVA_)
                 .and("isDeleted").is(false)
-                .and("details.courseId").is(courseId);//.and("details.taskId").is(phaseId);
+                .and("details.courseId").is(planTask.getPlan())
+                .and("planId").is(planId);//.and("details.taskId").is(phaseId);
         //criteria.elemMatch(new Criteria().and("phaseIds").in(phaseIds));
-        criteria.and("phaseIds").in(phaseIds);
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
 
@@ -518,11 +552,13 @@ public class FeedbackService_V2 {
         return courseResponseList;
     }
 
-    public List<CourseResponse_V2> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,List<String> milestoneIds,String traineeId){
-        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is("TEST")
+    public List<CourseResponse_V2> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String planId,String traineeId){
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(TEST_)
                 .and("isDeleted").is(false)
-                .and("details.taskId").is(testId);
-        criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
+                .and("details.testId").is(testId)
+                .and("planId").is(planId);
+
+//        criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query,Feedback_V2.class);
         List<CourseResponse_V2> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
@@ -610,6 +646,16 @@ public class FeedbackService_V2 {
         return ((float) temp) / 100;
     }
 
+    public Map<String,Float> computeOverallRating(String traineeId,String courseId,String planId,int type){
+        if(courseId == null||planId == null) return null;
+        Map<String,Float> response = new HashMap<>();
+//        response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,criteriaList));
+        response.put("planRating",computeOverallRatingOfTraineeOnPlan(traineeId,planId));
+        response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
+        response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, Integer.toString(type)));
+        return response;
+    }
+
     public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
         if(courseId == null) return null;
 
@@ -657,6 +703,7 @@ public class FeedbackService_V2 {
         response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, Integer.toString(type)));
         return response;
     }
+
 //    Float computeOverallRatingForTrainee(){
 //
 //        Aggregation aggregation = newAggregation(
@@ -682,6 +729,22 @@ public class FeedbackService_V2 {
 //                )
 //        );
 //    }
+
+    Float computeOverallRatingOfTraineeOnPlan(String traineeId,String planId){
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId);
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(criteria),
+                group("planId")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        Document document = aggregationResults.getUniqueMappedResult();
+        if (document == null) return 0f;
+        int count = (int) document.get("count");
+        double totalRating = (double) document.get("overallRating");
+        return roundOff_Rating(totalRating/count);
+    }
 
     Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
         Criteria criteria = new Criteria().orOperator(taskIds);
@@ -714,6 +777,7 @@ public class FeedbackService_V2 {
         double totalRating = (double) document.get(0).get("overallRating");
         return roundOff_Rating(totalRating/count);
     }
+
     Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type)
                 .and("isDeleted").is(false);
@@ -721,6 +785,7 @@ public class FeedbackService_V2 {
             criteria.and("details.courseId").is(courseId);
         else if (type.equals(TEST_))
             criteria.and("details.testId").is(courseId);
+
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria),
                 group("traineeId")
@@ -758,5 +823,56 @@ public class FeedbackService_V2 {
         if (planId.size() == 0)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!");
         return true;
+    }
+
+    public void computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String type){
+        Document document = new Document();
+        document.append("traineeOverAllRating",Arrays.asList(
+                new Document("$match", new Document("traineeId", traineeId)),
+                new Document("$group", new Document("_id", null)
+                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                        .append("count", new Document("$sum", 1)))
+        ));
+        document.append("planRating",Arrays.asList(
+                new Document("$match", new Document("planId", planId)),
+                new Document("$group", new Document("_id", null)
+                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                        .append("count", new Document("$sum", 1)))
+        ));
+        String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+
+        document.append("courseRating",Arrays.asList(
+                new Document("$match", new Document("planId", planId).append(taskName,taskId)),
+                new Document("$group", new Document("_id", null)
+                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                        .append("count", new Document("$sum", 1)))
+        ));
+        Aggregation aggregation = newAggregation(
+                context -> new Document("$facet", document)
+        );
+        Document results = mongoTemplate.aggregate(
+                aggregation, "feedback_V2", Document.class
+        ).getUniqueMappedResult();
+        System.out.println(results + "///");
+    }
+    public PlanTask findMilestonesFromPlanTask(String _id){
+        return mongoTemplate.findById(_id,PlanTask.class);
+    }
+    public void testAggregationQuery(String _id){
+        Criteria criteria = Criteria.where("traineeId").is("64e2e98aecc13d506c72c73a").and("isDeleted").is(false);
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(criteria),
+                group("createdBy")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+                        .push("$$ROOT").as("feedbacks")
+//                        .first("createdBy").as("createdBy")
+        );
+        List<Document> documents = mongoTemplate.aggregate(aggregation,"feedback_V2",Document.class).getMappedResults();
+        for (Document document : documents){
+            List<Feedback_V2> feedback_v2List = (List<Feedback_V2>) document.get("feedbacks");
+            System.out.println(feedback_v2List.size() + "//");
+        }
+        System.out.println(documents.size() + "///");
     }
 }
