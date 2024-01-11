@@ -2,7 +2,9 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -13,8 +15,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.findTraineeAndMap;
+import static com.chicmic.trainingModule.TrainingModuleApplication.searchNameById;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newUpdate;
 
 @Service
 public class TraineePlanService_V2 {
@@ -108,14 +112,26 @@ public class TraineePlanService_V2 {
 
         for (Document tr : traineePlanResponseList){
             List<UserIdAndNameDto> planDetails = new ArrayList<>();
+            HashSet<String> names = new HashSet<>();
             assignedPlanList.forEach(ap -> {
                 if(ap.getUserId().equals(tr.get("_id")))
                     ap.getPlans().forEach(p-> {
-                                if (p!= null && !p.getDeleted())
+                                if (p!= null)
                                     planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName()));
+                                if(p!= null && !p.getDeleted() && p.getPhases()!=null) {
+                                    p.getPhases().forEach(ph -> {
+                                        ph.getTasks().forEach(pt ->{
+                                            if(pt!=null && pt instanceof PlanTask)
+                                                names.addAll(pt.getMentorIds());
+                                        });
+                                    });
+                                }
                             }
                     );
             });
+            HashSet<String> mentorNames = new HashSet<>();
+            names.forEach(nm-> mentorNames.add(searchNameById(nm)));
+            tr.put("mentor",mentorNames);
             tr.put("plan",planDetails);
         };
 
@@ -127,7 +143,7 @@ public class TraineePlanService_V2 {
             userIds.add(_id);
             userSummary.put(_id,count++);
 //            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
-            document.put("mentor","Rohit");
+//            document.put("mentor","Rohit");
             document.put("rating",0.0f);
         }
         List<Document> traineeRatingSummary = feedbackService.calculateEmployeeRatingSummary(userIds);

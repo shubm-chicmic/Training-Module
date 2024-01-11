@@ -19,7 +19,7 @@ public class FeedbackProgressService {
     private final MongoTemplate mongoTemplate;
     private final TestService testService;
     private final CourseService courseService;
-    public Feedback_V2 feedbackOfParticularPhaseOfTrainee(String traineeId, String taskId, List<String> subtaskIds, String type){
+    public Feedback_V2 feedbackOfParticularPhaseOfTrainee(String traineeId, String taskId, List<String> subtaskIds, String type, String userId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type);
         if (type.equals(VIVA_)||type.equals(PPT_)) {
             criteria.and("details.courseId").is(taskId);
@@ -29,6 +29,7 @@ public class FeedbackProgressService {
             criteria.and("details.testId").is(taskId);
             criteria.and("milestoneIds").all(subtaskIds);
         }
+        criteria.and("createdBy").is(userId);
         return mongoTemplate.findOne(new Query(criteria), Feedback_V2.class);
     }
 }

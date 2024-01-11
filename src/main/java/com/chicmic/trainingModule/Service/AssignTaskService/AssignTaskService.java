@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -215,7 +216,16 @@ public class AssignTaskService {
             return mongoTemplate.findOne(query, AssignedPlan.class);
         }
 
+    public List<AssignedPlan> getAssignedPlansByPlan(Plan plan) {
+        List<AssignedPlan> allAssignedPlans = assignTaskRepo.findAll();
 
+        return allAssignedPlans.stream()
+                .filter(assignedPlan -> assignedPlan != null &&
+                        assignedPlan.getPlans() != null &&
+                        assignedPlan.getPlans().stream()
+                                .anyMatch(p -> p != null && p.get_id().equals(plan.get_id()) && !p.getDeleted()))
+                .collect(Collectors.toList());
+    }
     public AssignedPlan updateAssignTask(AssignedPlan assignedPlan) {
         return assignTaskRepo.save(assignedPlan);
     }

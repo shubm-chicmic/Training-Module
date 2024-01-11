@@ -181,6 +181,14 @@ public class PlanService {
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
             plan.setDeleted(true);
+            List<Phase<PlanTask>> phases = plan.getPhases();
+            for (Phase<PlanTask> phase : phases) {
+                List<PlanTask> tasks = phase.getTasks();
+                for (PlanTask task : tasks) {
+                    task.setIsDeleted(true);
+                    planTaskRepo.save(task);
+                }
+            }
             planRepo.save(plan);
             return true;
         } else {

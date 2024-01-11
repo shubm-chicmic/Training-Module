@@ -62,6 +62,7 @@ public class TestService {
         Query searchQuery = new Query(finalCriteria);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
+        System.out.println("Tests : " + tests.size());
         List<Test> testList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
             System.out.println("\u001B[33m traineeId is coming in test \u001B[0m" + traineeId);

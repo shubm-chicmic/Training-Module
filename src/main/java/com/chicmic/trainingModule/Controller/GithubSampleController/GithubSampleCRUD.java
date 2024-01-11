@@ -84,13 +84,13 @@ public class GithubSampleCRUD {
                 if (approver.contains(principal.getName())) {
                     githubSample = githubSampleService.approve(githubSample, principal.getName());
                 } else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this GithubSample", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this GithubSample", null, response);
                 }
             }
             GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSampleService.updateGithubSample(githubSampleDto, githubSampleId));
-            return new ApiResponse(HttpStatus.CREATED.value(), "GithubSample updated successfully", githubSampleResponseDto, response);
+            return new ApiResponse(HttpStatus.OK.value(), "GithubSample updated successfully", githubSampleResponseDto, response);
         } else {
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "GithubSample not found", null, response);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "GithubSample not found", null, response);
         }
     }
 }

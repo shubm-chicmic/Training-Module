@@ -79,7 +79,7 @@ public class DashboardService_V2 {
                     ps.getTasks().forEach(pt -> {
                         if (pt != null && pt instanceof PlanTask && pt.getPlanType() == COURSE) {
                             int prog = courseProgress.get(pt.getPlan()) == null ? 0 : courseProgress.get(pt.getPlan());
-                            courseProgress.put(pt.getPlan(), prog + pt.getMilestones().size());//pt.getTotalTasks()
+                            courseProgress.put(pt.getPlan(), prog + pt.getTotalTasks());//pt.getTotalTasks()
                             //courseDtoList.add(new CourseDto(pt.getPlan(), p.get_id(),pt.getTotalTasks()));
                             criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()).and("status").is(3));
                         }
@@ -136,6 +136,7 @@ public class DashboardService_V2 {
             documentList.forEach(d ->{
                 if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId")) ){
                     int completed = (d.get("count")==null)?0:(Integer) d.get("count");
+                    if(completed > total) completed = total;
                     if (total!=0) c.setProgress(completed * 100 / total);
                 }
             });
@@ -149,10 +150,12 @@ public class DashboardService_V2 {
             if(pd.getType() == 1 || pd.getType() == 3 || pd.getType() == 4){
                 pd.setTaskName(courseDetails.get(0).get(taskId));
                 List<Object> subTaskIds = new ArrayList<>();
-                pd.getSubtasks().forEach(st->{
-                    String subTaskId = (String) st;
-                    subTaskIds.add(courseDetails.get(1).get(subTaskId));
-                });
+                if(pd.getSubtasks() != null) {
+                    pd.getSubtasks().forEach(st -> {
+                        String subTaskId = (String) st;
+                        subTaskIds.add(courseDetails.get(1).get(subTaskId));
+                    });
+                }
                 pd.setSubtasks(subTaskIds);
             }else if (pd.getType() == TEST){
                 pd.setTaskName(testDetails.get(0).get(taskId));

@@ -4,9 +4,14 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Repository.*;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,10 +20,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class PhaseService {
+    private final MongoTemplate mongoTemplate;
     private final PhaseRepo phaseRepo;
     private final TaskRepo taskRepo;
     private final SubTaskRepo subTaskRepo;
     private final PlanTaskRepo planTaskRepo;
+    private final UserProgressRepo userProgressRepo;
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
         int count = 0;
         String phaseNameInitial = "";
@@ -220,8 +227,8 @@ public class PhaseService {
             List<SubTask> subtasks = task.getSubtasks();
             if (subtasks != null) {
                 for (SubTask subTask : subtasks) {
-                    subTask.setIsDeleted(true);
-                    subTaskRepo.save(subTask);
+                    deleteSubtask(subTask);
+//                    subTaskRepo.save(subTask);
                 }
             }
             return true;
@@ -239,10 +246,28 @@ public class PhaseService {
     public boolean deleteSubtask(SubTask subTask){
         if(subTask != null){
             subTask.setIsDeleted(true);
+            deleteUserProgressBySubTaskId(subTask.get_id());
+            List<Task> taskList = findTasksBySubtask(subTask);
+            for (Task task : taskList) {
+               Phase phase = task.getPhase();
+               List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+               for (PlanTask planTask : planTasks) {
+                   planTask.setTotalTasks(planTask.getTotalTasks() == 0 ? 0 : planTask.getTotalTasks() - 1);
+               }
+            }
             subTaskRepo.save(subTask);
             return true;
         }
         return false;
+    }
+    public long deleteUserProgressBySubTaskId(String subTaskId) {
+        Query query = new Query(Criteria.where("subTaskId").is(subTaskId));
+        DeleteResult result = mongoTemplate.remove(query, UserProgress.class);
+        System.out.println("UsrProgress Deleted " + result.getDeletedCount());
+        return result.getDeletedCount();
+    }
+    public List<Task> findTasksBySubtask(SubTask subTask) {
+        return taskRepo.findTasksBySubtask(subTask);
     }
 
 }

@@ -23,6 +23,7 @@ public class UserProgressService {
     private final MongoTemplate mongoTemplate;
 
     public UserProgress createUserProgress(UserProgress userProgress) {
+        System.out.println("Im creating user progress");
         return userProgressRepo.save(userProgress);
     }
 
@@ -57,6 +58,9 @@ public class UserProgressService {
 
     public UserProgress getUserProgressByTraineeIdAndPlanId(String traineeId, String planId, Integer progressType) {
         return userProgressRepo.findByTraineeIdAndPlanIdAndProgressType(traineeId, planId, progressType).orElse(null);
+    }
+    public UserProgress getUserProgressByTraineeIdPlanIdAndPlanTaskId(String traineeId, String planId, String planTaskId, Integer progressType) {
+        return userProgressRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndProgressType(traineeId, planId, planTaskId, progressType).orElse(null);
     }
     public UserProgress getUserProgressByTraineeIdPlanIdAndCourseId(String traineeId, String planId, String courseId, Integer progressType) {
         return userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(traineeId, planId, courseId, progressType).orElse(null);

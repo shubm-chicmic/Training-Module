@@ -4,9 +4,11 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Plan;
 
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanResponseMapper;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
@@ -25,6 +27,7 @@ import java.util.*;
 public class PlanCRUD {
     private final PlanService planService;
     private final PlanTaskService planTaskService;
+    private final AssignTaskService assignTaskService;
     private final PlanResponseMapper planResponseMapper;
 //    @GetMapping("/getting")
 //    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
@@ -84,13 +87,25 @@ public class PlanCRUD {
     }
 
     @DeleteMapping("/{planId}")
-    public ApiResponse delete(@PathVariable String planId) {
-        System.out.println("planId = " + planId);
-        Boolean deleted = planService.deletePlanById(planId);
-        if (deleted) {
-            return new ApiResponse(HttpStatus.OK.value(), "Plan deleted successfully", null);
+    public ApiResponse delete(@PathVariable String planId, HttpServletResponse response) {
+        Plan plan = planService.getPlanById(planId);
+        if(plan != null) {
+            System.out.println("planId = " + planId);
+            List<AssignedPlan> assignedPlans = assignTaskService.getAssignedPlansByPlan(plan);
+            System.out.println("assigned Plan size = " + assignedPlans.size());
+            if (assignedPlans.size() > 0){
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "This plan is already assigned to a User", null, response);
+            }
+            Boolean deleted = planService.deletePlanById(planId);
+            if (deleted) {
+                return new ApiResponse(HttpStatus.OK.value(), "Plan deleted successfully", null, response);
+            }else {
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not deleted", null, response);
+
+            }
         }
-        return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Plan not found", null);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not found", null, response);
+
     }
 
     @PutMapping

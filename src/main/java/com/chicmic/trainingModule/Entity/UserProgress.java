@@ -19,6 +19,7 @@ public class UserProgress {
     private String traineeId;
     private String planId;
     private String courseId;
+    private String planTaskId;
     private Integer progressType;
     private String subTaskId;
     private Integer status = ProgessConstants.NotStarted;

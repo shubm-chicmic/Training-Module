@@ -138,7 +138,8 @@ public class AssignTaskCRUD {
                                @RequestParam String traineeId,
                                @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
-                               HttpServletResponse response
+                               HttpServletResponse response,
+                                        Principal principal
     ){
         Plan plan = planService.getPlanById(planId);
         if(plan != null) {
@@ -152,7 +153,7 @@ public class AssignTaskCRUD {
            int totalTasks = planTasks.size();
            planTasks = Pagenation.paginate(planTasks, pageNumber, pageSize);
             System.out.println("PlanTasks: " + planTasks.size());
-           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId,traineeId);
+           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId,traineeId, principal.getName());
            return new ApiResponseWithCount(totalTasks, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
         }
         return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Plan Not Found", null, response);

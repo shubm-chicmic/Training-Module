@@ -610,7 +610,7 @@ public class FeedbackService_V2 {
         return ((float) temp) / 100;
     }
 
-    public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
+    public Map<String,Object> computeOverallRating(String traineeId,String courseId,int type){
         if(courseId == null) return null;
 
         Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
@@ -651,7 +651,7 @@ public class FeedbackService_V2 {
             }
         });
 
-        Map<String,Float> response = new HashMap<>();
+        Map<String,Object> response = new HashMap<>();
         response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,criteriaList));
         response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
         response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, Integer.toString(type)));
@@ -700,7 +700,7 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
 
-    Float computeOverallRatingOfTrainee(String traineeId){
+    public Float computeOverallRatingOfTrainee(String traineeId){
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
                 group("traineeId")

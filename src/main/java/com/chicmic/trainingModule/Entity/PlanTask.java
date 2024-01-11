@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 @Document
@@ -36,6 +37,10 @@ public class PlanTask {
     private List<String> mentor;
     private Integer totalTasks;
     private LocalDateTime date;
+    public void setDate(LocalDateTime date) {
+        if(date != null)
+        this.date = date.plusHours(5).plusMinutes(30);
+    }
     private Integer estimatedTime;
     private Boolean isDeleted = false;
     @DBRef

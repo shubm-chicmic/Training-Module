@@ -6,8 +6,10 @@ import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Dto.TestDto.TestResponseDto;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Entity.Test;
+import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.TestServices.TestResponseMapper;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +26,8 @@ import java.util.*;
 @AllArgsConstructor
 public class TestCRUD {
     private final TestService testService;
+    private final PlanTaskRepo planTaskRepo;
+
     private final TestResponseMapper testResponseMapper;
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
@@ -87,8 +91,13 @@ public class TestCRUD {
     }
 
     @DeleteMapping("/{testId}")
-    public ApiResponse delete(@PathVariable String testId) {
+    public ApiResponse delete(@PathVariable String testId, HttpServletResponse response) {
         System.out.println("testId = " + testId);
+        List<PlanTask> planTasks = planTaskRepo.findByPlanId(testId);
+        if(planTasks.size() > 0){
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Test is already assigned to a plan", null, response
+            );
+        }
         Boolean deleted = testService.deleteTestById(testId);
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Test deleted successfully", null);

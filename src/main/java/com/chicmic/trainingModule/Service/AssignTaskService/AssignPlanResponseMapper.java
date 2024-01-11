@@ -30,16 +30,16 @@ public class AssignPlanResponseMapper {
     private final UserProgressService userProgressService;
     private final FeedbackProgressService feedbackProgressService;
 
-    public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId) {
+    public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId, String userId) {
         System.out.println("planTasks: " + planTasks.size());
         List<PlanTaskResponseDto> assignPlanResponseDtoList = new ArrayList<>();
         for (PlanTask planTask : planTasks) {
-            assignPlanResponseDtoList.add(mapAssignPlanToResponseDto(planTask, planId, traineeId));
+            assignPlanResponseDtoList.add(mapAssignPlanToResponseDto(planTask, planId, traineeId, userId));
         }
         System.out.println("assignPlanResponseDtoList: " + assignPlanResponseDtoList.size());
         return assignPlanResponseDtoList;
     }
-    public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask,String planId, String traineeId) {
+    public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask,String planId, String traineeId, String userId) {
         String planName = null;
         if(planTask == null) {
             return null;
@@ -72,6 +72,7 @@ public class AssignPlanResponseMapper {
         Integer totalTask = 0;
         Integer completedTasks = 0;
         if(planTask.getMilestones() == null){
+            System.out.println("Milstones is null not available");
             planTask.setMilestones(new ArrayList<>());
         }
         for (Object milestone : planTask.getMilestones()) {
@@ -95,9 +96,13 @@ public class AssignPlanResponseMapper {
             totalTask += phase.getTotalTasks();
         }
         }
+
+        System.out.println("totalTask: " + totalTask);
+        System.out.println("completedTasks: " + completedTasks);
 //        Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         Boolean isPlanCompleted = false;
         if(totalTask == completedTasks) {
+            System.out.println("\u001B[31m in plan created \u001B[0m");
             UserProgress planProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), EntityType.COURSE);
             if(planProgress == null) {
                 UserProgress userProgress = UserProgress.builder()
@@ -130,7 +135,7 @@ public class AssignPlanResponseMapper {
         List<String> milestonesIds = planTask.getMilestones().stream()
                 .map(Object::toString)
                 .collect(Collectors.toList());
-        Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType));
+        Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
             if(userProgress != null) {
@@ -138,6 +143,16 @@ public class AssignPlanResponseMapper {
             }else {
                 completedTasks = 0;
             }
+            totalTask = 1;
+            isPlanCompleted =(totalTask == completedTasks);
+        }
+        if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4){
+            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id(), planTask.getPlanType());
+            if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed){
+                completedTasks++;
+            }
+            System.out.println("userProgress = " + userProgress);
+            if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed)completedTasks = 1;
             totalTask = 1;
             isPlanCompleted =(totalTask == completedTasks);
         }
@@ -155,7 +170,7 @@ public class AssignPlanResponseMapper {
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
-                .feedbackId(null)
+                .feedbackId(feedbackV2 == null ? null : feedbackV2.get_id())
                 .rating(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
                 .build();
     }

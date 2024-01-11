@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -34,6 +35,12 @@ public class AssignedPlan {
     private LocalDateTime updatedAt;
     public List<UserIdAndNameDto> getReviewerDetails() {
         return ConversionUtility.convertToUserIdAndName(this.reviewers);
+    }
+    public List<Plan> getPlans() {
+        if(this.plans == null)return null;
+        return plans.stream()
+                .filter(plan -> !plan.getDeleted())
+                .collect(Collectors.toList());
     }
 
 }

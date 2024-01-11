@@ -114,6 +114,7 @@ public class FeedbackCRUD_V2 {
             return new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
         var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        response.put("_id",feedbackResponse.get_id());
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
 

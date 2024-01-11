@@ -10,6 +10,7 @@ import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 //import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AssignTaskResponseMapper {
-//    private final FeedbackService feedbackService;
+    private final FeedbackService_V2 feedbackServiceV2;
     private final UserProgressService userProgressService;
     private final CourseService courseService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
@@ -37,7 +38,7 @@ public class AssignTaskResponseMapper {
 //    }
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
         if (assignTask == null) {
-            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
+            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId));
 
             return AssignTaskResponseDto.builder().trainee(trainee).build();
         }
@@ -53,7 +54,7 @@ public class AssignTaskResponseMapper {
 //                    )
 //                    .orElse(null);
         } else {
-            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), 0f);
+            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
         }
      //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
@@ -64,14 +65,18 @@ public class AssignTaskResponseMapper {
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
-                        if(planTask != null && (planTask.getPlanType() != 3 || planTask.getPlanType() != 4)) {
+                        if((planTask.getPlanType() != 3 && planTask.getPlanType() != 4)) {
                             if(planTask.getTotalTasks() == null) {
                                 totalTask += 0;
                             }else {
                                 totalTask += planTask.getTotalTasks();
                             }
                         }else {
-                            totalTask += 1;
+                            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndPlanTaskId(traineeId, plan.get_id(), planTask.get_id(), planTask.getPlanType());
+                            if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed){
+                                completedTasks++;
+                            }
+                            totalTask++;
                         }
                     }
                 }
