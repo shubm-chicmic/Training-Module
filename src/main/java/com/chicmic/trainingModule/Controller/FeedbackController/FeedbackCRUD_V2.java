@@ -22,7 +22,7 @@ import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResp
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 
 @RestController
-@RequestMapping("/v2/training/feedback")
+@RequestMapping("/v1/training/feedback")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
 
@@ -70,6 +70,11 @@ public class FeedbackCRUD_V2 {
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize);
+    }
+    @GetMapping("/user/{traineeId}/task/{taskId}")
+    public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String taskId,@RequestParam String planId,@RequestParam Integer feedbackType) {
+        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTaskIdAndTraineeId(taskId,planId,traineeId,feedbackType);
+        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
 
     @GetMapping("/user/{userId}")
@@ -176,15 +181,15 @@ public class FeedbackCRUD_V2 {
         return new ApiResponse(200,"Feedback fetched successfully",feedback);
     }
 
-    @GetMapping("/user/{traineeId}/course/{courseId}")
-    public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String courseId,@RequestParam String planId) {
-        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,planId,traineeId);
-        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
-    }
-
-    @GetMapping("/user/{traineeId}/test/{testId}")
-    public ApiResponse getFeedbackByTest(@PathVariable String traineeId, @PathVariable String testId,@RequestParam String planId) {
-        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,planId,traineeId);
-        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
-    }
+//    @GetMapping("/user/{traineeId}/course/{courseId}")
+//    public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String courseId,@RequestParam String planId) {
+//        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByCourseIdAndPhaseIdAndTraineeId(courseId,planId,traineeId);
+//        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
+//    }
+//
+//    @GetMapping("/user/{traineeId}/test/{testId}")
+//    public ApiResponse getFeedbackByTest(@PathVariable String traineeId, @PathVariable String testId,@RequestParam String planId) {
+//        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(testId,planId,traineeId);
+//        return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
+//    }
 }
