@@ -28,6 +28,7 @@ public class FeedbackResponse_V2 {
     private UserIdAndNameDto test;
     private List<UserIdAndNameDto> milestone;
     private float communicationRating;
+    private UserIdAndNameDto plan;
     private float presentationRating;
     private float technicalRating;
     private float theoreticalRating;

@@ -296,5 +296,14 @@ public class PlanService {
         }
         return planRepo.save(plan);
     }
-
+    public HashMap<String,String> getPlanName(List<String> planIds){
+        Criteria criteria = Criteria.where("_id").in(planIds);
+        Query query = new Query(criteria);
+        query.fields().include("planName");
+        List<Plan> plans = mongoTemplate.find(query,Plan.class);
+        HashMap<String,String> planDetails = new HashMap<>();
+        for (Plan plan : plans)
+            planDetails.put(plan.get_id(),plan.getPlanName());
+        return planDetails;
+    }
 }

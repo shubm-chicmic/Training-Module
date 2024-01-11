@@ -21,6 +21,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private UserDto reviewer;
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
+    private UserIdAndNameDto plan;
     private String createdOn;
     private Float rating;
     private String comment;
@@ -50,9 +51,8 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
         return null;
     }
     @Override
-    public void setTask(UserIdAndNameDto task) {
+    public void setTask(UserIdAndNameDto task) {}
 
-    }
     @Override
     public List<UserIdAndNameDto> getSubTask() {
         return new ArrayList<>();

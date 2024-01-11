@@ -21,6 +21,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto task;
+    private UserIdAndNameDto plan;
     private String createdOn;
     private Float rating;
     private String comment;
@@ -28,7 +29,8 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     private Float technicalRating;
     private Float presentationRating;
     private Float overallRating;
-//
+
+    //
     public  static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
         Rating_PPT rating_ppt = (Rating_PPT) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());

@@ -132,6 +132,13 @@ public class CourseCRUD {
                 }
             }
             courseDto.setApproved(course.getIsApproved());
+            if (courseDto.getApprover() != null && !courseDto.getApprover().equals(course.getApprover())) {
+                List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
+                if(planTasks.size() > 0){
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be edited since course is already assigned to a plan", null, response
+                    );
+                }
+            }
 //            courseDto.setApprover(course.getApprover());
             CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId), true);
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);

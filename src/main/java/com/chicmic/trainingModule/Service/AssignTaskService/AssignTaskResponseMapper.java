@@ -11,6 +11,7 @@ import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 //import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class AssignTaskResponseMapper {
     private final FeedbackService_V2 feedbackServiceV2;
     private final UserProgressService userProgressService;
+    private final PhaseService phaseService;
     private final CourseService courseService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
 //        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
@@ -69,7 +71,7 @@ public class AssignTaskResponseMapper {
                             if(planTask.getTotalTasks() == null) {
                                 totalTask += 0;
                             }else {
-                                totalTask += planTask.getTotalTasks();
+                                totalTask += phaseService.countTotalSubtask(planTask.getMilestones());
                             }
                         }else {
                             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndPlanTaskId(traineeId, plan.get_id(), planTask.get_id(), planTask.getPlanType());

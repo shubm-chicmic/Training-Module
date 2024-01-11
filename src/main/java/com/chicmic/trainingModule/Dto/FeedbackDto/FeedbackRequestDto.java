@@ -13,9 +13,9 @@ import java.util.List;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 
 @Getter @Setter
-@Conditional(conditionalProperty = "feedbackType", values = {"3"}, requiredProperties = {"course","phase","theoreticalRating","technicalRating","communicationRating"},message = "type-1 error")
-@Conditional(conditionalProperty = "feedbackType", values = {"2"}, requiredProperties = {"test","milestone","theoreticalRating","codingRating","communicationRating"},message = "type-2 error")
-@Conditional(conditionalProperty = "feedbackType", values = {"4"}, requiredProperties = {"course","communicationRating","technicalRating","presentationRating"},message = "type-3 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"3"}, requiredProperties = {"course","phase","theoreticalRating","technicalRating","communicationRating","planId"},message = "type-1 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"2"}, requiredProperties = {"test","milestone","theoreticalRating","codingRating","communicationRating","planId"},message = "type-2 error")
+@Conditional(conditionalProperty = "feedbackType", values = {"4"}, requiredProperties = {"course","communicationRating","technicalRating","presentationRating","planId"},message = "type-3 error")
 @Conditional(conditionalProperty = "feedbackType", values = {"5"}, requiredProperties = {"teamSpiritRating","attitudeRating"},message = "type-4 error")
 public class FeedbackRequestDto {
     private String _id;
@@ -66,6 +66,8 @@ public class FeedbackRequestDto {
 
     @NotBlank(message = "Comment field is required.")
     private String comment;
+
+    private String planId;
     public Float computeRating(){
         if (feedbackType.equals(VIVA_)) {
             float total = theoreticalRating + technicalRating + communicationRating;

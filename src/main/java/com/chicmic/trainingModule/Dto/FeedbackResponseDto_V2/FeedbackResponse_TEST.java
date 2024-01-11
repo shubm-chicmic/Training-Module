@@ -23,6 +23,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto task;
+    private UserIdAndNameDto plan;
     private List<UserIdAndNameDto> subTask;
     private Float theoreticalRating;
     private Float codingRating;

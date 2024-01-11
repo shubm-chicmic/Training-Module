@@ -14,7 +14,8 @@ public interface FeedbackResponse {
     public void setTask(UserIdAndNameDto task);
     public UserIdAndNameDto getTask();
     public List<UserIdAndNameDto> getSubTask();
-    public String get_id();
+    public void setPlan(UserIdAndNameDto plan);
+    public UserIdAndNameDto getPlan();
 
     public static FeedbackResponse buildFeedbackResponse(Feedback_V2 feedback){
         String type = feedback.getType();

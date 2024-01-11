@@ -2,6 +2,10 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
+import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.AssignedPlanResponse;
+import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.FeedbackCourseDto;
+import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.FeedbackPlanDto;
+import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.FeedbackTestDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Dto.UserProgressDto;
 import com.chicmic.trainingModule.Entity.*;
@@ -87,13 +91,14 @@ public class AssignPlanResponseMapper {
                 if (userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(), traineeId)) {
                     completedTasks++;
                 }
+                totalTask++;
             }
             UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
                     ._id(phase.get_id())
                     .name(phase.getName())
                     .build();
             milestonesIdAndName.add(milestoneDetails);
-            totalTask += phase.getTotalTasks();
+//            totalTask += phase.getTotalTasks();
         }
         }
 
@@ -111,10 +116,10 @@ public class AssignPlanResponseMapper {
                         .progressType(planTask.getPlanType())
                         .status(ProgessConstants.Completed)
                         .build();
-                userProgressService.createUserProgress(userProgress);
+//                userProgressService.createUserProgress(userProgress);
             }else {
                 planProgress.setStatus(ProgessConstants.Completed);
-                userProgressService.createUserProgress(planProgress);
+//                userProgressService.createUserProgress(planProgress);
             }
             if(planProgress != null) {
                 isPlanCompleted = planProgress.getStatus() == ProgessConstants.Completed;
@@ -172,6 +177,84 @@ public class AssignPlanResponseMapper {
                 .isCompleted(isPlanCompleted)
                 .feedbackId(feedbackV2 == null ? null : feedbackV2.get_id())
                 .rating(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
+                .build();
+    }
+
+    public AssignedPlanResponse mapAssignedPlanForFeedback(AssignedPlan assignedPlan) {
+        List<FeedbackPlanDto> plans = new ArrayList<>();
+        List<Plan> planList = assignedPlan.getPlans();
+        for (Plan plan : planList) {
+            List<FeedbackCourseDto> viva = new ArrayList<>();
+            List<FeedbackCourseDto> ppt = new ArrayList<>();
+            List<FeedbackTestDto> test = new ArrayList<>();
+            for (Phase<PlanTask> phase : plan.getPhases()) {
+                for (PlanTask planTask : phase.getTasks()) {
+                    String planName = null;
+                    if(planTask == null) {
+                        return null;
+                    }
+                   if (planTask.getPlanType() == 2) {
+                        Test test1 = testService.getTestById(planTask.getPlan());
+                        if(test != null) {
+                            planName = test1.getTestName();
+                        }
+//            planTask.setEstimatedTime(test.getEstimatedTime());
+                    }else {
+                        Course course =  courseService.getCourseById(planTask.getPlan());
+                        if(course != null) {
+                            planName = course.getName();
+                        }
+//            planTask.setEstimatedTime(course.getEstimatedTime());
+                    }
+                    UserIdAndNameDto planIdAndNameDto = UserIdAndNameDto.builder()
+                            .name(planName)
+                            ._id(planTask.getPlan())
+                            .build();
+
+                    List<UserIdAndNameDto> milestonesIds = new ArrayList<>();
+                    if(planTask.getMilestones() != null) {
+                        for (Object milestone : planTask.getMilestones()) {
+                            Phase<Task> milestoneDetail = (Phase<Task>) phaseService.getPhaseById((String) milestone);
+                            UserIdAndNameDto userIdAndNameDto = UserIdAndNameDto.builder()
+                                    ._id(milestoneDetail.get_id())
+                                    .name(milestoneDetail.getName())
+                                    .build();
+                            milestonesIds.add(userIdAndNameDto);
+                        }
+                    }
+                   if(planTask.getPlanType() == 2) {
+                        FeedbackTestDto feedbackTestDto = FeedbackTestDto.builder()
+                                ._id(planTask.get_id())
+                                .test(planIdAndNameDto)
+                                .milestones(milestonesIds)
+                                .build();
+                        test.add(feedbackTestDto);
+                    }else if(planTask.getPlanType() == 3) {
+                        FeedbackCourseDto feedbackCourseDto = FeedbackCourseDto.builder()
+                                ._id(planTask.get_id())
+                                .course(planIdAndNameDto)
+                                .phases(milestonesIds)
+                                .build();
+                        viva.add(feedbackCourseDto);
+                    }else if(planTask.getPlanType() == 4) {
+                        FeedbackCourseDto feedbackCourseDto = FeedbackCourseDto.builder()
+                                ._id(planTask.get_id())
+                                .course(planIdAndNameDto)
+                                .phases(milestonesIds)
+                                .build();
+                        ppt.add(feedbackCourseDto);
+                    }
+                }
+            }
+            FeedbackPlanDto feedbackPlanDto = FeedbackPlanDto.builder()
+                    .ppt(ppt)
+                    .viva(viva)
+                    .test(test)
+                    .build();
+            plans.add(feedbackPlanDto);
+        }
+        return AssignedPlanResponse.builder()
+                .plans(plans)
                 .build();
     }
 }

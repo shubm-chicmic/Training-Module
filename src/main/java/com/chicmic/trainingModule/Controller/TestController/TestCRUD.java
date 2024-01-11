@@ -48,7 +48,7 @@ public class TestCRUD {
             List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey, taineeId);
             Long count = testService.countNonDeletedTests(searchString, principal.getName());
             List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
-            Collections.reverse(testResponseDtoList);
+//            Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         }
         if(testId == null || testId.isEmpty()) {
@@ -60,7 +60,7 @@ public class TestCRUD {
             Long count = testService.countNonDeletedTests(searchString, principal.getName());
 
             List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
-            Collections.reverse(testResponseDtoList);
+//            Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         } else {
             Test test = testService.getTestById(testId);
@@ -125,6 +125,13 @@ public class TestCRUD {
                 }
             }
             testDto.setApproved(test.getApproved());
+            if (test.getApprover() != null && !testDto.getApprover().equals(test.getApprover())) {
+                List<PlanTask> planTasks = planTaskRepo.findByPlanId(testId);
+                if(planTasks.size() > 0){
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be edited since Test is already assigned to a plan", null, response
+                    );
+                }
+            }
             TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(testService.updateTest(testDto, testId));
             return new ApiResponse(HttpStatus.OK.value(), "Test updated successfully", testResponseDto, response);
         }else {

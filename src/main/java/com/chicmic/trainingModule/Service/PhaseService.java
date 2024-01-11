@@ -270,4 +270,17 @@ public class PhaseService {
         return taskRepo.findTasksBySubtask(subTask);
     }
 
+    public Integer countTotalSubtask(List<Object> milestones) {
+        Integer totalSubtask = 0;
+        for (Object milestone : milestones) {
+            Phase<Task> phase = (Phase<Task>) getPhaseById((String) milestone);
+            for (Task task : phase.getTasks()) {
+                for (SubTask subTask : task.getSubtasks()) {
+                    totalSubtask += 1;
+                }
+            }
+//            totalSubtask += phase.getTotalTasks();
+        }
+        return totalSubtask;
+    }
 }
