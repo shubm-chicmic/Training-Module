@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.rating.Rating;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.Set;
 
 import static com.chicmic.trainingModule.Dto.rating.Rating.getRating;
 import static com.chicmic.trainingModule.Dto.rating.Rating.getSubTaskIds;
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.TEST;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA;
@@ -50,7 +52,7 @@ public class Feedback_V2 {
                 .createdAt(formatter.format(date))
                 .updateAt(formatter.format(date))
                 .createdBy(reviewer)
-                .overallRating(feedbackDto.computeRating())
+                .overallRating(compute_rating(feedbackDto.computeRating(),1))
                 .planId(feedbackDto.getPlanId())
                 .isDeleted(false)
                 .build();

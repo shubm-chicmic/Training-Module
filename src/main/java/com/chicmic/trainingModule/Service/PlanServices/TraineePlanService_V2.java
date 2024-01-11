@@ -118,7 +118,7 @@ public class TraineePlanService_V2 {
                     ap.getPlans().forEach(p-> {
                                 if (p!= null)
                                     planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName()));
-                                if(p!= null && p.getPhases()!=null) {
+                                if(p!= null && !p.getDeleted() && p.getPhases()!=null) {
                                     p.getPhases().forEach(ph -> {
                                         ph.getTasks().forEach(pt ->{
                                             if(pt!=null && pt instanceof PlanTask)

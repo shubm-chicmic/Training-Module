@@ -6,7 +6,6 @@ import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
 import com.chicmic.trainingModule.Dto.DashboardDto.*;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.FeedbackDto.RatingAndCountDto;
-import com.chicmic.trainingModule.Dto.FeedbackDto.TaskIdAndTypeDto;
 import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
 import com.chicmic.trainingModule.Dto.PhaseResponse_V2.PhaseResponse_V2;
 import com.chicmic.trainingModule.Dto.rating.Rating;
@@ -19,8 +18,6 @@ import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.FeedbackUtil;
-import com.mongodb.client.*;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -33,20 +30,17 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
-import static com.chicmic.trainingModule.Entity.Constants.EntityType.COURSE;
 import static com.chicmic.trainingModule.Entity.Feedback_V2.buildFeedbackFromFeedbackRequestDto;
 import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
-import static com.chicmic.trainingModule.Util.FeedbackUtil.*;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 import static com.mongodb.client.model.Aggregates.facet;
 import static java.util.Arrays.asList;
-import static org.apache.commons.math3.stat.descriptive.AggregateSummaryStatistics.aggregate;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
@@ -61,6 +55,45 @@ public class FeedbackService_V2 {
         this.testService = testService;
         this.courseService = courseService;
         this.planService = planService;
+    }
+
+    public List<String> checkTaskAssignedOrNot(FeedbackRequestDto feedbackRequestDto){
+        String traineeId = feedbackRequestDto.getTrainee();
+        String taskId = (feedbackRequestDto.getFeedbackType().equals(TEST_))?feedbackRequestDto.getTest():feedbackRequestDto.getCourse();
+        HashSet<String> subTaskId = (feedbackRequestDto.getFeedbackType().equals(TEST_))?feedbackRequestDto.getMilestone():feedbackRequestDto.getPhase();
+        int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
+
+        AssignedPlan assignedPlan = mongoTemplate.findOne(new Query(Criteria.where("userId").is(traineeId)),AssignedPlan.class);
+        if(assignedPlan == null||assignedPlan.getPlans() == null||assignedPlan.getPlans().isEmpty())
+            throw new ApiException(HttpStatus.BAD_REQUEST,"No plan Assigned!!");
+        List<Plan> plans = assignedPlan.getPlans();
+        List<String> mentorIds = new ArrayList<>();
+        AtomicInteger value = new AtomicInteger(0);
+        plans.forEach(p->{
+            var phases = p.getPhases();
+            if(phases == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
+            phases.forEach(ph ->{
+                var pt = ph.getTasks();
+                if(pt == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
+                pt.forEach(ptask ->{
+                    if(ptask.getPlanType() == type) {
+                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId) && new HashSet<>(ptask.getMilestones()).containsAll(subTaskId)) {
+                            value.set(1);
+                            mentorIds.addAll(ptask.getMentorIds());
+                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId) && new HashSet<>(ptask.getMilestones()).containsAll(subTaskId)) {
+                            value.set(1);
+                            mentorIds.addAll(ptask.getMentorIds());
+                        } else if (Objects.equals(ptask.getPlanType(), PPT) && ptask.getPlan().equals(taskId)) {
+                            value.set(1);
+                            mentorIds.addAll(ptask.getMentorIds());
+                        }
+                    }
+                });
+            });
+        });
+        if(value.get() == 1)
+            return mentorIds;
+        throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
     }
 
     public boolean feedbackExist(Feedback_V2 feedback_v2, String reviewer){
@@ -85,9 +118,15 @@ public class FeedbackService_V2 {
         return mongoTemplate.exists(new Query(criteria), Feedback_V2.class);
     }
 
-    public FeedbackResponse saveFeedbackInDb(FeedbackRequestDto feedbackDto, String reviewerId){
+    public FeedbackResponse saveFeedbackInDb(FeedbackRequestDto feedbackDto, String reviewerId,boolean role){
         //checking traineeId is valid
         TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
+
+        if(!feedbackDto.getFeedbackType().equals(BEHAVIUOR_)) {
+            List<String> mentors = checkTaskAssignedOrNot(feedbackDto);
+            if (!role && !mentors.contains(reviewerId))
+                throw new ApiException(HttpStatus.BAD_REQUEST, "You can't give feedback to this trainee!!");
+        }
 
         Feedback_V2 feedback = buildFeedbackFromFeedbackRequestDto(feedbackDto,reviewerId);
 
@@ -108,6 +147,32 @@ public class FeedbackService_V2 {
             feedbackResponse.setPlan(new UserIdAndNameDto(feedback.getPlanId(), plan.getPlanName()));
         addTaskNameAndSubTaskName(asList(feedbackResponse));
         return feedbackResponse;
+    }
+
+    public Feedback_V2 saveTraineeFeedback(FeedbackRequestDto feedbackDto, String reviewerId,boolean role){
+        //checking traineeId is valid
+        TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
+        if(!feedbackDto.getFeedbackType().equals(BEHAVIUOR_)) {
+            List<String> mentors = checkTaskAssignedOrNot(feedbackDto);
+            if (!role && !mentors.contains(reviewerId))
+                throw new ApiException(HttpStatus.BAD_REQUEST, "You can't give feedback to this trainee!!");
+        }
+
+        Feedback_V2 feedback = buildFeedbackFromFeedbackRequestDto(feedbackDto,reviewerId);
+
+        Query query = new Query(Criteria.where("_id").is(feedback.getPlanId()));
+        query.fields().include("planName");
+
+        Plan plan = mongoTemplate.findOne(query,Plan.class);
+        if(plan == null && !feedbackDto.getFeedbackType().equals(BEHAVIUOR_)) throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid planId!!");
+        //course assigned or not!!
+
+        //checking feedback exist or not!!
+        boolean flag = feedbackExist(feedback,reviewerId);
+        if (flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!!");
+
+        Feedback_V2 feedbackV2 =  mongoTemplate.insert(feedback,"feedback_V2");
+        return feedbackV2;
     }
 
     public FeedbackResponse updateFeedback(FeedbackRequestDto feedbackRequestDto,String reviewerId){
@@ -137,7 +202,7 @@ public class FeedbackService_V2 {
                 .set("updateAt",formatter.format(date))
                 .set("details",rating)
                 .set("comment",feedbackRequestDto.getComment())
-                .set("overallRating",feedbackRequestDto.computeRating());
+                .set("overallRating",compute_rating(feedbackRequestDto.computeRating(),1));
 
        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
@@ -543,7 +608,7 @@ public class FeedbackService_V2 {
                 .and("isDeleted").is(false)
                 .and("details.courseId").is(planTask.getPlan())
                 .and("planId").is(planId);//.and("details.taskId").is(phaseId);
-        //criteria.elemMatch(new Criteria().and("phaseIds").in(phaseIds));
+        criteria.elemMatch(new Criteria().and("phaseIds").in(planTask.getMilestones()));
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
 
@@ -553,11 +618,12 @@ public class FeedbackService_V2 {
     }
 
     public List<CourseResponse_V2> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String planId,String traineeId){
+        PlanTask planTask = findMilestonesFromPlanTask(testId);
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(TEST_)
                 .and("isDeleted").is(false)
                 .and("details.testId").is(testId)
                 .and("planId").is(planId);
-
+        criteria.elemMatch(new Criteria().and("milestoneIds").in(planTask.getMilestones()));
 //        criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query,Feedback_V2.class);
@@ -639,7 +705,7 @@ public class FeedbackService_V2 {
 //        //return roundOff_Rating(totalRating/feedbackList.size());
 //    }
 
-    private static Float compute_rating(double totalRating,int count){
+    public static Float compute_rating(double totalRating,int count){
         if(totalRating==0) return 0f;
         int temp = (int)(totalRating/count * 100);
 //        return roundOff_Rating(totalRating/count);
@@ -875,4 +941,15 @@ public class FeedbackService_V2 {
         }
         System.out.println(documents.size() + "///");
     }
+
+    public void deleteFeedbacksGivenOnTraineePlans(String traineeId,List<String> planIds){
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").in(planIds);
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+
+        Update update = new Update().set("isDeleted",true)
+                .set("updateAt",formatter.format(date));
+        mongoTemplate.updateMulti(new Query(criteria),update,Feedback_V2.class);
+    }
+
 }
