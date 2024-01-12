@@ -54,7 +54,7 @@ public class TestCRUD {
         if(testId == null || testId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
-                return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
             List<Test> testList = testService.getAllTests(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             System.out.println(testList);
             Long count = testService.countNonDeletedTests(searchString, principal.getName());
@@ -65,7 +65,7 @@ public class TestCRUD {
         } else {
             Test test = testService.getTestById(testId);
             if(test == null){
-                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Test not found", null, response);
+                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Test not found", null, response);
             }
             TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(test);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Test retrieved successfully", testResponseDto, response);
@@ -87,7 +87,7 @@ public class TestCRUD {
                 .approved(false)
                 .build();
         test = testService.createTest(test);
-        return new ApiResponse(HttpStatus.CREATED.value(), "Test created successfully", test);
+        return new ApiResponse(HttpStatus.OK.value(), "Test created successfully", test);
     }
 
     @DeleteMapping("/{testId}")
@@ -102,7 +102,7 @@ public class TestCRUD {
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Test deleted successfully", null);
         }
-        return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Test not found", null);
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Test not found", null);
     }
 
     @PutMapping
@@ -118,7 +118,7 @@ public class TestCRUD {
                 if (approver.contains(principal.getName())) {
                     test = testService.approve(test, principal.getName());
                     TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(test);
-                    return new ApiResponse(HttpStatus.OK.value(), "Test approved successfully", test, response);
+                    return new ApiResponse(HttpStatus.OK.value(), "Test approved successfully", testResponseDto, response);
 
                 } else {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this test", null, response);
