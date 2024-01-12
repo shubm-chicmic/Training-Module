@@ -22,7 +22,7 @@ import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResp
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 
 @RestController
-@RequestMapping("/v2/training/feedback")
+@RequestMapping("/v1/training/feedback")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
 
@@ -115,7 +115,7 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        boolean flag = checkRole("TL")||checkRole("PM");
+        boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
         FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName(),flag);
         if(q==0)
@@ -133,7 +133,7 @@ public class FeedbackCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
-        boolean flag = checkRole("TL")||checkRole("PM");
+        boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
         Feedback_V2 feedback = feedbackService.saveTraineeFeedback(feedbackRequestDto, principal.getName(),flag);
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
         String taskId = null;
