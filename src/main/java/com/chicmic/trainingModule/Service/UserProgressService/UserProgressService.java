@@ -187,4 +187,20 @@ public class UserProgressService {
 
     }
     }
+
+    public void deleteAllBySubTaskId(String planId, String milestone) {
+        Phase<?> phase = phaseRepo.findById(milestone).orElse(null);
+        phase = phase != null && !phase.getIsDeleted() ? phase : null;
+        for (Object task : phase.getTasks()) {
+            Task task1 = (Task) task;
+            for (SubTask subTask : task1.getSubtasks()){
+                List<UserProgress> userProgressList = userProgressRepo.findByPlanIdAndSubTaskId(planId, subTask.get_id());
+                List<String> idsToDelete = userProgressList.stream()
+                        .map(UserProgress::get_id)
+                        .collect(Collectors.toList());
+                mongoTemplate.findAllAndRemove(Query.query(Criteria.where("_id").in(idsToDelete)), UserProgress.class);
+
+            }
+        }
+    }
 }

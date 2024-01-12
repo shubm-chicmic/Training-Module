@@ -97,6 +97,9 @@ public class PlanTask {
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+    public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
+        this.estimatedTime = estimatedTimeInSeconds;
+    }
 
     @Override
     public String toString() {

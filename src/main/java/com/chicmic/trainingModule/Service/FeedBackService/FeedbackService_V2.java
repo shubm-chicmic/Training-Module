@@ -844,7 +844,7 @@ public class FeedbackService_V2 {
 //        );
 //    }
 
-    Float computeOverallRatingOfTraineeOnPlan(String traineeId,String planId){
+    public Float computeOverallRatingOfTraineeOnPlan(String traineeId,String planId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId);
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria),
@@ -892,7 +892,7 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
 
-    Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
+    public Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type)
                 .and("isDeleted").is(false);
         if(type.equals(VIVA_)||type.equals(PPT_))

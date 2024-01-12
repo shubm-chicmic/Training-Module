@@ -9,6 +9,6 @@ import org.springframework.data.mongodb.repository.Query;
 import java.util.List;
 
 public interface TaskRepo extends MongoRepository<Task, String> {
-    @Query("{ 'subtasks' : ?0 }")
-    List<Task> findTasksBySubtask(SubTask subTask);
+    List<Task> findBySubtasks(SubTask subTask);
+
 }

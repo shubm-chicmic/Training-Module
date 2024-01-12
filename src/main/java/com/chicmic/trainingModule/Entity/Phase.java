@@ -96,6 +96,9 @@ public class Phase<T> {
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+    public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
+        this.estimatedTime = estimatedTimeInSeconds;
+    }
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;

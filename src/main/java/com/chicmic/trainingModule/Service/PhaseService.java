@@ -95,13 +95,27 @@ public class PhaseService {
             }else {
                 System.out.println("fljgdkofdklf " + planTask.get_id());
 
+
+
                 newPlanTask = planTaskRepo.findById(planTask.get_id()).orElse(null);
-                if(newPlanTask.getPlanType() == PlanType.VIVA) {
-                    List<Object> milestones = newPlanTask.getMilestones(); // original milestones
+                List<Object> milestones = newPlanTask.getMilestones(); // original milestones
+                if(milestones != null) {
                     for (Object milestone : milestones) {
                         if (!planTask.getMilestones().contains(milestone)) {
                             // this milestone is deleted
                             // delete all userProgress of this milestone
+                            System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
+                            userProgressService.deleteAllBySubTaskId(plan.get_id(), (String)milestone);
+                        }
+                    }
+                }
+                if(newPlanTask.getPlanType() == PlanType.VIVA) {
+                    List<Object> milestones1 = newPlanTask.getMilestones(); // original milestones
+                    for (Object milestone : milestones1) {
+                        if (!planTask.getMilestones().contains(milestone)) {
+                            // this milestone is deleted
+                            // delete all userProgress of this milestone
+                            System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id()+ "\u001B[0m");
                             userProgressService.deleteByMilestoneId(plan.get_id(), newPlanTask.get_id());
                         }
                     }
@@ -169,6 +183,8 @@ public class PhaseService {
                 List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
                 for (PlanTask planTask : planTasks) {
                     planTask.setTotalTasks(planTask.getTotalTasks() + 1);
+                    Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                    planTask.setEstimatedTimeInSeconds(estimatedTime + subTask.getEstimatedTimeInSeconds());
                     planTaskRepo.save(planTask);
                 }
             }else {
@@ -265,16 +281,31 @@ public class PhaseService {
     }
     public boolean deleteSubtask(SubTask subTask){
         if(subTask != null){
-            subTask.setIsDeleted(true);
+
             deleteUserProgressBySubTaskId(subTask.get_id());
             List<Task> taskList = findTasksBySubtask(subTask);
+            System.out.println("\u001B[41m PhaseId" + taskList.size());
+
             for (Task task : taskList) {
-               Phase phase = task.getPhase();
+               Phase<Task> phase = task.getPhase();
+                System.out.println("\u001B[41m PhaseId" + phase.get_id());
+                Integer phaseEstimatedTime = phase.getEstimatedTimeInSeconds();
+                phase.setEstimatedTimeInSeconds(phaseEstimatedTime == 0 ? 0 : phaseEstimatedTime - subTask.getEstimatedTimeInSeconds());
                List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
                for (PlanTask planTask : planTasks) {
+                   System.out.println("\u001B[41m PlanTask" + planTask.getMentorDetails());
+                   Integer estimatedTimeOfPhase = phase.getEstimatedTimeInSeconds();
+                   estimatedTimeOfPhase = estimatedTimeOfPhase == 0 ? 0 : estimatedTimeOfPhase - subTask.getEstimatedTimeInSeconds();
+                   phase.setEstimatedTimeInSeconds(estimatedTimeOfPhase);
                    planTask.setTotalTasks(planTask.getTotalTasks() == 0 ? 0 : planTask.getTotalTasks() - 1);
+                   Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                   System.out.println("Estimated time in seconds: " + estimatedTime);
+                   planTask.setEstimatedTimeInSeconds(estimatedTime == 0 ? 0 : estimatedTime - subTask.getEstimatedTimeInSeconds());
+                   System.out.println("Estimated time in seconds: " + planTask.getEstimatedTime());
+
                }
             }
+            subTask.setIsDeleted(true);
             subTaskRepo.save(subTask);
             return true;
         }
@@ -287,7 +318,7 @@ public class PhaseService {
         return result.getDeletedCount();
     }
     public List<Task> findTasksBySubtask(SubTask subTask) {
-        return taskRepo.findTasksBySubtask(subTask);
+        return taskRepo.findBySubtasks(subTask);
     }
 
     public Integer countTotalSubtask(List<Object> milestones) {

@@ -114,7 +114,7 @@ public class AssignTaskResponseMapper {
                         .mentors(mentorDetails)
 //                    .feedbackId()
                         .isCompleted(isCompleted)
-                        .rating(0f)
+                        .rating(feedbackServiceV2.computeOverallRatingOfTraineeOnPlan(traineeId, plan.get_id()))
                         .build();
                 plans.add(planDto);
             }

@@ -13,6 +13,8 @@ import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -84,12 +86,13 @@ public class FeedbackCRUD_V2 {
                                                             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
                                                             @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                                             @PathVariable String userId,@RequestParam(required = false) String _id,
-                                                            @RequestParam(required = false) Integer type){
+                                                            @RequestParam(required = false) Integer type,
+                                                            Principal principal){
 
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
-        if(checkRole("TR"))
+        if(checkRole("TR") && !principal.getName().equals(userId))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You can't access this Api!");
 
         sortDirection = (sortDirection!=1)?-1:1;
@@ -115,7 +118,8 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        boolean flag = checkRole("TL")||checkRole("PM");
+        boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
+        System.out.println(flag + "}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
         FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName(),flag);
         if(q==0)
@@ -134,17 +138,18 @@ public class FeedbackCRUD_V2 {
     public ApiResponse giveFeedbackToUser(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto, Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
-
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
-        boolean flag = checkRole("TL")||checkRole("PM");
+        boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
         Feedback_V2 feedback = feedbackService.saveTraineeFeedback(feedbackRequestDto, principal.getName(),flag);
+
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
         String taskId = null;
         if(type != FeedbackType.TEST)
             taskId = feedbackRequestDto.getTest();
-        else if(type!= FeedbackType.VIVA || type!= FeedbackType.PPT) taskId = feedbackRequestDto.getCourse();
-
-        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),taskId,feedbackRequestDto.getPlanId(),type);
+        else if(type!= FeedbackType.VIVA || type!= FeedbackType.PPT)
+            taskId = feedbackRequestDto.getCourse();
+        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,Integer.toString(type));
+        response.put("_id", feedback.get_id());
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
 
@@ -160,7 +165,23 @@ public class FeedbackCRUD_V2 {
         apiResponse.setOverallRating(overallRating);
         return apiResponse;
     }
+    @PutMapping("/user")
+    public ApiResponse updateTraineeFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
+        if (checkRole("TR"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
+        FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
+//        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
+
+        int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
+//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
+        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),feedbackResponse.getTask().get_id(),Integer.toString(type));
+//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
+        response.put("_id", feedbackResponse.get_id());
+//        return new ApiResponse(200,"Feedback updated successfully",response);
+        ApiResponse apiResponse = new ApiResponse(200,"Feedback updated successfully",response);
+        return apiResponse;
+    }
     @DeleteMapping("/{id}")
     public ApiResponse deleteFeedback(@PathVariable String id,Principal principal){
         if (checkRole("TR"))
