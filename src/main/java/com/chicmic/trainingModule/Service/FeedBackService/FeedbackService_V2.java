@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Entity.Feedback_V2.buildFeedbackFromFeedbackRequestDto;
@@ -68,6 +69,7 @@ public class FeedbackService_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"No plan Assigned!!");
         List<Plan> plans = assignedPlan.getPlans();
         List<String> mentorIds = new ArrayList<>();
+        Set<Object> phaseIds = new HashSet<>();
         AtomicInteger value = new AtomicInteger(0);
         plans.forEach(p->{
             var phases = p.getPhases();
@@ -77,12 +79,14 @@ public class FeedbackService_V2 {
                 if(pt == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
                 pt.forEach(ptask ->{
                     if(ptask.getPlanType() == type) {
-                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId) && new HashSet<>(ptask.getMilestones()).containsAll(subTaskId)) {
+                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
-                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId) && new HashSet<>(ptask.getMilestones()).containsAll(subTaskId)) {
+                            phaseIds.addAll(ptask.getMilestones());
+                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
+                            phaseIds.addAll(ptask.getMilestones());
                         } else if (Objects.equals(ptask.getPlanType(), PPT) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
@@ -91,8 +95,22 @@ public class FeedbackService_V2 {
                 });
             });
         });
+
+        if(!feedbackRequestDto.getFeedbackType().equals(PPT_)) {
+            if(phaseIds.isEmpty())
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
+            HashSet<String> taskName = new HashSet<>();
+            phaseIds.forEach(ph -> {
+                taskName.add((String) ph);
+            });
+            boolean flag = taskName.containsAll(subTaskId);
+            if (!flag)
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
+        }
+
         if(value.get() == 1)
             return mentorIds;
+
         throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
     }
 
@@ -499,8 +517,8 @@ public class FeedbackService_V2 {
     }
 
     public List<CourseResponse_V2> buildFeedbackResponseForCourseAndTest(List<Feedback_V2> feedbackList){
-        if(feedbackList == null || feedbackList.isEmpty())
-            return null;
+//        if(feedbackList == null || feedbackList.isEmpty())
+//            return null;
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
         feedbackList.forEach(f -> {
@@ -611,18 +629,19 @@ public class FeedbackService_V2 {
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(Integer.toString(feedbackType))
                 .and("isDeleted").is(false)
                 .and("planId").is(planId);//.and("details.taskId").is(phaseId);
+
         if(feedbackType == VIVA||feedbackType == PPT){
             criteria.and("details.courseId").is(planTask.getPlan());
-//            if(feedbackType == VIVA) {
-//                List<String> phaseIds = planTask.getMilestones().stream().map(m->(String)m).toList();
-//                criteria.elemMatch(new Criteria().and("phaseIds").in(phaseIds));
-//            }
-//                criteria.and("phaseIds").is(planTask.getPlan());
+            if(feedbackType == VIVA) {
+                List<String> phaseIds = planTask.getMilestones().stream().map(m->(String)m).toList();
+                criteria.and("phaseIds").elemMatch(new Criteria().and("phaseIds").in(phaseIds));
+            }
+             //   criteria.and("phaseIds").is(planTask.getPlan());
         }
         else if(feedbackType == TEST){
-//            List<String> milestoneIds = planTask.getMilestones().stream().map(m->(String)m).toList();
+            List<String> milestoneIds = planTask.getMilestones().stream().map(m->(String)m).toList();
             criteria.and("details.testId").is(planTask.getPlan());
-//            criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
+            criteria.and("milestoneIds").elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         }
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
@@ -839,7 +858,7 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
 
-    Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
+    public Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
         Criteria criteria = new Criteria().orOperator(taskIds);
         if (taskIds.size() == 0) return 0f;
         Aggregation aggregation = Aggregation.newAggregation(

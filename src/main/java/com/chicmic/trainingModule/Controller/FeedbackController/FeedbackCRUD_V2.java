@@ -115,7 +115,7 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
+        boolean flag = checkRole("TL")||checkRole("PM");
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
         FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName(),flag);
         if(q==0)
@@ -123,7 +123,10 @@ public class FeedbackCRUD_V2 {
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
         //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
         var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
-        return new ApiResponse(201,"Feedback saved successfully",response);
+        float overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
+        ApiResponse apiResponse = new ApiResponse(201,"Feedback saved successfully",response);
+        apiResponse.setOverallRating(overallRating);
+        return apiResponse;
     }
 
     @PostMapping("/user")
@@ -133,7 +136,7 @@ public class FeedbackCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
-        boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
+        boolean flag = checkRole("TL")||checkRole("PM");
         Feedback_V2 feedback = feedbackService.saveTraineeFeedback(feedbackRequestDto, principal.getName(),flag);
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
         String taskId = null;
@@ -141,11 +144,10 @@ public class FeedbackCRUD_V2 {
             taskId = feedbackRequestDto.getTest();
         else if(type!= FeedbackType.VIVA || type!= FeedbackType.PPT) taskId = feedbackRequestDto.getCourse();
 
-//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),taskId,feedbackRequestDto.getPlanId(),type);
-        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,Integer.toString(type));
-        response.put("_id", feedback.get_id());
+        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),taskId,feedbackRequestDto.getPlanId(),type);
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
+
     @PutMapping
     public ApiResponse updateFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal){
         if (checkRole("TR"))
@@ -153,24 +155,10 @@ public class FeedbackCRUD_V2 {
 
         FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
 //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
-
-        return new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
-
-    }
-    @PutMapping("/user")
-    public ApiResponse updateTraineeFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
-        if (checkRole("TR"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
-
-        FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
-//        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
-
-        int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
-//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
-        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),feedbackResponse.getTask().get_id(),Integer.toString(type));
-//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
-        response.put("_id", feedbackResponse.get_id());
-        return new ApiResponse(200,"Feedback updated successfully",response);
+        float overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
+        ApiResponse apiResponse = new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
+        apiResponse.setOverallRating(overallRating);
+        return apiResponse;
     }
 
     @DeleteMapping("/{id}")
