@@ -141,22 +141,35 @@ public class FeedbackCRUD_V2 {
             taskId = feedbackRequestDto.getTest();
         else if(type!= FeedbackType.VIVA || type!= FeedbackType.PPT) taskId = feedbackRequestDto.getCourse();
 
-        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),taskId,feedbackRequestDto.getPlanId(),type);
+//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),taskId,feedbackRequestDto.getPlanId(),type);
+        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,Integer.toString(type));
+        response.put("_id", feedback.get_id());
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
     @PutMapping
-    public ApiResponse updateFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
+    public ApiResponse updateFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal){
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
         FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
 //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
-        if(q==0)
-            return new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
+
+        return new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
+
+    }
+    @PutMapping("/user")
+    public ApiResponse updateTraineeFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
+        if (checkRole("TR"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
+
+        FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
+//        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
 
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
 //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
-        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
+        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),feedbackResponse.getTask().get_id(),Integer.toString(type));
+//        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
+        response.put("_id", feedbackResponse.get_id());
         return new ApiResponse(200,"Feedback updated successfully",response);
     }
 

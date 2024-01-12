@@ -59,9 +59,9 @@ public class AssignTaskCRUD {
             }
         }
         if(error) {
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan is Already Created", null, response);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan Already Assigned", null, response);
         }
-        return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask created successfully", assignTaskDto);
+        return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask Created Successfully", assignTaskDto);
     }
     @PutMapping
     public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response){
@@ -131,7 +131,7 @@ public class AssignTaskCRUD {
             }
             return new ApiResponseWithCount(totalPlans,HttpStatus.OK.value(), planSize + " Plans retrieved", assignTaskResponseDto, response);
         }
-        return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Fount", null, response);
+        return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Found", null, response);
     }
     @GetMapping("/plan")
     public ApiResponseWithCount getPlan(@RequestParam String planId,

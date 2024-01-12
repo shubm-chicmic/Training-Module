@@ -2,8 +2,11 @@ package com.chicmic.trainingModule.Service;
 
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
+import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Repository.*;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.formula.functions.T;
@@ -25,7 +28,7 @@ public class PhaseService {
     private final TaskRepo taskRepo;
     private final SubTaskRepo subTaskRepo;
     private final PlanTaskRepo planTaskRepo;
-    private final UserProgressRepo userProgressRepo;
+    private final UserProgressService userProgressService;
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
         int count = 0;
         String phaseNameInitial = "";
@@ -93,6 +96,16 @@ public class PhaseService {
                 System.out.println("fljgdkofdklf " + planTask.get_id());
 
                 newPlanTask = planTaskRepo.findById(planTask.get_id()).orElse(null);
+                if(newPlanTask.getPlanType() == PlanType.VIVA) {
+                    List<Object> milestones = newPlanTask.getMilestones(); // original milestones
+                    for (Object milestone : milestones) {
+                        if (!planTask.getMilestones().contains(milestone)) {
+                            // this milestone is deleted
+                            // delete all userProgress of this milestone
+                            userProgressService.deleteByMilestoneId(plan.get_id(), newPlanTask.get_id());
+                        }
+                    }
+                }
                 System.out.println("new Id 2 = " + newPlanTask.get_id());
 
             }
@@ -132,7 +145,7 @@ public class PhaseService {
             }
 //            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
 //            task.set_id(id);
-            List<SubTask> subTasks = createSubTasks(task.getSubtasks(), newTask, entityType);
+            List<SubTask> subTasks = createSubTasks(task.getSubtasks(), newTask, entityType, phase);
             newTask.setEntityType(entityType);
             newTask.setMainTask(task.getMainTask());
             newTask.setSubtasks(subTasks);
@@ -145,12 +158,19 @@ public class PhaseService {
         return createdTasks;
     }
 
-    public List<SubTask> createSubTasks(List<SubTask> subTasks, Task task, Integer entityType) {
+    public List<SubTask> createSubTasks(List<SubTask> subTasks, Task task, Integer entityType, Phase<Task> phase) {
         List<SubTask> createdSubTasks = new ArrayList<>();
         for (SubTask subTask : subTasks) {
             SubTask newSubTask = new SubTask();
             if(subTask.get_id() == null || subTask.get_id().isEmpty() || subTask.get_id().isBlank()){
                 newSubTask.set_id(String.valueOf(new ObjectId()));
+                // new subtask is created
+                // task count to plantask
+                List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+                for (PlanTask planTask : planTasks) {
+                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
+                    planTaskRepo.save(planTask);
+                }
             }else {
                 newSubTask = subTaskRepo.findById(subTask.get_id()).orElse(null);
             }

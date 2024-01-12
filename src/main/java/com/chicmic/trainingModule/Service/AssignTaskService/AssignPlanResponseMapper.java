@@ -195,7 +195,7 @@ public class AssignPlanResponseMapper {
                     }
                    if (planTask.getPlanType() == 2) {
                         Test test1 = testService.getTestById(planTask.getPlan());
-                        if(test != null) {
+                        if(test1 != null) {
                             planName = test1.getTestName();
                         }
 //            planTask.setEstimatedTime(test.getEstimatedTime());
@@ -246,10 +246,15 @@ public class AssignPlanResponseMapper {
                     }
                 }
             }
+            UserIdAndNameDto planIdAndName = UserIdAndNameDto.builder()
+                    ._id(plan.get_id())
+                    .name(plan.getPlanName())
+                    .build();
             FeedbackPlanDto feedbackPlanDto = FeedbackPlanDto.builder()
                     .ppt(ppt)
                     .viva(viva)
                     .test(test)
+                    .plan(planIdAndName)
                     .build();
             plans.add(feedbackPlanDto);
         }

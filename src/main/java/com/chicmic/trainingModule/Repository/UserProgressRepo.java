@@ -39,5 +39,5 @@ public interface UserProgressRepo extends MongoRepository<UserProgress, String> 
 
     List<UserProgress> findBySubTaskId(String subTaskId);
 
-
+    List<UserProgress> findByPlanIdAndPlanTaskId(String planId, String planTaskId);
 }

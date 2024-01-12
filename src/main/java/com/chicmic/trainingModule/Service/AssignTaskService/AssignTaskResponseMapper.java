@@ -19,9 +19,7 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,6 +58,7 @@ public class AssignTaskResponseMapper {
         }
      //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
+        Set<String> mentors = new HashSet<>();
         Integer countOfCompletedPlan = 0;
         for (Plan plan : assignTask.getPlans()) {
             if(plan != null && !plan.getDeleted()) {
@@ -67,6 +66,8 @@ public class AssignTaskResponseMapper {
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
+                        if (planTask == null)continue;
+                        mentors.addAll(planTask.getMentorIds());
                         if((planTask.getPlanType() != 3 && planTask.getPlanType() != 4)) {
                             if(planTask.getTotalTasks() == null) {
                                 totalTask += 0;
@@ -95,7 +96,11 @@ public class AssignTaskResponseMapper {
                     isCompleted = true;
                     countOfCompletedPlan++;
                 }
-
+                //add mentor name also
+                Set<UserIdAndNameDto> mentorDetails = new HashSet<>();
+                for (String mentorDetail : mentors) {
+                    mentorDetails.add(new UserIdAndNameDto(mentorDetail, TrainingModuleApplication.searchNameById(mentorDetail)));
+                }
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())
@@ -107,6 +112,7 @@ public class AssignTaskResponseMapper {
                         .totalTasks(totalTask)
                         .completedTasks(completedTasks)
                         .approver(plan.getApproverDetails())
+                        .mentors(mentorDetails)
 //                    .feedbackId()
                         .isCompleted(isCompleted)
                         .rating(0f)

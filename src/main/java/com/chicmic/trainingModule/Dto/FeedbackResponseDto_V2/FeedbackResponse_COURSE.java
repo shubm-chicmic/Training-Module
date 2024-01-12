@@ -32,7 +32,6 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private Float overallRating;
 
 
-
     public void setSubTask(List<UserIdAndNameDto> subTask) {
         this.subTask = subTask;
     }

@@ -1,10 +1,11 @@
 package com.chicmic.trainingModule.Service.UserProgressService;
 
 import com.chicmic.trainingModule.Dto.UserProgressDto;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
-import com.chicmic.trainingModule.Entity.Course;
-import com.chicmic.trainingModule.Entity.UserProgress;
+import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.UserProgressRepo;
+import com.chicmic.trainingModule.Service.PhaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class UserProgressService {
     private final UserProgressRepo userProgressRepo;
     private final MongoTemplate mongoTemplate;
+    private final PhaseRepo phaseRepo;
 
     public UserProgress createUserProgress(UserProgress userProgress) {
         System.out.println("Im creating user progress");
@@ -173,5 +175,16 @@ public class UserProgressService {
 
             mongoTemplate.findAllAndRemove(Query.query(Criteria.where("_id").in(idsToDelete)), UserProgress.class);
         }
+    }
+
+    public void deleteByMilestoneId(String planId, String planTaskId) {
+        List<UserProgress> userProgressListToDelete = userProgressRepo.findByPlanIdAndPlanTaskId(planId, planTaskId);
+        if (!userProgressListToDelete.isEmpty()) {
+            List<String> idsToDelete = userProgressListToDelete.stream()
+                    .map(UserProgress::get_id)
+                    .collect(Collectors.toList());
+            mongoTemplate.findAllAndRemove(Query.query(Criteria.where("_id").in(idsToDelete)), UserProgress.class);
+
+    }
     }
 }

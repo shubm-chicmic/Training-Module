@@ -733,9 +733,9 @@ public class FeedbackService_V2 {
         return ((float) temp) / 100;
     }
 
-    public Map<String,Float> computeOverallRating(String traineeId,String courseId,String planId,int type){
+    public Map<String,Object> computeOverallRating(String traineeId,String courseId,String planId,int type){
         if(courseId == null||planId == null) return null;
-        Map<String,Float> response = new HashMap<>();
+        Map<String,Object> response = new HashMap<>();
 //        response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,criteriaList));
         response.put("planRating",computeOverallRatingOfTraineeOnPlan(traineeId,planId));
         response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
@@ -912,7 +912,7 @@ public class FeedbackService_V2 {
         return true;
     }
 
-    public void computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String type){
+    public Map<String,Object> computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String type){
         Document document = new Document();
         document.append("traineeOverAllRating",Arrays.asList(
                 new Document("$match", new Document("traineeId", traineeId)),
@@ -940,7 +940,36 @@ public class FeedbackService_V2 {
         Document results = mongoTemplate.aggregate(
                 aggregation, "feedback_V2", Document.class
         ).getUniqueMappedResult();
-        System.out.println(results + "///");
+        Map<String, Object> response = new HashMap<String, Object>();
+        List<Document> traineeOverAllRating = (List<Document>) results.get("traineeOverAllRating");
+        if(traineeOverAllRating == null || traineeOverAllRating.isEmpty()) {
+            response.put("traineeOverAllRating", 0f);
+        }else{
+            Double totalOverAllRating = (Double) traineeOverAllRating.get(0).get("totalOverAllRating");
+            Integer count = (Integer) traineeOverAllRating.get(0).get("count");
+            response.put("traineeOverAllRating", compute_rating(totalOverAllRating,count));
+        }
+        List<Document> planRating = (List<Document>) results.get("planRating");
+        if (planRating == null || planRating.isEmpty()) {
+            response.put("planRating", 0f);
+        }else{
+            Double totalOverAllRating = (Double) planRating.get(0).get("totalOverAllRating");
+            Integer count = (Integer) planRating.get(0).get("count");
+            response.put("planRating", compute_rating(totalOverAllRating,count));
+        }
+        List<Document> courseRating = (List<Document>) results.get("courseRating");
+        if (courseRating == null || courseRating.isEmpty()) {
+            response.put("courseRating", 0f);
+        }else{
+            Double totalOverAllRating = (Double) courseRating.get(0).get("totalOverAllRating");
+            Integer count = (Integer) courseRating.get(0).get("count");
+            response.put("courseRating", compute_rating(totalOverAllRating,count));
+        }
+
+//        response.put("traineeOverAllRating", results.get("traineeOverAllRating")==null?0:compute_rating((Double) results.get("traineeOverAllRating.totalOverAllRating"),(Integer) results.get("traineeOverAllRating.count")));
+//        response.put("planRating",results.get("planRating")==null?0:compute_rating((Double) results.get("planRating.totalOverAllRating"),(Integer) results.get("planRating.count")));
+//        response.put("courseRating",results.get("courseRating")==null?0:compute_rating((Double) results.get("courseRating.totalOverAllRating"),(Integer) results.get("courseRating.count")));
+        return response;
     }
     public PlanTask findMilestonesFromPlanTask(String _id){
         return mongoTemplate.findById(_id,PlanTask.class);

@@ -57,7 +57,9 @@ public class ExcelPerformOperations {
                     System.out.println("\u001B[31m Task \u001B[0m" + courseTask);
                     if (phase != null) {
                         System.out.println("im in");
-                        phase.getTasks().add(courseTask);
+                        List<Task> tasks = phase.getTasks();
+                        tasks.add(courseTask);
+                        phase.setTasks(tasks);
                     }
                 }
 
@@ -68,7 +70,13 @@ public class ExcelPerformOperations {
                     courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()));
                     courseSubTask.setLink(referenceCell.getStringCellValue());
                     if (phase != null && phase.getTasks().size() > 0) {
-                        phase.getTasks().get(phase.getTasks().size() - 1).getSubtasks().add(courseSubTask);
+                        Task task = phase.getTasks().get(phase.getTasks().size() - 1);
+                        List<SubTask> subTasks = task.getSubtasks();
+                        subTasks.add(courseSubTask);
+                        task.setSubtasks(subTasks);
+                        List<Task> tasks = phase.getTasks();
+                        tasks.add(task);
+                        phase.setTasks(tasks);
                     }
                 }
 //                System.out.println("phase = " + phase);
