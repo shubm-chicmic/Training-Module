@@ -25,6 +25,8 @@ public class AssignedPlan {
     private String _id;
     private String userId;
     private LocalDateTime date;
+    private Integer estimatedTime;
+    private Integer consumedTime;
     @DBRef
     private List<Plan> plans;
     private Set<String> reviewers = new HashSet<>();
