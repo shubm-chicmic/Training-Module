@@ -140,7 +140,7 @@ public class AssignPlanResponseMapper {
         List<String> milestonesIds = planTask.getMilestones().stream()
                 .map(Object::toString)
                 .collect(Collectors.toList());
-        Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
+        Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
             if(userProgress != null) {

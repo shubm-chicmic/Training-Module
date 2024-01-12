@@ -19,8 +19,9 @@ public class FeedbackProgressService {
     private final MongoTemplate mongoTemplate;
     private final TestService testService;
     private final CourseService courseService;
-    public Feedback_V2 feedbackOfParticularPhaseOfTrainee(String traineeId, String taskId, List<String> subtaskIds, String type, String userId){
+    public Feedback_V2 feedbackOfParticularPhaseOfTrainee(String traineeId, String planId, String taskId, List<String> subtaskIds, String type, String userId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type);
+        criteria.and("planId").is(planId);
         if (type.equals(VIVA_)||type.equals(PPT_)) {
             criteria.and("details.courseId").is(taskId);
             if (type.equals(VIVA_))

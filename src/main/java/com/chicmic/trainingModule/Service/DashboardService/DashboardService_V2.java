@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.UserProgress;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.bson.Document;
@@ -30,12 +31,14 @@ public class DashboardService_V2 {
     private final MongoTemplate mongoTemplate;
     private final TestService testService;
     private final CourseService courseService;
+    private final PhaseService phaseService;
 
-    public DashboardService_V2(FeedbackService_V2 feedbackService, MongoTemplate mongoTemplate, TestService testService, CourseService courseService) {
+    public DashboardService_V2(FeedbackService_V2 feedbackService, MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PhaseService phaseService) {
         this.feedbackService = feedbackService;
         this.mongoTemplate = mongoTemplate;
         this.testService = testService;
         this.courseService = courseService;
+        this.phaseService = phaseService;
     }
 
     public DashboardResponse getTraineeRatingSummary(String traineeId){
@@ -79,7 +82,7 @@ public class DashboardService_V2 {
                     ps.getTasks().forEach(pt -> {
                         if (pt != null && pt instanceof PlanTask && pt.getPlanType() == COURSE) {
                             int prog = courseProgress.get(pt.getPlan()) == null ? 0 : courseProgress.get(pt.getPlan());
-                            courseProgress.put(pt.getPlan(), prog + pt.getTotalTasks());//pt.getTotalTasks()
+                            courseProgress.put(pt.getPlan(), prog + phaseService.countTotalSubtask(pt.getMilestones()));//pt.getTotalTasks()
                             //courseDtoList.add(new CourseDto(pt.getPlan(), p.get_id(),pt.getTotalTasks()));
                             criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()).and("status").is(3));
                         }

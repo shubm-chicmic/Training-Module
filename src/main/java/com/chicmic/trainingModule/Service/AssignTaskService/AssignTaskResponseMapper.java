@@ -37,26 +37,25 @@ public class AssignTaskResponseMapper {
 //        return assignTaskResponseDtoList;
 //    }
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
-        if (assignTask == null) {
-            Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId));
+        Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId));
 
+        if (assignTask == null) {
             return AssignTaskResponseDto.builder().trainee(trainee).build();
         }
-        Object trainee = null;
-        if (traineeId == null && traineeId.isEmpty()) {
-//            trainee = Optional.ofNullable(assignTask.getUsers())
-//                    .map(userIds -> userIds.stream()
-//                            .map(userId -> {
-//                                String name = TrainingModuleApplication.searchNameById(userId);
-//                                return new UserIdAndNameDto(userId, name);
-//                            })
-//                            .collect(Collectors.toList())
-//                    )
-//                    .orElse(null);
-        } else {
-            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
-        }
-     //userProgressService.getTotalCompletedTasks(traineeId);
+//        if (traineeId == null && traineeId.isEmpty()) {
+////            trainee = Optional.ofNullable(assignTask.getUsers())
+////                    .map(userIds -> userIds.stream()
+////                            .map(userId -> {
+////                                String name = TrainingModuleApplication.searchNameById(userId);
+////                                return new UserIdAndNameDto(userId, name);
+////                            })
+////                            .collect(Collectors.toList())
+////                    )
+////                    .orElse(null);
+//        } else {
+//            trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId));
+//        }
+//     //userProgressService.getTotalCompletedTasks(traineeId);
         List<PlanDto> plans = new ArrayList<>();
         Set<String> mentors = new HashSet<>();
         Integer countOfCompletedPlan = 0;
