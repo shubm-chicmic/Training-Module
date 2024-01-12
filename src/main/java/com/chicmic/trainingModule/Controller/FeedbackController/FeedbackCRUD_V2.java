@@ -22,7 +22,7 @@ import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResp
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 
 @RestController
-@RequestMapping("/v1/training/feedback")
+@RequestMapping("/v2/training/feedback")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
 
@@ -84,13 +84,14 @@ public class FeedbackCRUD_V2 {
                                                             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
                                                             @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                                             @PathVariable String userId,@RequestParam(required = false) String _id,
-                                                            @RequestParam(required = false) Integer type){
+                                                            @RequestParam(required = false) Integer type,
+                                                            Principal principal){
 
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
-        if(checkRole("TR"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You can't access this Api!");
+        if(checkRole("TR") && !principal.getName().equals(userId))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not allowed to access this api!");
 
         sortDirection = (sortDirection!=1)?-1:1;
         if(_id == null &&  type == null){

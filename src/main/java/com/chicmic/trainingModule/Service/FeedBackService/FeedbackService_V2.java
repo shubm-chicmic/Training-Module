@@ -571,7 +571,7 @@ public class FeedbackService_V2 {
         for (TraineeRating rating : dp.values()){
             int index = rating.getIndex();
 //               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
-            courseResponseList.get(index).setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
+            courseResponseList.get(index).setOverallRating(compute_rating(rating.getRating()/rating.getCount(),1));
         }
         //courseResponseList = addSubTaskName(courseResponseList,);
         return courseResponseList;
@@ -939,28 +939,64 @@ public class FeedbackService_V2 {
         return true;
     }
 
-    public void computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String type){
+    public void computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String subTaskId,String type){
+        Criteria criteria = Criteria.where("_id").is(planId);
+        Plan plan = mongoTemplate.findOne(new Query(criteria),Plan.class);
+        if(plan == null)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Invalid Plan!!");
+
+        List<Object> milestoneObjectIds = new ArrayList<>();
+        if(type.equals(VIVA_)||type.equals(TEST_)) {
+            if(plan.getPhases()!=null) {
+                plan.getPhases().forEach(ph -> {
+                    ph.getTasks().forEach(ps -> {
+                        boolean flag = ps.getMilestones().contains(taskId);
+                        if (flag) milestoneObjectIds.addAll(ps.getMilestones());
+                    });
+                });
+            }
+        }
+
+        List<String> milestoneIds = new ArrayList<>();
+        milestoneObjectIds.forEach((mo)->milestoneIds.add((String) mo));
+
         Document document = new Document();
         document.append("traineeOverAllRating",Arrays.asList(
-                new Document("$match", new Document("traineeId", traineeId)),
+                new Document("$match", new Document("traineeId", traineeId)).append("isDeleted",false),
                 new Document("$group", new Document("_id", null)
                         .append("totalOverAllRating", new Document("$sum", "$overallRating"))
                         .append("count", new Document("$sum", 1)))
         ));
         document.append("planRating",Arrays.asList(
-                new Document("$match", new Document("planId", planId)),
+                new Document("$match", new Document("planId", planId)).append("isDeleted",false).append("traineeId",traineeId),
                 new Document("$group", new Document("_id", null)
                         .append("totalOverAllRating", new Document("$sum", "$overallRating"))
                         .append("count", new Document("$sum", 1)))
         ));
-        String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+        //String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+        if(type.equals(TEST_)) {
+            document.append("courseRating", Arrays.asList(
+                    new Document("$match", new Document("planId", planId).append("details.testId", taskId)).append("isDeleted", false).append("traineeId", traineeId),
+                    new Document("$group", new Document("_id", null)
+                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                            .append("count", new Document("$sum", 1)))
+            ));
+        }else if(type.equals(VIVA_)){
+            document.append("courseRating", Arrays.asList(
+                    new Document("$match", new Document("planId", planId).append("details.courseId", taskId)).append("isDeleted", false).append("traineeId", traineeId),
+                    new Document("$group", new Document("_id", null)
+                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                            .append("count", new Document("$sum", 1)))
+            ));
 
-        document.append("courseRating",Arrays.asList(
-                new Document("$match", new Document("planId", planId).append(taskName,taskId)),
-                new Document("$group", new Document("_id", null)
-                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
-                        .append("count", new Document("$sum", 1)))
-        ));
+        }else if(type.equals(PPT_)){
+            document.append("courseRating", Arrays.asList(
+                    new Document("$match", new Document("planId", planId).append("details.courseId", taskId)).append("isDeleted", false).append("traineeId", traineeId),
+                    new Document("$group", new Document("_id", null)
+                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                            .append("count", new Document("$sum", 1)))
+            ));
+        }
         Aggregation aggregation = newAggregation(
                 context -> new Document("$facet", document)
         );
@@ -969,6 +1005,7 @@ public class FeedbackService_V2 {
         ).getUniqueMappedResult();
         System.out.println(results + "///");
     }
+
     public PlanTask findMilestonesFromPlanTask(String _id){
         return mongoTemplate.findById(_id,PlanTask.class);
     }
