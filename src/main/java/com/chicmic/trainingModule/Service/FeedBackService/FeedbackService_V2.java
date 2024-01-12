@@ -499,8 +499,8 @@ public class FeedbackService_V2 {
     }
 
     public List<CourseResponse_V2> buildFeedbackResponseForCourseAndTest(List<Feedback_V2> feedbackList){
-        if(feedbackList == null || feedbackList.isEmpty())
-            return null;
+//        if(feedbackList == null || feedbackList.isEmpty())
+//            return null;
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
         feedbackList.forEach(f -> {
@@ -611,18 +611,19 @@ public class FeedbackService_V2 {
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(Integer.toString(feedbackType))
                 .and("isDeleted").is(false)
                 .and("planId").is(planId);//.and("details.taskId").is(phaseId);
+
         if(feedbackType == VIVA||feedbackType == PPT){
             criteria.and("details.courseId").is(planTask.getPlan());
-//            if(feedbackType == VIVA) {
-//                List<String> phaseIds = planTask.getMilestones().stream().map(m->(String)m).toList();
-//                criteria.elemMatch(new Criteria().and("phaseIds").in(phaseIds));
-//            }
-//                criteria.and("phaseIds").is(planTask.getPlan());
+            if(feedbackType == VIVA) {
+                List<String> phaseIds = planTask.getMilestones().stream().map(m->(String)m).toList();
+                criteria.and("phaseIds").elemMatch(new Criteria().and("phaseIds").in(phaseIds));
+            }
+             //   criteria.and("phaseIds").is(planTask.getPlan());
         }
         else if(feedbackType == TEST){
-//            List<String> milestoneIds = planTask.getMilestones().stream().map(m->(String)m).toList();
+            List<String> milestoneIds = planTask.getMilestones().stream().map(m->(String)m).toList();
             criteria.and("details.testId").is(planTask.getPlan());
-//            criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
+            criteria.and("milestoneIds").elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         }
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
