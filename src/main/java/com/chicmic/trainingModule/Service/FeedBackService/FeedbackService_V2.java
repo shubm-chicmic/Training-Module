@@ -840,7 +840,7 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
 
-    Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
+    public Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
         Criteria criteria = new Criteria().orOperator(taskIds);
         if (taskIds.size() == 0) return 0f;
         Aggregation aggregation = Aggregation.newAggregation(
@@ -857,7 +857,7 @@ public class FeedbackService_V2 {
         return roundOff_Rating(totalRating/count);
     }
 
-    Float computeOverallRatingOfTrainee(String traineeId){
+    public Float computeOverallRatingOfTrainee(String traineeId){
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
                 group("traineeId")
