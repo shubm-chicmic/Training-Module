@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Entity.Feedback_V2.buildFeedbackFromFeedbackRequestDto;
@@ -68,6 +69,7 @@ public class FeedbackService_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"No plan Assigned!!");
         List<Plan> plans = assignedPlan.getPlans();
         List<String> mentorIds = new ArrayList<>();
+        Set<Object> phaseIds = new HashSet<>();
         AtomicInteger value = new AtomicInteger(0);
         plans.forEach(p->{
             var phases = p.getPhases();
@@ -77,12 +79,14 @@ public class FeedbackService_V2 {
                 if(pt == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
                 pt.forEach(ptask ->{
                     if(ptask.getPlanType() == type) {
-                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId) && new HashSet<>(ptask.getMilestones()).containsAll(subTaskId)) {
+                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
-                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId) && new HashSet<>(ptask.getMilestones()).containsAll(subTaskId)) {
+                            phaseIds.addAll(ptask.getMilestones());
+                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
+                            phaseIds.addAll(ptask.getMilestones());
                         } else if (Objects.equals(ptask.getPlanType(), PPT) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
@@ -91,8 +95,22 @@ public class FeedbackService_V2 {
                 });
             });
         });
+
+        if(!feedbackRequestDto.getFeedbackType().equals(PPT_)) {
+            if(phaseIds.isEmpty())
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
+            HashSet<String> taskName = new HashSet<>();
+            phaseIds.forEach(ph -> {
+                taskName.add((String) ph);
+            });
+            boolean flag = taskName.containsAll(subTaskId);
+            if (!flag)
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
+        }
+
         if(value.get() == 1)
             return mentorIds;
+
         throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
     }
 

@@ -22,7 +22,7 @@ import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResp
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 
 @RestController
-@RequestMapping("/v2/training/feedback")
+@RequestMapping("/v1/training/feedback")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
 
@@ -147,6 +147,7 @@ public class FeedbackCRUD_V2 {
         var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),taskId,feedbackRequestDto.getPlanId(),type);
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
+
     @PutMapping
     public ApiResponse updateFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto,Principal principal){
         if (checkRole("TR"))
