@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Controller.UserProgressController;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.UserProgressDto;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.UserProgress;
@@ -30,12 +31,13 @@ public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     private final PlanTaskService planTaskService;
     private final FeedbackService_V2 feedbackServiceV2;
+
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal, HttpServletResponse response) {
         Boolean checked = false;
-        if(userProgressDto.getProgressType() == 3 || userProgressDto.getProgressType() == 4){
+        if (userProgressDto.getProgressType() == PlanType.VIVA || userProgressDto.getProgressType() == PlanType.PPT) {
             PlanTask planTask = planTaskService.getPlanTaskById(userProgressDto.getSubTaskId());
-            if(planTask == null){
+            if (planTask == null) {
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan task not found", null, response);
             }
             userProgressDto.setSubTaskId(null);
@@ -46,7 +48,7 @@ public class UserProgressCRUD {
                     userProgressDto.getPlanTaskId(),
                     userProgressDto.getProgressType()
             );
-            if(userProgress == null) {
+            if (userProgress == null) {
                 System.out.println("Im in ");
                 userProgress = UserProgress.builder()
                         .traineeId(userProgressDto.getTraineeId())
@@ -57,38 +59,34 @@ public class UserProgressCRUD {
                         .status(userProgressDto.getStatus())
                         .build();
 
-            }else {
+            } else {
                 userProgress.setStatus(userProgressDto.getStatus());
             }
-//            if(userProgress.getStatus() == ProgessConstants.Completed){
-//
-//                List<String> milestonesIds = new ArrayList<>();
-//                if(planTask.getMilestones() == null) {
-//                    milestonesIds = new ArrayList<>();
-//                }else {
-//                    if(planTask != null && planTask.getMilestones() != null) {
-//                        milestonesIds = planTask.getMilestones().stream()
-//                                .map(Object::toString)
-//                                .collect(Collectors.toList());
-//                    }else {
-//                        milestonesIds = new ArrayList<>();
-//                    }
-//                }
-//
-//                //delete feedback
-//                Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTrainee(
-//                        userProgress.getTraineeId(),
-//                        planTask.getPlan(),
-//                        milestonesIds,
-//                        String.valueOf(userProgressDto.getProgressType())
-//                );
-//                if(isFeedbackExist)
-//                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Feedback already Given", null);
-//            }
+            if (userProgress.getStatus() == ProgessConstants.Completed) {
+
+                List<String> milestonesIds = new ArrayList<>();
+
+                if (planTask != null && planTask.getMilestones() != null) {
+                    milestonesIds = planTask.getMilestones().stream()
+                            .map(Object::toString)
+                            .collect(Collectors.toList());
+                }
+
+
+                //delete feedback
+                Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTrainee(
+                        userProgress.getTraineeId(),
+                        planTask.getPlan(),
+                        milestonesIds,
+                        String.valueOf(userProgressDto.getProgressType())
+                );
+                if (isFeedbackExist)
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Feedback already Given", null);
+            }
             System.out.println("viva or ppt feedback is created");
             System.out.println("UserProgress " + userProgress);
             userProgress = userProgressService.createUserProgress(userProgress);
-        }else {
+        } else {
             UserProgress userProgress = userProgressService.getUserProgress(userProgressDto);
             if (userProgress == null) {
                 userProgress = UserProgress.builder()

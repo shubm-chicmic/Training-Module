@@ -920,7 +920,7 @@ public class FeedbackService_V2 {
 
     public Map<String,Object> computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String type){
         Document document = new Document();
-        document.append("traineeOverAllRating",Arrays.asList(
+        document.append("overallRating",Arrays.asList(
                 new Document("$match", new Document("traineeId", traineeId)),
                 new Document("$group", new Document("_id", null)
                         .append("totalOverAllRating", new Document("$sum", "$overallRating"))
@@ -947,13 +947,13 @@ public class FeedbackService_V2 {
                 aggregation, "feedback_V2", Document.class
         ).getUniqueMappedResult();
         Map<String, Object> response = new HashMap<String, Object>();
-        List<Document> traineeOverAllRating = (List<Document>) results.get("traineeOverAllRating");
+        List<Document> traineeOverAllRating = (List<Document>) results.get("overallRating");
         if(traineeOverAllRating == null || traineeOverAllRating.isEmpty()) {
-            response.put("traineeOverAllRating", 0f);
+            response.put("overallRating", 0f);
         }else{
             Double totalOverAllRating = (Double) traineeOverAllRating.get(0).get("totalOverAllRating");
             Integer count = (Integer) traineeOverAllRating.get(0).get("count");
-            response.put("traineeOverAllRating", compute_rating(totalOverAllRating,count));
+            response.put("overallRating", compute_rating(totalOverAllRating,count));
         }
         List<Document> planRating = (List<Document>) results.get("planRating");
         if (planRating == null || planRating.isEmpty()) {
