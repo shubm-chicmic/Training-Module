@@ -571,7 +571,7 @@ public class FeedbackService_V2 {
         for (TraineeRating rating : dp.values()){
             int index = rating.getIndex();
 //               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
-            courseResponseList.get(index).setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
+            courseResponseList.get(index).setOverallRating(compute_rating(rating.getRating(),rating.getCount()));
         }
         //courseResponseList = addSubTaskName(courseResponseList,);
         return courseResponseList;
@@ -845,7 +845,7 @@ public class FeedbackService_V2 {
 //    }
 
     public Float computeOverallRatingOfTraineeOnPlan(String traineeId,String planId){
-        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId);
+        Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId).and("isDeleted").is(false);
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria),
                 group("planId")

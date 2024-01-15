@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;

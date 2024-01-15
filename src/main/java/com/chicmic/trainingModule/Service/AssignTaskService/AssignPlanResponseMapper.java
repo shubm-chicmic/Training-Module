@@ -141,6 +141,7 @@ public class AssignPlanResponseMapper {
                 .map(Object::toString)
                 .collect(Collectors.toList());
         Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
+        Map<String,Object> response = feedbackProgressService.testAggregationQuery(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
         if(planTask.getPlanType() != 3 && planTask.getPlanType() != 4) {
 //            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
 //            if(userProgress != null) {

@@ -114,7 +114,7 @@ public class FeedbackCRUD_V2 {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse giveFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto, Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
+    public ApiResponse giveFeedback(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto, Principal principal){
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
@@ -122,14 +122,9 @@ public class FeedbackCRUD_V2 {
         System.out.println(flag + "}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
         FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName(),flag);
-        if(q==0)
-            return new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
-        int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
-        //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
-        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
-        float overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
-        ApiResponse apiResponse = new ApiResponse(201,"Feedback saved successfully",response);
-        apiResponse.setOverallRating(overallRating);
+        feedbackResponse.setOverallRating(feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee()));
+        ApiResponse apiResponse =  new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
+       // apiResponse.setOverallRating(feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee()));
         return apiResponse;
     }
 
@@ -159,10 +154,11 @@ public class FeedbackCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
         FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
-//        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
         float overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
+        feedbackResponse.setOverallRating(overallRating);
+        //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
         ApiResponse apiResponse = new ApiResponse(200,"Feedback updated successfully",feedbackResponse);
-        apiResponse.setOverallRating(overallRating);
+//        apiResponse.setOverallRating(overallRating);
         return apiResponse;
     }
     @PutMapping("/user")
