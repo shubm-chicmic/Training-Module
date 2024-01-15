@@ -210,6 +210,7 @@ public class PhaseService {
             newSubTask.setEstimatedTime(subTask.getEstimatedTime());
             newSubTask.setEntityType(entityType);
             newSubTask.setTask(task);
+            newSubTask.setPhase(subTask.getPhase());
             createdSubTasks.add(subTaskRepo.save(newSubTask));
         }
         return createdSubTasks;

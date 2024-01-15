@@ -25,6 +25,9 @@ public class SubTask {
     @DBRef
     @JsonIgnore
     private Task task;
+    @DBRef
+    @JsonIgnore
+    private Phase<Task> phase;
     private Boolean isDeleted = false;
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
