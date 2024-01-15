@@ -20,4 +20,11 @@ public class DateTimeUtil {
         }
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
+
+    public static String convertSecondsToString(Integer estimatedTime) {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
+    }
 }
