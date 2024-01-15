@@ -8,13 +8,11 @@ import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService_V2;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -25,6 +23,8 @@ import java.util.List;
 public class AssignedPlanDropdown {
     private final AssignTaskService assignTaskService;
     private final AssignPlanResponseMapper assignPlanResponseMapper;
+    private final TraineePlanService_V2 traineePlanServiceV2;
+
     @RequestMapping(value = {"/plan"}, method = RequestMethod.GET)
     public ApiResponse getAll(
             @RequestParam String traineeId,
@@ -37,5 +37,10 @@ public class AssignedPlanDropdown {
             return new ApiResponse(HttpStatus.OK.value(), "Success", assignedPlanResponse, response);
         }
         return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "AssignedPlan not found", response);
+    }
+    @PatchMapping("/trainee-status")
+    public ApiResponse updateTraineeStatus(@RequestBody UserIdAndStatusDto userIdAndStatusDto){
+        traineePlanServiceV2.updateTraineeStatus(userIdAndStatusDto);
+        return new ApiResponse(200,"Trainee status updated successfully!!",null);
     }
 }

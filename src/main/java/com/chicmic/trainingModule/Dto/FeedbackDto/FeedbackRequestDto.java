@@ -68,6 +68,8 @@ public class FeedbackRequestDto {
     private String comment;
 
     private String planId;
+
+    private String taskId;
     public Float computeRating(){
         if (feedbackType.equals(VIVA_)) {
             float total = theoreticalRating + technicalRating + communicationRating;

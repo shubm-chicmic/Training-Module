@@ -139,11 +139,14 @@ public class FeedbackCRUD_V2 {
 
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
         String taskId = null;
-        if(type != FeedbackType.TEST)
+        if(type == FeedbackType.TEST)
             taskId = feedbackRequestDto.getTest();
-        else if(type!= FeedbackType.VIVA || type!= FeedbackType.PPT)
+        else if(type == FeedbackType.VIVA || type == FeedbackType.PPT)
             taskId = feedbackRequestDto.getCourse();
-        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,Integer.toString(type));
+
+        System.out.println(taskId + "//////");
+        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,feedbackRequestDto.getTaskId(),Integer.toString(type));
+        //var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,feedbackRequestDto.getTaskId(),Integer.toString(type));
         response.put("_id", feedback.get_id());
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
@@ -171,7 +174,7 @@ public class FeedbackCRUD_V2 {
 
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
 //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),type);
-        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),feedbackResponse.getTask().get_id(),Integer.toString(type));
+        var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getTaskId(),Integer.toString(type));
 //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
         response.put("_id", feedbackResponse.get_id());
 //        return new ApiResponse(200,"Feedback updated successfully",response);

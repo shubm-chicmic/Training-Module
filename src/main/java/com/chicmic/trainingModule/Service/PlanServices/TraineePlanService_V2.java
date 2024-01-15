@@ -4,12 +4,18 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.mongodb.client.result.UpdateResult;
+import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -130,8 +136,8 @@ public class TraineePlanService_V2 {
                             }
                     );
             });
-            HashSet<String> mentorNames = new HashSet<>();
-            names.forEach(nm-> mentorNames.add(searchNameById(nm)));
+            HashSet<UserIdAndNameDto> mentorNames = new HashSet<>();
+            names.forEach(nm-> mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
             tr.put("mentor",mentorNames);
             tr.put("plan",planDetails);
         };
@@ -141,6 +147,7 @@ public class TraineePlanService_V2 {
         int count = 0;
         for (Document document : traineePlanResponseList){
             String _id = (String) document.get("_id");
+
             userIds.add(_id);
             userSummary.put(_id,count++);
 //            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
@@ -155,5 +162,14 @@ public class TraineePlanService_V2 {
             traineePlanResponseList.get(index).put("rating",roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")));
         }
         return traineePlanResponseList;
+    }
+
+    public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto){
+        Criteria criteria = Criteria.where("userId").is(userIdAndStatusDto.getTraineeId());
+        Update update = new Update();
+        update.set("trainingStatus",userIdAndStatusDto.getStatus());
+        UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria),update,AssignedPlan.class);
+        if (updateResult.getModifiedCount() == 0)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"No user found!!");
     }
 }

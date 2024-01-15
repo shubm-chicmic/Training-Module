@@ -939,28 +939,69 @@ public class FeedbackService_V2 {
         return true;
     }
 
-    public Map<String,Object> computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String type){
+    public Map<String,Object> computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String subTaskId,String type){
+//        Document document = new Document();
+//        document.append("overallRating",Arrays.asList(
+//                new Document("$match", new Document("traineeId", traineeId)).append("isDeleted",false),
+//                new Document("$group", new Document("_id", null)
+//                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+//                        .append("count", new Document("$sum", 1)))
+//        ));
+//        document.append("planRating",Arrays.asList(
+//                new Document("$match", new Document("planId", planId)).append("isDeleted",false).append("traineeId",traineeId),
+//                new Document("$group", new Document("_id", null)
+//                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+//                        .append("count", new Document("$sum", 1)))
+//        ));
+//        String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+//
+//        document.append("courseRating",Arrays.asList(
+//                new Document("$match", new Document("planId", planId).append(taskName,taskId)),
+//                new Document("$group", new Document("_id", null)
+//                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+//                        .append("count", new Document("$sum", 1)))
+//        ));
         Document document = new Document();
         document.append("overallRating",Arrays.asList(
-                new Document("$match", new Document("traineeId", traineeId)),
+                new Document("$match", new Document("traineeId", traineeId).append("isDeleted",false)),
                 new Document("$group", new Document("_id", null)
                         .append("totalOverAllRating", new Document("$sum", "$overallRating"))
                         .append("count", new Document("$sum", 1)))
         ));
         document.append("planRating",Arrays.asList(
-                new Document("$match", new Document("planId", planId)),
+                new Document("$match", new Document("planId", planId).append("isDeleted",false).append("traineeId",traineeId)),
                 new Document("$group", new Document("_id", null)
                         .append("totalOverAllRating", new Document("$sum", "$overallRating"))
                         .append("count", new Document("$sum", 1)))
         ));
-        String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+        //String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+        if(type.equals(TEST_)||type.equals(VIVA_)) {
+            Criteria criteria1 = Criteria.where("_id").is(subTaskId);
+            Query query = new Query(criteria1);
+            PlanTask planTask = mongoTemplate.findOne(query, PlanTask.class);
+            if(planTask == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Invalid plan task Id!!");
+            List<Object> milestoneObjectIds = planTask.getMilestones();
+            if(milestoneObjectIds == null || milestoneObjectIds.isEmpty()) throw new ApiException(HttpStatus.BAD_REQUEST,"No tasks available in this milestone!!");
+            List<String> milestoneIds = new ArrayList<>();
+            milestoneObjectIds.forEach((mo)->milestoneIds.add((String) mo));
+            String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+            String subTaskName = type.equals(TEST_)?"milestoneIds":"phaseIds";
 
-        document.append("courseRating",Arrays.asList(
-                new Document("$match", new Document("planId", planId).append(taskName,taskId)),
-                new Document("$group", new Document("_id", null)
-                        .append("totalOverAllRating", new Document("$sum", "$overallRating"))
-                        .append("count", new Document("$sum", 1)))
-        ));
+            document.append("courseRating", Arrays.asList(
+                    new Document("$match", new Document("planId", planId).append(taskName, taskId).append("isDeleted", false).append("traineeId", traineeId).append(subTaskName,new Document("$in",milestoneIds))),
+                    new Document("$group", new Document("_id", null)
+                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                            .append("count", new Document("$sum", 1)))
+            ));
+        }
+         else if(type.equals(PPT_)){
+            document.append("courseRating", Arrays.asList(
+                    new Document("$match", new Document("planId", planId).append("details.courseId", taskId).append("isDeleted", false).append("traineeId", traineeId)),
+                    new Document("$group", new Document("_id", null)
+                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                            .append("count", new Document("$sum", 1)))
+            ));
+        }
         Aggregation aggregation = newAggregation(
                 context -> new Document("$facet", document)
         );

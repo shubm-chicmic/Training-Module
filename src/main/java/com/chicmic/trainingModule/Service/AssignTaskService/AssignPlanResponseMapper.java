@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -176,8 +177,8 @@ public class AssignPlanResponseMapper {
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
-                .feedbackId(feedbackV2 == null ? null : feedbackV2.get_id())
-                .rating(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
+                .feedbackId(response.containsKey("_id")?response.get("_id").toString():null)//(feedbackV2 == null ? null : feedbackV2.get_id())
+                .rating((Float) response.get("overallRating"))//(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
                 .build();
     }
 
