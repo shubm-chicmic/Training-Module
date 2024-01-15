@@ -62,7 +62,7 @@ public class UserProgressCRUD {
             } else {
                 userProgress.setStatus(userProgressDto.getStatus());
             }
-            if (userProgress.getStatus() == ProgessConstants.Completed) {
+            if (userProgress.getStatus() == ProgessConstants.NotStarted) {
 
                 List<String> milestonesIds = new ArrayList<>();
 
@@ -72,8 +72,7 @@ public class UserProgressCRUD {
                             .collect(Collectors.toList());
                 }
 
-
-                //delete feedback
+                //if feedbackExist donot uncheck it
                 Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTrainee(
                         userProgress.getTraineeId(),
                         planTask.getPlan(),
@@ -81,7 +80,7 @@ public class UserProgressCRUD {
                         String.valueOf(userProgressDto.getProgressType())
                 );
                 if (isFeedbackExist)
-                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Feedback already Given", null);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Feedback already Given", null, response);
             }
             System.out.println("viva or ppt feedback is created");
             System.out.println("UserProgress " + userProgress);
