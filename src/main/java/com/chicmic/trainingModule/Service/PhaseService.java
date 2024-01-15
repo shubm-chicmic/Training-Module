@@ -29,6 +29,7 @@ public class PhaseService {
     private final TaskRepo taskRepo;
     private final SubTaskRepo subTaskRepo;
     private final PlanTaskRepo planTaskRepo;
+    private final PlanRepo planRepo;
     private final UserProgressService userProgressService;
 
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
@@ -187,7 +188,15 @@ public class PhaseService {
                     planTask.setTotalTasks(planTask.getTotalTasks() + 1);
                     Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
                     planTask.setEstimatedTimeInSeconds(estimatedTime + subTask.getEstimatedTimeInSeconds());
+
+                    Phase<PlanTask> planTaskPhase = planTask.getPhase();
+                    Plan plan = (Plan)planTaskPhase.getEntity();
+                    planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() + subTask.getEstimatedTimeInSeconds());
+                    plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() + subTask.getEstimatedTimeInSeconds());
                     planTaskRepo.save(planTask);
+                    phaseRepo.save(planTaskPhase);
+                    planRepo.save(plan);
+
                 }
             } else {
                 newSubTask = subTaskRepo.findById(subTask.get_id()).orElse(null);
@@ -195,14 +204,29 @@ public class PhaseService {
                 for (PlanTask planTask : planTasks) {
 //                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
                     Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                    Phase<PlanTask> planTaskPhase = planTask.getPhase();
+                    Plan plan = (Plan)planTaskPhase.getEntity();
+
+
                     if(newSubTask.getEstimatedTimeInSeconds() > subTask.getEstimatedTimeInSeconds()){
-                        estimatedTime = estimatedTime - (newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
+                        Integer changeInEstimateTime = (newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
+                        estimatedTime = estimatedTime - changeInEstimateTime;
+                        planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() - changeInEstimateTime);
+                        plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() - changeInEstimateTime);
+
                     }else if(newSubTask.getEstimatedTimeInSeconds() < subTask.getEstimatedTimeInSeconds()){
-                        estimatedTime = estimatedTime + (subTask.getEstimatedTimeInSeconds() - newSubTask.getEstimatedTimeInSeconds());
+                        Integer changeInEstimateTime = (subTask.getEstimatedTimeInSeconds() - newSubTask.getEstimatedTimeInSeconds());
+
+                        estimatedTime = estimatedTime + changeInEstimateTime;
+                        planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() + changeInEstimateTime);
+                        plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() + changeInEstimateTime);
+
                     }
                     if (estimatedTime < 0) estimatedTime = 0;
                     planTask.setEstimatedTimeInSeconds(estimatedTime);
                     planTaskRepo.save(planTask);
+                    phaseRepo.save(planTaskPhase);
+                    planRepo.save(plan);
                 }
             }
 //            String id = (subTask.get_id() == null || subTask.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : subTask.get_id();
@@ -322,7 +346,14 @@ public class PhaseService {
                 planTask.setTotalTasks(planTask.getTotalTasks() == 0 ? 0 : planTask.getTotalTasks() - 1);
                 Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
                 planTask.setEstimatedTimeInSeconds(estimatedTime == 0 ? 0 : estimatedTime - subTask.getEstimatedTimeInSeconds());
+
+                Phase<PlanTask> planTaskPhase = planTask.getPhase();
+                Plan plan = (Plan)planTaskPhase.getEntity();
+                planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
+                plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
                 planTaskRepo.save(planTask);
+                phaseRepo.save(planTaskPhase);
+                planRepo.save(plan);
             }
             Integer taskEstimatedTime = task.getEstimatedTimeInSeconds();
             task.setEstimatedTimeInSeconds(taskEstimatedTime == 0 ? 0 : taskEstimatedTime - subTask.getEstimatedTimeInSeconds());

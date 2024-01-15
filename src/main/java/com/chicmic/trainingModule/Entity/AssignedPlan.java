@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Util.ConversionUtility;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -33,6 +34,7 @@ public class AssignedPlan {
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
+    private Integer trainingStatus = TrainingStatus.ONGOING;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     public List<UserIdAndNameDto> getReviewerDetails() {

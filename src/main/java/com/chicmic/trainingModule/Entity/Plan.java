@@ -68,6 +68,9 @@ public class Plan {
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+    public void setEstimatedTimeInSeconds(Integer estimatedTime) {
+        this.estimatedTime = estimatedTime;
+    }
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;
