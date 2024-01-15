@@ -84,14 +84,14 @@ public class AssignTaskResponseMapper {
                 }
                 Boolean isCompleted = false;
                 if(totalTask == completedTasks) {
-                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id(), EntityType.PLAN) == null) {
-                        UserProgress userProgress = UserProgress.builder()
-                                .planId(plan.get_id())
-                                .progressType(EntityType.PLAN)
-                                .status(ProgessConstants.Completed)
-                                .build();
-                        userProgressService.createUserProgress(userProgress);
-                    }
+//                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id(), EntityType.PLAN) == null) {
+//                        UserProgress userProgress = UserProgress.builder()
+//                                .planId(plan.get_id())
+//                                .progressType(EntityType.PLAN)
+//                                .status(ProgessConstants.Completed)
+//                                .build();
+//                        userProgressService.createUserProgress(userProgress);
+//                    }
                     isCompleted = true;
                     countOfCompletedPlan++;
                 }

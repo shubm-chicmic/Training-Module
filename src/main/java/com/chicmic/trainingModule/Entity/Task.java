@@ -61,7 +61,9 @@ public class Task {
 
         return String.format("%02d:%02d", hours, minutes);
     }
-
+    public void setEstimatedTimeInSeconds(Integer estimatedTime){
+        this.estimatedTime = estimatedTime;
+    }
     public void setEstimatedTime(String estimatedTime) {
         System.out.println("estimatedTime = " + estimatedTime);
         estimatedTime = estimatedTime.trim();

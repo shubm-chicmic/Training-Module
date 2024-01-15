@@ -141,14 +141,14 @@ public class AssignPlanResponseMapper {
                 .map(Object::toString)
                 .collect(Collectors.toList());
         Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
-        if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
-            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
-            if(userProgress != null) {
-                completedTasks = (userProgress.getStatus() == ProgessConstants.Completed) ? 1 : 0;
-            }else {
-                completedTasks = 0;
-            }
-            totalTask = 1;
+        if(planTask.getPlanType() != 3 && planTask.getPlanType() != 4) {
+//            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
+//            if(userProgress != null) {
+//                completedTasks = (userProgress.getStatus() == ProgessConstants.Completed) ? 1 : 0;
+//            }else {
+//                completedTasks = 0;
+//            }
+//            totalTask = 1;
             isPlanCompleted =(totalTask == completedTasks);
         }
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4){

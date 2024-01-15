@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Repository.*;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.formula.functions.T;
@@ -29,21 +30,22 @@ public class PhaseService {
     private final SubTaskRepo subTaskRepo;
     private final PlanTaskRepo planTaskRepo;
     private final UserProgressService userProgressService;
+
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
         int count = 0;
         String phaseNameInitial = "";
-        if(entityType == EntityType.TEST){
+        if (entityType == EntityType.TEST) {
             phaseNameInitial = "Milestone ";
-        }else {
+        } else {
             phaseNameInitial = "Phase ";
         }
-        System.out.println("\u001B[35m "+phases);
+        System.out.println("\u001B[35m " + phases);
         List<Phase<Task>> createdPhases = new ArrayList<>();
         for (Phase<Task> phase : phases) {
             Phase<Task> newPhase = new Phase<>();
-            if(phase.get_id() == null || phase.get_id().isEmpty()){
+            if (phase.get_id() == null || phase.get_id().isEmpty()) {
                 newPhase.set_id(String.valueOf(new ObjectId()));
-            }else {
+            } else {
                 newPhase = (Phase<Task>) getPhaseById(phase.get_id());
             }
             count++;
@@ -59,14 +61,15 @@ public class PhaseService {
         }
         return createdPhases;
     }
+
     public List<Phase<PlanTask>> createPlanPhases(List<Phase<PlanTask>> phases, Object entity) {
-        System.out.println("\u001B[35m "+phases);
+        System.out.println("\u001B[35m " + phases);
         List<Phase<PlanTask>> createdPhases = new ArrayList<>();
         for (Phase<PlanTask> phase : phases) {
             Phase<PlanTask> newPhase = new Phase<>();
-            if(phase.get_id() == null || phase.get_id().isEmpty() || phase.get_id().isBlank()){
+            if (phase.get_id() == null || phase.get_id().isEmpty() || phase.get_id().isBlank()) {
                 newPhase.set_id(String.valueOf(new ObjectId()));
-            }else {
+            } else {
                 newPhase = (Phase<PlanTask>) getPhaseById(phase.get_id());
             }
             System.out.println("\u001B[33m" + phase + "\u001B[0m");
@@ -87,35 +90,34 @@ public class PhaseService {
         for (PlanTask planTask : planTasks) {
             PlanTask newPlanTask = new PlanTask();
             System.out.println("plan task id " + planTask.get_id());
-            if(planTask.get_id() == null || planTask.get_id().isEmpty() || planTask.get_id().isBlank()){
+            if (planTask.get_id() == null || planTask.get_id().isEmpty() || planTask.get_id().isBlank()) {
                 System.out.println("sdisdois " + planTask.get_id());
 
                 newPlanTask.set_id(String.valueOf(new ObjectId()));
                 System.out.println("new Id = " + newPlanTask.get_id());
-            }else {
+            } else {
                 System.out.println("fljgdkofdklf " + planTask.get_id());
-
 
 
                 newPlanTask = planTaskRepo.findById(planTask.get_id()).orElse(null);
                 List<Object> milestones = newPlanTask.getMilestones(); // original milestones
-                if(milestones != null) {
+                if (milestones != null) {
                     for (Object milestone : milestones) {
                         if (!planTask.getMilestones().contains(milestone)) {
                             // this milestone is deleted
                             // delete all userProgress of this milestone
                             System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
-                            userProgressService.deleteAllBySubTaskId(plan.get_id(), (String)milestone);
+                            userProgressService.deleteAllBySubTaskId(plan.get_id(), (String) milestone);
                         }
                     }
                 }
-                if(newPlanTask.getPlanType() == PlanType.VIVA) {
+                if (newPlanTask.getPlanType() == PlanType.VIVA) {
                     List<Object> milestones1 = newPlanTask.getMilestones(); // original milestones
                     for (Object milestone : milestones1) {
                         if (!planTask.getMilestones().contains(milestone)) {
                             // this milestone is deleted
                             // delete all userProgress of this milestone
-                            System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id()+ "\u001B[0m");
+                            System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
                             userProgressService.deleteByMilestoneId(plan.get_id(), newPlanTask.get_id());
                         }
                     }
@@ -124,7 +126,7 @@ public class PhaseService {
 
             }
             Integer totalTask = 0;
-            if(planTask.getMilestones() != null) {
+            if (planTask.getMilestones() != null) {
                 for (Object milestone : planTask.getMilestones()) {
                     Phase<Task> coursePhase = (Phase<Task>) getPhaseById((String) milestone);
                     totalTask += coursePhase.getTotalTasks();
@@ -152,9 +154,9 @@ public class PhaseService {
         List<Task> createdTasks = new ArrayList<>();
         for (Task task : tasks) {
             Task newTask = new Task();
-            if(task.get_id() == null || task.get_id().isEmpty() || task.get_id().isBlank()){
+            if (task.get_id() == null || task.get_id().isEmpty() || task.get_id().isBlank()) {
                 newTask.set_id(String.valueOf(new ObjectId()));
-            }else {
+            } else {
                 newTask = taskRepo.findById(task.get_id()).orElse(null);
             }
 //            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
@@ -176,7 +178,7 @@ public class PhaseService {
         List<SubTask> createdSubTasks = new ArrayList<>();
         for (SubTask subTask : subTasks) {
             SubTask newSubTask = new SubTask();
-            if(subTask.get_id() == null || subTask.get_id().isEmpty() || subTask.get_id().isBlank()){
+            if (subTask.get_id() == null || subTask.get_id().isEmpty() || subTask.get_id().isBlank()) {
                 newSubTask.set_id(String.valueOf(new ObjectId()));
                 // new subtask is created
                 // task count to plantask
@@ -187,8 +189,18 @@ public class PhaseService {
                     planTask.setEstimatedTimeInSeconds(estimatedTime + subTask.getEstimatedTimeInSeconds());
                     planTaskRepo.save(planTask);
                 }
-            }else {
+            } else {
                 newSubTask = subTaskRepo.findById(subTask.get_id()).orElse(null);
+                List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+                for (PlanTask planTask : planTasks) {
+//                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
+                    Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                    Integer changeInEstimateTime = newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds();
+                    estimatedTime = estimatedTime + changeInEstimateTime;
+                    if (estimatedTime < 0) estimatedTime = 0;
+                    planTask.setEstimatedTimeInSeconds(estimatedTime);
+                    planTaskRepo.save(planTask);
+                }
             }
 //            String id = (subTask.get_id() == null || subTask.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : subTask.get_id();
 //            subTask.set_id(id);
@@ -202,6 +214,7 @@ public class PhaseService {
         }
         return createdSubTasks;
     }
+
     public Phase<?> getPhaseById(String phaseId) {
         Phase<?> phase = phaseRepo.findById(phaseId).orElse(null);
         return phase != null && !phase.getIsDeleted() ? phase : null;
@@ -211,22 +224,26 @@ public class PhaseService {
     public List<Phase> getPhaseByIds(List<String> phaseId) {
         return phaseRepo.findAllById(phaseId);
     }
+
     public Task getTaskById(String taskId) {
         Task task = taskRepo.findById(taskId).orElse(null);
         return task.getIsDeleted() ? null : task;
     }
+
     public PlanTask getPlanTaskById(String taskId) {
         PlanTask task = planTaskRepo.findById(taskId).orElse(null);
         return task.getIsDeleted() ? null : task;
     }
+
     public SubTask getSubTaskById(String taskId) {
         SubTask task = subTaskRepo.findById(taskId).orElse(null);
         return task.getIsDeleted() ? null : task;
     }
+
     public boolean deletePhase(Phase<T> phase) {
-        if(phase != null) {
+        if (phase != null) {
             List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
-            if(planTasks.size() > 0){
+            if (planTasks.size() > 0) {
                 return false;
             }
             phase.setIsDeleted(true);
@@ -241,12 +258,11 @@ public class PhaseService {
                     }
                 }
             }
-            if(phase.getEntityType() == EntityType.TEST){
+            if (phase.getEntityType() == EntityType.TEST) {
                 Test test = (Test) phase.getEntity();
-            }else if (phase.getEntityType() == EntityType.COURSE){
+            } else if (phase.getEntityType() == EntityType.COURSE) {
                 Course course = (Course) phase.getEntity();
             }
-
 
 
 //            planService.findIfPhaseExists(phase);
@@ -256,10 +272,9 @@ public class PhaseService {
         }
         return false;
     }
+
     public boolean deleteTask(Task task) {
-        if(task != null){
-            task.setIsDeleted(true);
-            taskRepo.save(task);
+        if (task != null) {
             List<SubTask> subtasks = task.getSubtasks();
             if (subtasks != null) {
                 for (SubTask subTask : subtasks) {
@@ -267,56 +282,63 @@ public class PhaseService {
 //                    subTaskRepo.save(subTask);
                 }
             }
+            task.setIsDeleted(true);
+            taskRepo.save(task);
             return true;
         }
         return false;
     }
+
     public boolean deleteTask(PlanTask task) {
-        if(task != null){
+        if (task != null) {
             task.setIsDeleted(true);
             planTaskRepo.save(task);
             return true;
         }
         return false;
     }
-    public boolean deleteSubtask(SubTask subTask){
-        if(subTask != null){
+
+    public boolean deleteSubtask(SubTask subTask) {
+        if (subTask != null) {
 
             deleteUserProgressBySubTaskId(subTask.get_id());
             List<Task> taskList = findTasksBySubtask(subTask);
             System.out.println("\u001B[41m PhaseId" + taskList.size());
 
-            for (Task task : taskList) {
-               Phase<Task> phase = task.getPhase();
-                System.out.println("\u001B[41m PhaseId" + phase.get_id());
-                Integer phaseEstimatedTime = phase.getEstimatedTimeInSeconds();
-                phase.setEstimatedTimeInSeconds(phaseEstimatedTime == 0 ? 0 : phaseEstimatedTime - subTask.getEstimatedTimeInSeconds());
-               List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
-               for (PlanTask planTask : planTasks) {
-                   System.out.println("\u001B[41m PlanTask" + planTask.getMentorDetails());
-                   Integer estimatedTimeOfPhase = phase.getEstimatedTimeInSeconds();
-                   estimatedTimeOfPhase = estimatedTimeOfPhase == 0 ? 0 : estimatedTimeOfPhase - subTask.getEstimatedTimeInSeconds();
-                   phase.setEstimatedTimeInSeconds(estimatedTimeOfPhase);
-                   planTask.setTotalTasks(planTask.getTotalTasks() == 0 ? 0 : planTask.getTotalTasks() - 1);
-                   Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
-                   System.out.println("Estimated time in seconds: " + estimatedTime);
-                   planTask.setEstimatedTimeInSeconds(estimatedTime == 0 ? 0 : estimatedTime - subTask.getEstimatedTimeInSeconds());
-                   System.out.println("Estimated time in seconds: " + planTask.getEstimatedTime());
-
-               }
+            Task task = subTask.getTask();
+            Phase<Task> phase = task.getPhase();
+            System.out.println("\u001B[41m PhaseId" + phase.get_id());
+            Integer phaseEstimatedTime = phase.getEstimatedTimeInSeconds();
+            Integer phaseTotalTasks = phase.getTotalTasks();
+            phase.setTotalTasks(phaseTotalTasks - 1);
+            phase.setEstimatedTimeInSeconds(phaseEstimatedTime == 0 ? 0 : phaseEstimatedTime - subTask.getEstimatedTimeInSeconds());
+            List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+            for (PlanTask planTask : planTasks) {
+                planTask.setTotalTasks(planTask.getTotalTasks() == 0 ? 0 : planTask.getTotalTasks() - 1);
+                Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                planTask.setEstimatedTimeInSeconds(estimatedTime == 0 ? 0 : estimatedTime - subTask.getEstimatedTimeInSeconds());
+                planTaskRepo.save(planTask);
             }
+            Integer taskEstimatedTime = task.getEstimatedTimeInSeconds();
+            task.setEstimatedTimeInSeconds(taskEstimatedTime == 0 ? 0 : taskEstimatedTime - subTask.getEstimatedTimeInSeconds());
+            taskRepo.save(task);
+            phaseRepo.save(phase);
+
+
             subTask.setIsDeleted(true);
             subTaskRepo.save(subTask);
             return true;
         }
         return false;
     }
+
     public long deleteUserProgressBySubTaskId(String subTaskId) {
         Query query = new Query(Criteria.where("subTaskId").is(subTaskId));
         DeleteResult result = mongoTemplate.remove(query, UserProgress.class);
         System.out.println("UsrProgress Deleted " + result.getDeletedCount());
         return result.getDeletedCount();
     }
+
     public List<Task> findTasksBySubtask(SubTask subTask) {
         return taskRepo.findBySubtasks(subTask);
     }
