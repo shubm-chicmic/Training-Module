@@ -14,6 +14,7 @@ import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
@@ -59,12 +60,14 @@ public class AssignTaskResponseMapper {
         List<PlanDto> plans = new ArrayList<>();
         Set<String> mentors = new HashSet<>();
         Integer countOfCompletedPlan = 0;
+        Integer estimatedTime = 0;
         for (Plan plan : assignTask.getPlans()) {
             if(plan != null && !plan.getDeleted()) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
+                        estimatedTime += planTask.getEstimatedTimeInSeconds();
                         if (planTask == null)continue;
                         mentors.addAll(planTask.getMentorIds());
                         if((planTask.getPlanType() != 3 && planTask.getPlanType() != 4)) {
@@ -107,7 +110,7 @@ public class AssignTaskResponseMapper {
                         .isDeleted(plan.getDeleted())
                         ._id(plan.get_id())
                         .consumedTime("00:00")
-                        .estimatedTime(plan.getEstimatedTime())
+                        .estimatedTime(DateTimeUtil.convertSecondsToString(estimatedTime))
                         .totalTasks(totalTask)
                         .completedTasks(completedTasks)
                         .approver(plan.getApproverDetails())
