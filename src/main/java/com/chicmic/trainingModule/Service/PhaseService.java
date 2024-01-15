@@ -195,8 +195,11 @@ public class PhaseService {
                 for (PlanTask planTask : planTasks) {
 //                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
                     Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
-                    Integer changeInEstimateTime = newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds();
-                    estimatedTime = estimatedTime + changeInEstimateTime;
+                    if(newSubTask.getEstimatedTimeInSeconds() > subTask.getEstimatedTimeInSeconds()){
+                        estimatedTime = estimatedTime - (newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
+                    }else if(newSubTask.getEstimatedTimeInSeconds() < subTask.getEstimatedTimeInSeconds()){
+                        estimatedTime = estimatedTime + (subTask.getEstimatedTimeInSeconds() - newSubTask.getEstimatedTimeInSeconds());
+                    }
                     if (estimatedTime < 0) estimatedTime = 0;
                     planTask.setEstimatedTimeInSeconds(estimatedTime);
                     planTaskRepo.save(planTask);
