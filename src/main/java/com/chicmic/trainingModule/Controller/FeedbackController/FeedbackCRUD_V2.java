@@ -74,7 +74,7 @@ public class FeedbackCRUD_V2 {
         pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
-        return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize);
+        return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize,searchString);
     }
     @GetMapping("/user/{traineeId}/task/{taskId}")
     public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String taskId,@RequestParam String planId,@RequestParam Integer feedbackType) {
