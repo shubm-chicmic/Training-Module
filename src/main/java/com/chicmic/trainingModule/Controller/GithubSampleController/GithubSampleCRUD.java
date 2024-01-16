@@ -38,7 +38,7 @@ public class GithubSampleCRUD {
         if(githubSampleId == null || githubSampleId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
-                return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
             List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = githubSampleService.countNonDeletedGithubSamples(searchString, principal.getName());
 
@@ -49,7 +49,7 @@ public class GithubSampleCRUD {
             System.out.println("i m called");
             GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
             if(githubSample == null){
-                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "GithubSample not found", null, response);
+                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "GithubSample not found", null, response);
             }
             GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSample);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "GithubSample retrieved successfully", githubSampleResponseDto, response);

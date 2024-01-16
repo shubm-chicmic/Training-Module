@@ -1,7 +1,9 @@
 package com.chicmic.trainingModule.Service.GithubSampleServices;
 
 import com.chicmic.trainingModule.Dto.GithubSampleDto.GithubSampleDto;
+import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Repository.GithubSampleRepo;
+import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.GithubSample;
 import lombok.RequiredArgsConstructor;
@@ -44,18 +46,28 @@ public class GithubSampleService {
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-
+        UserDto userDto = TrainingModuleApplication.searchUserById(userId);
+        String teamId = userDto.getTeamId();
         Criteria criteria = Criteria.where("projectName").regex(query, "i")
                 .and("isDeleted").is(false);
-        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true)
+                .andOperator(
+                        new Criteria().orOperator(
+                                Criteria.where("createdBy").is(userId),
+                                Criteria.where("approver").in(userId),
+                                Criteria.where("teams").in(teamId)
+                        )
+                );
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
+
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
+
 
         Query searchQuery = new Query(finalCriteria).with(pageable);
 
@@ -133,17 +145,28 @@ public class GithubSampleService {
     }
 
     public long countNonDeletedGithubSamples(String query, String userId) {
+        UserDto userDto = TrainingModuleApplication.searchUserById(userId);
+        String teamId = userDto.getTeamId();
         Criteria criteria = Criteria.where("projectName").regex(query, "i")
                 .and("isDeleted").is(false);
-        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true)
+                .andOperator(
+                        new Criteria().orOperator(
+                                Criteria.where("createdBy").is(userId),
+                                Criteria.where("approver").in(userId),
+                                Criteria.where("teams").in(teamId)
+                        )
+                );
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
+
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
+
 
         MatchOperation matchStage = Aggregation.match(finalCriteria);
 
