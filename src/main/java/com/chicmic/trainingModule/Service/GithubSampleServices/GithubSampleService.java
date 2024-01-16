@@ -47,15 +47,18 @@ public class GithubSampleService {
         System.out.println("query = " + query);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         UserDto userDto = TrainingModuleApplication.searchUserById(userId);
-        String teamId = userDto.getTeamId();
+        List<String> teams = userDto.getTeams();
+        System.out.println("userDto = " + userDto);
+        System.out.println("teamId = " + teams);
         Criteria criteria = Criteria.where("projectName").regex(query, "i")
                 .and("isDeleted").is(false);
+        Criteria teamsCriteria = Criteria.where("teams").all(teams);
         Criteria approvedCriteria = Criteria.where("isApproved").is(true)
                 .andOperator(
                         new Criteria().orOperator(
                                 Criteria.where("createdBy").is(userId),
                                 Criteria.where("approver").in(userId),
-                                Criteria.where("teams").in(teamId)
+                                teamsCriteria
                         )
                 );
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
@@ -146,15 +149,18 @@ public class GithubSampleService {
 
     public long countNonDeletedGithubSamples(String query, String userId) {
         UserDto userDto = TrainingModuleApplication.searchUserById(userId);
-        String teamId = userDto.getTeamId();
+        List<String> teams = userDto.getTeams();
+        System.out.println("userDto = " + userDto);
+        System.out.println("teamId = " + teams);
         Criteria criteria = Criteria.where("projectName").regex(query, "i")
                 .and("isDeleted").is(false);
+        Criteria teamsCriteria = Criteria.where("teams").all(teams);
         Criteria approvedCriteria = Criteria.where("isApproved").is(true)
                 .andOperator(
                         new Criteria().orOperator(
                                 Criteria.where("createdBy").is(userId),
                                 Criteria.where("approver").in(userId),
-                                Criteria.where("teams").in(teamId)
+                                teamsCriteria
                         )
                 );
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
@@ -166,6 +172,7 @@ public class GithubSampleService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
+
 
 
         MatchOperation matchStage = Aggregation.match(finalCriteria);
