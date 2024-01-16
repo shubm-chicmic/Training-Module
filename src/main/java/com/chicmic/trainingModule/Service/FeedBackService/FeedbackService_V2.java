@@ -263,7 +263,7 @@ public class FeedbackService_V2 {
         return feedbackResponseV2;
     }
 
-    public ApiResponse findFeedbacksOnUserPlan(String traineeId,String planId,Integer pageNumber, Integer pageSize){
+    public ApiResponse findFeedbacksOnUserPlan(String traineeId,String planId,Integer pageNumber, Integer pageSize,String query){
 //        List<Criteria> criteriaList = getAllTaskIdsInPlan(traineeId,planId);
         List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
                         new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
@@ -275,7 +275,9 @@ public class FeedbackService_V2 {
 //        Criteria criteria = new Criteria().orOperator(criteriaList);
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId).and("isDeleted").is(false);
         int skipValue = (pageNumber - 1) * pageSize;
-
+        if(query==null || query.isBlank()) query = ".*";
+        java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
+        
         Aggregation aggregation = newAggregation(
                 match(criteria),
                 context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
@@ -291,6 +293,9 @@ public class FeedbackService_V2 {
                                 .append("preserveNullAndEmptyArrays", true)
                 ),
                 context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", asList(
+                        new Document("userData.reviewerName", new Document("$regex", namePattern))
+                ))),
                 context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
                 context -> new Document("$limit", pageSize)
         );
