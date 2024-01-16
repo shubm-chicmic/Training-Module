@@ -18,9 +18,11 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating;
 import static com.chicmic.trainingModule.TrainingModuleApplication.findTraineeAndMap;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchNameById;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
@@ -73,7 +75,10 @@ public class TraineePlanService_V2 {
                                         "$$REMOVE"
                                 ))
                         ))
+                        .append("status", new Document("$first", "$$ROOT.trainingStatus"))
+                        .append("startDate",new Document("$first","$$ROOT.date"))// Include the "deleted" field
                 ),
+//                context -> new Document("$project", new Document().append("status",1).append("date",1)),
                 context -> new Document("$match", new Document("$or", Arrays.asList(
                         new Document("name", new Document("$regex", namePattern)),
                         new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
@@ -114,7 +119,7 @@ public class TraineePlanService_V2 {
 //                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
 //                context -> new Document("$limit", pageSize)
 //        );
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
 
         for (Document tr : traineePlanResponseList){
@@ -136,10 +141,20 @@ public class TraineePlanService_V2 {
                             }
                     );
             });
-            HashSet<UserIdAndNameDto> mentorNames = new HashSet<>();
-            names.forEach(nm-> mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
+            //HashSet<UserIdAndNameDto> mentorNames = new HashSet<>();
+            HashSet<String> mentorNames = new HashSet<>();
+            names.forEach(nm-> mentorNames.add(searchNameById(nm)));//mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
+            //names.forEach(nm->mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
             tr.put("mentor",mentorNames);
             tr.put("plan",planDetails);
+            System.out.println(tr.get("status") + "}}}}}}}}}}}}}}");
+            System.out.println(tr.get("startDate") + "}}}}}}}}}}}}}}");
+            if(tr.get("status") == null)
+                tr.put("status",1);
+            if(tr.get("startDate") == null)
+                tr.put("startDate",formatter.format(new Date()));
+            else
+                tr.put("startDate",formatter.format(tr.get("startDate")));
         };
 
         Set<String> userIds = new HashSet<>();
@@ -159,7 +174,7 @@ public class TraineePlanService_V2 {
         for (Document document : traineeRatingSummary){
             String _id = (String) document.get("_id");
             int index = userSummary.get(_id);
-            traineePlanResponseList.get(index).put("rating",roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")));
+            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count")));
         }
         return traineePlanResponseList;
     }
