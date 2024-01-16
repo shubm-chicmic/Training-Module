@@ -154,6 +154,7 @@ public class AssignPlanResponseMapper {
             isPlanCompleted =(totalTask == completedTasks);
         }
         if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4){
+            completedTasks = 0;
             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id(), planTask.getPlanType());
             if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed){
                 completedTasks++;

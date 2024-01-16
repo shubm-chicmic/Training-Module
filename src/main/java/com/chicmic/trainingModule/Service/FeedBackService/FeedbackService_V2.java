@@ -857,7 +857,8 @@ public class FeedbackService_V2 {
         if (document == null) return 0f;
         int count = (int) document.get("count");
         double totalRating = (double) document.get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
+//        return roundOff_Rating(totalRating/count);
     }
 
     public Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
@@ -874,7 +875,8 @@ public class FeedbackService_V2 {
         if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
+//        return roundOff_Rating(totalRating/count);
     }
 
     public Float computeOverallRatingOfTrainee(String traineeId){
@@ -889,7 +891,8 @@ public class FeedbackService_V2 {
         if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
+//        return roundOff_Rating(totalRating/count);
     }
 
     public Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
@@ -911,7 +914,8 @@ public class FeedbackService_V2 {
         if (document.isEmpty()) return 0f;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
+//        return roundOff_Rating(totalRating/count);
     }
 
     public boolean courseExist(String traineeId,int tmp,String taskId){
