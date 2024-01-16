@@ -66,6 +66,9 @@ public class FeedbackCRUD_V2 {
     @GetMapping("/user/{userId}/plan/{planId}")
     public ApiResponse findFeedbacksOnUserPlan(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                                @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+                                                 @RequestParam(value = "searchString", defaultValue = ".*", required = false) String searchString,
+                                                @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
+                                                @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                                @PathVariable(value = "planId")String planId,
                                                @PathVariable String userId){
         pageNumber /= pageSize;
