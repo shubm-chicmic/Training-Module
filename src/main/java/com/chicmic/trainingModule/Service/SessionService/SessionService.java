@@ -65,10 +65,9 @@ public class SessionService {
                 .andOperator(
                         new Criteria().orOperator(
                                 Criteria.where("createdBy").is(userId),
-                                Criteria.where("reviewers").in(userId),
+                                Criteria.where("approver").in(userId),
                                 Criteria.where("trainees").in(userId),
                                 Criteria.where("sessionBy").in(userId)
-
                         )
                 );
         Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
@@ -195,7 +194,7 @@ public class SessionService {
                 .andOperator(
                         new Criteria().orOperator(
                                 Criteria.where("createdBy").is(userId),
-                                Criteria.where("reviewers").in(userId),
+                                Criteria.where("approver").in(userId),
                                 Criteria.where("trainees").in(userId),
                                 Criteria.where("sessionBy").in(userId)
 

@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.SubTaskRepo;
 import com.chicmic.trainingModule.Repository.TaskRepo;
 import com.chicmic.trainingModule.Service.PhaseService;
+import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
@@ -134,7 +135,7 @@ public class CourseService {
     public List<Course> getAllCourses(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(direction, sortKey);
             pageable = PageRequest.of(pageNumber, pageSize, sort);
         } else {
@@ -160,6 +161,12 @@ public class CourseService {
         Query searchQuery = new Query(finalCriteria).with(pageable);
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
+        if (!sortKey.isEmpty() && sortKey.equals("createdByName")) {
+            courses.sort(Comparator.comparing(course -> TrainingModuleApplication.searchNameById(course.getCreatedBy())));
+            if (sortDirection != 1) {
+                Collections.reverse(courses);
+            }
+        }
 
         if (!sortKey.isEmpty()) {
             Comparator<Course> courseComparator = Comparator.comparing(course -> {
@@ -177,7 +184,7 @@ public class CourseService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 courses.sort(courseComparator.reversed());
             } else {
                 courses.sort(courseComparator);
