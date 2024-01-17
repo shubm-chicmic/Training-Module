@@ -263,7 +263,7 @@ public class FeedbackService_V2 {
         return feedbackResponseV2;
     }
 
-    public ApiResponse findFeedbacksOnUserPlan(String traineeId,String planId,Integer pageNumber, Integer pageSize,String query){
+    public ApiResponse findFeedbacksOnUserPlan(String traineeId,String planId,Integer pageNumber, Integer pageSize,String query,Integer sortDirection,String sortKey){
 //        List<Criteria> criteriaList = getAllTaskIdsInPlan(traineeId,planId);
         List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
                         new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
@@ -296,6 +296,7 @@ public class FeedbackService_V2 {
                 context -> new Document("$match", new Document("$or", asList(
                         new Document("userData.reviewerName", new Document("$regex", namePattern))
                 ))),
+                context -> new Document("$sort", new Document(sortKey, sortDirection)),
                 context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
                 context -> new Document("$limit", pageSize)
         );
