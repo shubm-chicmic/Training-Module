@@ -13,5 +13,5 @@ import java.util.List;
 @Builder
 public class AssignedPlanUpdateDto {
     private List<String> plan;
-    private LocalDateTime startDate;
+    private Date startDate;
 }
