@@ -2,6 +2,8 @@ package com.chicmic.trainingModule.Dto.AssignTaskDto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -11,4 +13,5 @@ import java.util.List;
 @Builder
 public class AssignedPlanUpdateDto {
     private List<String> plan;
+    private LocalDateTime startDate;
 }
