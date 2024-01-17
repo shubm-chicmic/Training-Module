@@ -78,10 +78,14 @@ public class SessionCRUD {
     @PutMapping
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
+
         if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
         if (session != null) {
+            if(session.getStatus() == StatusConstants.COMPLETED){
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session is Completed, You Can't Update the session !!", null, response);
+            }
 
             if (sessionDto != null && sessionDto.getApproved() != null) {
                 Set<String> approver = session.getApprover();

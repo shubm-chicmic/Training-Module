@@ -75,6 +75,8 @@ public class FeedbackCRUD_V2 {
         sortDirection = (sortDirection!=1)?-1:1;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
+        if(sortKey.equals("reviewerName"))
+                sortKey = String.format("userData.%s",sortKey);
         return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize,searchString,sortDirection,sortKey);
     }
     @GetMapping("/user/{traineeId}/task/{taskId}")
