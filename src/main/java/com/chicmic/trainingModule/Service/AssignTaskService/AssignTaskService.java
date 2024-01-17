@@ -61,7 +61,7 @@ public class AssignTaskService {
                 .plans(plans)
                 .userId(userId)
                 .trainingStatus(TrainingStatus.ONGOING)
-                .startDate(assignTaskDto.getDate())
+                .date(assignTaskDto.getDate())
                 .build();
         return assignTaskRepo.save(assignTask);
     }

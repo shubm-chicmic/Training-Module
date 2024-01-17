@@ -129,7 +129,7 @@ public class AssignTaskResponseMapper {
                 .isCompleted(countOfCompletedPlan == plans.size())
                 .plans(plans)
                 .trainee(trainee)
-                .startDate(DateTimeUtil.convertLocalDateTimeToDate(assignTask.getStartDate()))
+                .date(assignTask.getDate())
                 .build();
     }
 

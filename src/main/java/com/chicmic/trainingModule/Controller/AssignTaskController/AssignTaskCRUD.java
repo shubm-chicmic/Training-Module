@@ -89,8 +89,8 @@ public class AssignTaskCRUD {
                 }
                 assignedPlan.setPlans(plans);
             }
-            if(assignTaskDto.getStartDate() != null){
-                assignedPlan.setStartDate(DateTimeUtil.convertStringToDate(assignTaskDto.getStartDate()));
+            if(assignTaskDto.getDate() != null){
+                assignedPlan.setDate(assignTaskDto.getDate());
             }
             AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
             return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);

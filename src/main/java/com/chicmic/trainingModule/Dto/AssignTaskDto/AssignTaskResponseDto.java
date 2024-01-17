@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.AssignTaskDto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -13,7 +14,7 @@ public class AssignTaskResponseDto {
 
     private String _id;
     private Object trainee;
-    private String startDate;
+    private LocalDateTime date;
 //    private Integer completedTask;
 //    private Integer totalTasks;
     private Boolean isCompleted;
