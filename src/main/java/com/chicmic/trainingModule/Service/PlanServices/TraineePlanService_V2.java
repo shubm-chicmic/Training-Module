@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.DateTimeUtil;
 import com.mongodb.client.result.UpdateResult;
 import org.apache.catalina.User;
 import org.bson.Document;
@@ -158,10 +159,10 @@ public class TraineePlanService_V2 {
             AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
             if(assignedPlan != null){
                 tr.put("status", assignedPlan.getTrainingStatus());
-                tr.put("startDate", formatter.format(assignedPlan.getDate()));
+                tr.put("startDate", formatter.format(DateTimeUtil.convertLocalDateTimeToDate(assignedPlan.getDate())));
             }else {
                 tr.put("status", TrainingStatus.ONGOING);
-                tr.put("startDate", formatter.format(LocalDateTime.now()));
+                tr.put("startDate",formatter.format(DateTimeUtil.convertLocalDateTimeToDate(LocalDateTime.now())));
             }
 //                if (tr.get("status") == null && assignedPlan == null)
 //                    tr.put("status", 1);

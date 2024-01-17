@@ -1,6 +1,9 @@
 package com.chicmic.trainingModule.Util;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 public class DateTimeUtil {
 
@@ -12,6 +15,12 @@ public class DateTimeUtil {
         String formattedTime = dateTime.format(DateTimeFormatter.ofPattern("h:mm a"));
         formattedTime = formattedTime.replaceAll("(?i)AM", "Am").replaceAll("(?i)PM", "Pm");
         return formattedTime;
+    }
+    public static Date convertLocalDateTimeToDate(LocalDateTime localDateTime){
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
+        Date date = Date.from(zonedDateTime.toInstant());
+        return date;
     }
     public static String getDateFromDate(LocalDateTime dateTime) {
         if (dateTime == null) {
