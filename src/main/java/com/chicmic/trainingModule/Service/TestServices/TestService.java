@@ -92,7 +92,7 @@ public class TestService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 tests.sort(testComparator.reversed());
             } else {
                 tests.sort(testComparator);
@@ -104,7 +104,7 @@ public class TestService {
     public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(direction, sortKey);
             pageable = PageRequest.of(pageNumber, pageSize, sort);
         } else {
@@ -157,7 +157,7 @@ public class TestService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 tests.sort(testComparator.reversed());
             } else {
                 tests.sort(testComparator);

@@ -51,7 +51,7 @@ public class SessionService {
         System.out.println("sortKey = " + sortKey);
         Pageable pageable;
         if(!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(direction, sortKey);
             pageable = PageRequest.of(pageNumber, pageSize, sort);
         }else {
@@ -107,7 +107,7 @@ public class SessionService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 sessions.sort(sessionComparator.reversed());
             } else {
                 sessions.sort(sessionComparator);

@@ -91,7 +91,7 @@ public class GithubSampleService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 githubSamples.sort(githubSampleComparator.reversed());
             } else {
                 githubSamples.sort(githubSampleComparator);

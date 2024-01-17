@@ -96,7 +96,7 @@ public class PlanService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 plans.sort(planComparator.reversed());
             } else {
                 plans.sort(planComparator);
@@ -109,7 +109,7 @@ public class PlanService {
     public List<Plan> getAllPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(direction, sortKey);
             pageable = PageRequest.of(pageNumber, pageSize, sort);
         } else {
@@ -154,7 +154,7 @@ public class PlanService {
                 }
             });
 
-            if (sortDirection == 1) {
+            if (sortDirection != 1) {
                 plans.sort(planComparator.reversed());
             } else {
                 plans.sort(planComparator);
