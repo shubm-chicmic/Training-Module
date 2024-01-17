@@ -16,7 +16,7 @@ public class AssignTaskDto {
     private LocalDateTime date;
     private List<String> users;
     private List<String> planIds;
-    private Set<String> reviewers = new HashSet<>();
+//    private Set<String> reviewers = new HashSet<>();
     private Boolean approved = false;
 
     @Override
@@ -24,7 +24,6 @@ public class AssignTaskDto {
         return "AssignTaskDto{" +
                 "users=" + users +
                 ", plans=" + planIds +
-                ", reviewers=" + reviewers +
                 ", approved=" + approved +
                 '}';
     }

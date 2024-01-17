@@ -126,11 +126,10 @@ public class AssignTaskResponseMapper {
                 ._id(assignTask.get_id())
                 .createdByName(TrainingModuleApplication.searchNameById(assignTask.getCreatedBy()))
                 .createdBy(assignTask.getCreatedBy())
-                .reviewers(assignTask.getReviewerDetails())
                 .isCompleted(countOfCompletedPlan == plans.size())
                 .plans(plans)
                 .trainee(trainee)
-                .date(assignTask.getDate())
+                .startDate(DateTimeUtil.convertLocalDateTimeToDate(assignTask.getStartDate()))
                 .build();
     }
 
