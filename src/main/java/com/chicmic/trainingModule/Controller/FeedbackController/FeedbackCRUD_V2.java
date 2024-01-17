@@ -72,9 +72,10 @@ public class FeedbackCRUD_V2 {
                                                @PathVariable(value = "planId")String planId,
                                                @PathVariable String userId){
         pageNumber /= pageSize;
+        sortDirection = (sortDirection!=1)?-1:1;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
-        return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize,searchString);
+        return feedbackService.findFeedbacksOnUserPlan(userId,planId,pageNumber,pageSize,searchString,sortDirection,sortKey);
     }
     @GetMapping("/user/{traineeId}/task/{taskId}")
     public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String taskId,@RequestParam String planId,@RequestParam Integer feedbackType) {
