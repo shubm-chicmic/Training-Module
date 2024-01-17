@@ -81,7 +81,7 @@ public class SessionCRUD {
     @PutMapping
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
-
+        Integer originalStatus = session.getStatus();
         if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
@@ -117,6 +117,7 @@ public class SessionCRUD {
                     if (session.getSessionBy().contains(principal.getName())) {
                         session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
                     } else {
+                        session = sessionService.updateStatus(sessionId, originalStatus);
                         return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Are Not Authorized to Post MOM", null, response);
                     }
                 }
