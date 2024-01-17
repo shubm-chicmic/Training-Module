@@ -35,6 +35,9 @@ public class GithubSampleCRUD {
             HttpServletResponse response,
             Principal principal
     ) throws JsonProcessingException {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         if(githubSampleId == null || githubSampleId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)

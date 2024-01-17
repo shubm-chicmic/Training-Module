@@ -43,6 +43,9 @@ public class CourseCRUD {
             @RequestParam(required = false ) String traineeId,
             Principal principal
     )  {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         if(sortKey != null && !sortKey.isEmpty() && sortKey.equals("courseName")){
             sortKey = "name";
         }
