@@ -43,6 +43,9 @@ public class TestCRUD {
             @RequestParam(required = false) String taineeId,
             Principal principal
     )  {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey, taineeId);

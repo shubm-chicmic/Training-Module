@@ -46,6 +46,9 @@ public class PlanCRUD {
             HttpServletResponse response,
             Principal principal
     ) {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);

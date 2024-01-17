@@ -36,6 +36,9 @@ public class SessionCRUD {
             HttpServletResponse response,
             Principal principal
     ) throws JsonProcessingException {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         if(sessionId == null || sessionId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
