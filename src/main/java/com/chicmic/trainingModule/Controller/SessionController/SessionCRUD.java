@@ -83,9 +83,9 @@ public class SessionCRUD {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
         if (session != null) {
-            if(session.getStatus() == StatusConstants.COMPLETED){
-                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session is Completed, You Can't Update the session !!", null, response);
-            }
+//            if(session.getStatus() == StatusConstants.COMPLETED){
+//                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session is Completed, You Can't Update the session !!", null, response);
+//            }
 
             if (sessionDto != null && sessionDto.getApproved() != null) {
                 Set<String> approver = session.getApprover();
@@ -102,7 +102,7 @@ public class SessionCRUD {
                 if(sessionDto.getStatus() != StatusConstants.PENDING && sessionDto.getStatus() != StatusConstants.UPCOMING && sessionDto.getStatus() != StatusConstants.COMPLETED) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
                 }
-                if(!session.isApproved()) {
+                if(!session.isApproved() && sessionDto.getStatus() != session.getStatus()) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Can't update status since Session is not approved", null, response);
                 }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
