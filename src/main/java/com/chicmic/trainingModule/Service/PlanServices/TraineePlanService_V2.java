@@ -194,12 +194,25 @@ public class TraineePlanService_V2 {
         return traineePlanResponseList;
     }
 
-    public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto){
+    public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto, String createdBy){
         Criteria criteria = Criteria.where("userId").is(userIdAndStatusDto.getTraineeId());
         Update update = new Update();
         update.set("trainingStatus",userIdAndStatusDto.getStatus());
         UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria),update,AssignedPlan.class);
         if (updateResult.getModifiedCount() == 0)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"No user found!!");
+        {
+            AssignedPlan assignedPlan = AssignedPlan.builder()
+                    .plans(new ArrayList<>())
+                    .date(LocalDateTime.now())
+                    .trainingStatus(userIdAndStatusDto.getStatus())
+                    .userId(userIdAndStatusDto.getTraineeId())
+                    .updatedAt(LocalDateTime.now())
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(createdBy)
+                    .deleted(false)
+                    .approved(false)
+                    .build();
+            assignTaskService.saveAssignTask(assignedPlan);
+        }
     }
 }

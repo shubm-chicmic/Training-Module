@@ -39,6 +39,9 @@ public class AssignTaskService {
     private final MongoTemplate mongoTemplate;
 
     //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
+    public AssignedPlan saveAssignTask(AssignedPlan assignedPlan){
+        return assignTaskRepo.save(assignedPlan);
+    }
     public AssignedPlan createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
         AssignedPlan assignTask = getAllAssignTasksByTraineeId(userId);
         if(assignTask != null) {
