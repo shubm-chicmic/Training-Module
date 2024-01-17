@@ -25,7 +25,7 @@ public class AssignedPlan {
     @Id
     private String _id;
     private String userId;
-    private LocalDateTime startDate;
+    private LocalDateTime date;
     private Integer estimatedTime;
     private Integer consumedTime;
     @DBRef
