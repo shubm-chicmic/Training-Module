@@ -13,6 +13,22 @@ public class DateTimeUtil {
         formattedTime = formattedTime.replaceAll("(?i)AM", "Am").replaceAll("(?i)PM", "Pm");
         return formattedTime;
     }
+    public static LocalDateTime convertStringToDate(String dateString) {
+        if (dateString == null || dateString.isEmpty()) {
+            throw new IllegalArgumentException("Invalid date string");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return LocalDateTime.parse(dateString, formatter);
+    }
+    public static String convertLocalDateTimeToDate(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            throw new IllegalArgumentException("Invalid LocalDateTime");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return dateTime.format(formatter);
+    }
 
     public static String getDateFromDate(LocalDateTime dateTime) {
         if (dateTime == null) {

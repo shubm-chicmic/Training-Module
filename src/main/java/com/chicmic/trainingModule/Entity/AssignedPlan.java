@@ -25,21 +25,18 @@ public class AssignedPlan {
     @Id
     private String _id;
     private String userId;
-    private LocalDateTime date;
+    private LocalDateTime startDate;
     private Integer estimatedTime;
     private Integer consumedTime;
     @DBRef
     private List<Plan> plans;
-    private Set<String> reviewers = new HashSet<>();
+//    private Set<String> reviewers = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
     private Integer trainingStatus = TrainingStatus.ONGOING;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    public List<UserIdAndNameDto> getReviewerDetails() {
-        return ConversionUtility.convertToUserIdAndName(this.reviewers);
-    }
     public List<Plan> getPlans() {
         if(this.plans == null)return null;
         return plans.stream()

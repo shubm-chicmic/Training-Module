@@ -14,6 +14,7 @@ import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
+import com.chicmic.trainingModule.Util.DateTimeUtil;
 import com.chicmic.trainingModule.Util.Pagenation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
@@ -87,6 +88,9 @@ public class AssignTaskCRUD {
                     }
                 }
                 assignedPlan.setPlans(plans);
+            }
+            if(assignTaskDto.getStartDate() != null){
+                assignedPlan.setStartDate(DateTimeUtil.convertStringToDate(assignTaskDto.getStartDate()));
             }
             AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
             return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);
