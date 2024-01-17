@@ -39,8 +39,8 @@ public class AssignedPlanDropdown {
         return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "AssignedPlan not found", response);
     }
     @PatchMapping("/trainee-status")
-    public ApiResponse updateTraineeStatus(@RequestBody UserIdAndStatusDto userIdAndStatusDto){
-        traineePlanServiceV2.updateTraineeStatus(userIdAndStatusDto);
+    public ApiResponse updateTraineeStatus(@RequestBody UserIdAndStatusDto userIdAndStatusDto, Principal principal){
+        traineePlanServiceV2.updateTraineeStatus(userIdAndStatusDto, principal.getName());
         return new ApiResponse(200,"Trainee status updated successfully!!",null);
     }
 }
