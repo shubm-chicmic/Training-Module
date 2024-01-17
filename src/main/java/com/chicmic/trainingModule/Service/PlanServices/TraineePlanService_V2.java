@@ -142,8 +142,8 @@ public class TraineePlanService_V2 {
                     );
             });
             HashSet<UserIdAndNameDto> mentorNames = new HashSet<>();
-          //  HashSet<String> mentorNames = new HashSet<>();
-           // names.forEach(nm-> mentorNames.add(searchNameById(nm)));//mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
+            //HashSet<String> mentorNames = new HashSet<>();
+            //names.forEach(nm-> mentorNames.add(searchNameById(nm)));//mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
             names.forEach(nm->mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
             tr.put("mentor",mentorNames);
             tr.put("plan",planDetails);
