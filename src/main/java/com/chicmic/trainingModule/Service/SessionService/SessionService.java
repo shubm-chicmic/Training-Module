@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.MomMessage;
 import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
 import com.chicmic.trainingModule.Repository.SessionRepo;
@@ -171,6 +172,7 @@ public class SessionService {
                 session.setApproved(true);
             }else {
                 session.setApproved(false);
+                session.setStatus(StatusConstants.PENDING);
             }
             Set<String> approvedBy = new HashSet<>();
             for (String approver : session.getApprovedBy()){

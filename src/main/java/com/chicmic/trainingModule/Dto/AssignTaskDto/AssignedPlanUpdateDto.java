@@ -14,4 +14,9 @@ import java.util.List;
 public class AssignedPlanUpdateDto {
     private List<String> plan;
     private LocalDateTime date;
+    public void setDate() {
+        if (date != null) {
+            date = date.plusHours(5).plusMinutes(30);
+        }
+    }
 }
