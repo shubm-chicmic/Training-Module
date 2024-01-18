@@ -26,7 +26,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private Float theoreticalRating;
     private Float technicalRating;
     private Float communicationRating;
-    private String createdOn;
+    private Date createdOn;
     private Float rating;
     private String comment;
     private Float overallRating;
