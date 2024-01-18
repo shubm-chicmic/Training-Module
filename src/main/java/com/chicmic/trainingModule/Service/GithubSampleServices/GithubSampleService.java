@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Entity.GithubSample;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -45,7 +46,17 @@ public class GithubSampleService {
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Pageable pageable;
+        if (!sortKey.isEmpty()) {
+            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = Sort.by(direction, sortKey);
+            pageable = PageRequest.of(pageNumber, pageSize, sort);
+        } else {
+            pageable = PageRequest.of(pageNumber, pageSize);
+        }
+
+
+
         UserDto userDto = TrainingModuleApplication.searchUserById(userId);
         List<String> teams = userDto.getTeams();
         System.out.println("userDto = " + userDto);

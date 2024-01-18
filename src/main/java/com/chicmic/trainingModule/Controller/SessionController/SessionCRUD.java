@@ -64,7 +64,9 @@ public class SessionCRUD {
         System.out.println("sessionDto = " + sessionDto);
         sessionDto.setCreatedBy(principal.getName());
         sessionDto.setStatus(StatusConstants.PENDING);
-        sessionDto = CustomObjectMapper.convert(sessionService.createSession(CustomObjectMapper.convert(sessionDto, Session.class)), SessionDto.class);
+        Session session = CustomObjectMapper.convert(sessionDto, Session.class);
+        session.setDateTime(sessionDto.getDateTime());
+        sessionDto = CustomObjectMapper.convert(sessionService.createSession(session), SessionDto.class);
         return new ApiResponse(HttpStatus.CREATED.value(), "Session created successfully", sessionDto);
     }
 
