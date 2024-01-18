@@ -765,10 +765,12 @@ public class FeedbackService_V2 {
 
     public static Float compute_rating(double totalRating,int count){
         if(totalRating==0) return 0f;
-        int temp = (int)(totalRating * 10 / count);
-//        return roundOff_Rating(totalRating/count);
-        float temp1 = temp;
-        return temp1/10;
+        double num = totalRating/count;
+        double truncatedNum = Math.floor(num * 100) / 100;
+
+       // int temp = (int)(totalRating/count * 100);
+//       return roundOff_Rating(totalRating/count);
+        return (float)truncatedNum;
     }
 
     public Map<String,Object> computeOverallRating(String traineeId,String courseId,String planId,int type){
