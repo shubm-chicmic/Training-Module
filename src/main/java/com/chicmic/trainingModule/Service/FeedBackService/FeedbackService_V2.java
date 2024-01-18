@@ -217,7 +217,7 @@ public class FeedbackService_V2 {
 
         Rating rating = Rating.getRating(feedbackRequestDto);
         Update update = new Update()
-                .set("updateAt",formatter.format(date))
+                .set("updateAt",date)
                 .set("details",rating)
                 .set("comment",feedbackRequestDto.getComment())
                 .set("overallRating",compute_rating(feedbackRequestDto.computeRating(),1));
