@@ -16,9 +16,8 @@ public class AssignedPlanUpdateDto {
     private List<String> plan;
     @JsonProperty("startDate")
     private LocalDateTime date;
-    public void setDate() {
-        if (date != null) {
-            date = date.plusHours(5).plusMinutes(30);
-        }
+    public void setDate(LocalDateTime date) {
+        if(date != null)
+            this.date = date.plusHours(5).plusMinutes(30);
     }
 }
