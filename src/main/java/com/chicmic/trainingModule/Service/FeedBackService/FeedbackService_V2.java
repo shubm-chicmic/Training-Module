@@ -220,7 +220,7 @@ public class FeedbackService_V2 {
                 .set("updateAt",date)
                 .set("details",rating)
                 .set("comment",feedbackRequestDto.getComment())
-                .set("overallRating",compute_rating(feedbackRequestDto.computeRating(),1));
+                .set("overallRating",compute_rating1(feedbackRequestDto.computeRating(),1));
 
        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
@@ -765,11 +765,24 @@ public class FeedbackService_V2 {
 
     public static Float compute_rating(double totalRating,int count){
         if(totalRating==0) return 0f;
-        int temp = (int)(totalRating * 10 / count);
-//        return roundOff_Rating(totalRating/count);
-        float temp1 = temp;
-        return temp1/10;
+        if(count==1) return (float)totalRating;
+        double num = totalRating/count;
+        double truncatedNum = Math.floor(num * 100) / 100;
+
+       // int temp = (int)(totalRating/count * 100);
+//       return roundOff_Rating(totalRating/count);
+        return (float)truncatedNum;
     }
+    public static Float compute_rating1(double totalRating,int count){
+        if(totalRating==0) return 0f;
+        double num = totalRating/count;
+        double truncatedNum = Math.floor(num * 100) / 100;
+
+       // int temp = (int)(totalRating/count * 100);
+//       return roundOff_Rating(totalRating/count);
+        return (float)truncatedNum;
+    }
+    
 
     public Map<String,Object> computeOverallRating(String traineeId,String courseId,String planId,int type){
         if(courseId == null||planId == null) return null;
