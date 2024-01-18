@@ -773,6 +773,16 @@ public class FeedbackService_V2 {
 //       return roundOff_Rating(totalRating/count);
         return (float)truncatedNum;
     }
+    public static Float compute_rating1(double totalRating,int count){
+        if(totalRating==0) return 0f;
+        double num = totalRating/count;
+        double truncatedNum = Math.floor(num * 100) / 100;
+
+       // int temp = (int)(totalRating/count * 100);
+//       return roundOff_Rating(totalRating/count);
+        return (float)truncatedNum;
+    }
+    
 
     public Map<String,Object> computeOverallRating(String traineeId,String courseId,String planId,int type){
         if(courseId == null||planId == null) return null;
