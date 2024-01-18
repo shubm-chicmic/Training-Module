@@ -765,8 +765,9 @@ public class FeedbackService_V2 {
 
     public static Float compute_rating(double totalRating,int count){
         if(totalRating==0) return 0f;
-        float temp = (float)(totalRating * 10 / count);
+        int temp = (int)(totalRating * 10 / count);
 //        return roundOff_Rating(totalRating/count);
+        float temp1 = temp;
         return temp/10;
     }
 
