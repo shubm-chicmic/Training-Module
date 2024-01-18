@@ -716,9 +716,10 @@ public class FeedbackService_V2 {
     public List<FeedbackResponseDto> findFirstFiveFeedbacksOfTrainee(String traineeId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false);
         List<Feedback_V2> feedbackV2List = mongoTemplate.find(new Query(criteria),Feedback_V2.class);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return feedbackV2List.stream().map(f -> FeedbackResponseDto.builder().feedback(f.getComment())
                 .name(TrainingModuleApplication.searchNameById(f.getCreatedBy()))
-                .date(f.getCreatedAt()).rating(compute_rating(f.getOverallRating(),1)).build()).toList();
+                .date(formatter.format(f.getCreatedAt())).rating(compute_rating(f.getOverallRating(),1)).build()).toList();
     }
 
 //    public DashboardResponse findFeedbacksSummaryOfTrainee(String traineeId){
