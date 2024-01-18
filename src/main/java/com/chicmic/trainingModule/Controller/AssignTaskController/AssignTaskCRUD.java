@@ -103,6 +103,12 @@ public class AssignTaskCRUD {
                         planIds.add(plan.get_id());
                     }
                 }
+                for (String planDtoId : assignTaskDto.getPlan()){
+                    if(!planIds.contains(planDtoId)){
+                        //addedPlan
+                        assignedPlan.setTrainingStatus(TrainingStatus.ONGOING);
+                    }
+                }
                 for (String planId : planIds){
                     if(!assignTaskDto.getPlan().contains(planId)){
                         //deletedplan
@@ -111,6 +117,7 @@ public class AssignTaskCRUD {
                         userProgressService.deleteUserProgressByPlanId(userId,planId);
                     }
                 }
+
                 assignedPlan.setPlans(plans);
             }
             if(assignTaskDto.getDate() != null){
