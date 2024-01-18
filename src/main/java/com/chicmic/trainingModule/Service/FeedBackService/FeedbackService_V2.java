@@ -765,6 +765,7 @@ public class FeedbackService_V2 {
 
     public static Float compute_rating(double totalRating,int count){
         if(totalRating==0) return 0f;
+        if(count==1) return (float)totalRating;
         double num = totalRating/count;
         double truncatedNum = Math.floor(num * 100) / 100;
 
