@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Service.TestServices;
 import com.chicmic.trainingModule.Dto.TestDto.TestDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.*;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PhaseService;
@@ -18,6 +19,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -42,7 +44,13 @@ public class TestService {
         test.set_id(String.valueOf(new ObjectId()));
         List<Phase<Task>> milestones = phaseService.createPhases(test.getMilestones(), test, EntityType.TEST);
         test.setMilestones(milestones);
-        test = testRepo.save(test);
+        try{
+            test = testRepo.save(test);
+        }
+        catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
+        }
         return test;
     }
 

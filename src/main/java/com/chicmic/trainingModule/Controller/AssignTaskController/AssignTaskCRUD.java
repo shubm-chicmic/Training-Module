@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.*;
 import com.chicmic.trainingModule.Entity.*;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
@@ -83,6 +84,8 @@ public class AssignTaskCRUD {
                 }
                 for (String planId : planIds){
                     if(!assignTaskDto.getPlan().contains(planId)){
+                        //deletedplan
+                        assignedPlan.setTrainingStatus(TrainingStatus.ONGOING);
                         System.out.println("Plan Id " + planId);
                         userProgressService.deleteUserProgressByPlanId(userId,planId);
                     }

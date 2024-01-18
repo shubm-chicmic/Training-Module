@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.CourseRepo;
 import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.SubTaskRepo;
@@ -23,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -48,7 +50,13 @@ public class CourseService {
         course.setPhases(phases);
 
         System.out.println("course in service " + course);
-        course = courseRepo.save(course);
+        try{
+            course = courseRepo.save(course);
+        }
+        catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+        }
         return course;
     }
 

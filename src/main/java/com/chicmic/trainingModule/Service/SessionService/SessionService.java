@@ -162,6 +162,9 @@ public class SessionService {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
             session = (Session) CustomObjectMapper.updateFields(sessionDto, session);
+            if(sessionDto.getDateTime() != null){
+                session.setDateTime(sessionDto.getDateTime());
+            }
             Integer count = 0;
             for (String reviewer : session.getApprover()){
                 if(session.getApprovedBy().contains(reviewer)){
