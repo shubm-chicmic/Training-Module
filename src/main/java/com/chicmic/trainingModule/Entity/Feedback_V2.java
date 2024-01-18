@@ -52,7 +52,7 @@ public class Feedback_V2 {
                 .createdAt(date)
                 .updateAt(date)
                 .createdBy(reviewer)
-                .overallRating(compute_rating(feedbackDto.computeRating(),1))
+                .overallRating(compute_rating1(feedbackDto.computeRating(),1))
                 .planId(feedbackDto.getPlanId())
                 .isDeleted(false)
                 .build();
