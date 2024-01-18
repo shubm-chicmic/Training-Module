@@ -577,7 +577,7 @@ public class FeedbackService_V2 {
         for (TraineeRating rating : dp.values()){
             int index = rating.getIndex();
 //               courseResponseList.get(index).reviewer().setOverallRating(roundOff_Rating(rating.getRating()/rating.getCount()));
-            courseResponseList.get(index).setOverallRating(compute_rating(rating.getRating(),rating.getCount()));
+            courseResponseList.get(index).setOverallRating(compute_rating1(rating.getRating(),rating.getCount()));
         }
         //courseResponseList = addSubTaskName(courseResponseList,);
         return courseResponseList;
@@ -587,7 +587,7 @@ public class FeedbackService_V2 {
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");    
     PhaseResponse_V2 phaseResponse = PhaseResponse_V2.builder()
                 .comment(feedback_v2.getComment())
-                .overallRating(compute_rating(feedback_v2.getDetails().computeOverallRating(),1))
+                .overallRating(compute_rating1(feedback_v2.getDetails().computeOverallRating(),1))
                 .createdAt(formatter.format(feedback_v2.getCreatedAt()))
                 .subTask(new ArrayList<>())
                 .build();
