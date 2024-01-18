@@ -19,8 +19,8 @@ public class CourseDto {
     @JsonProperty("courseName")
     private String name;
     private Set<String> approver;
-    private String figmaLink;
-    private String guidelines;
+    private String figmaLink = "";
+    private String guidelines = "";
     private List<Phase<Task>> phases;
     private Boolean approved = false;
 
