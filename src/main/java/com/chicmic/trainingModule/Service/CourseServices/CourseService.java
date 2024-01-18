@@ -122,9 +122,29 @@ public class CourseService {
         );
 
         Query searchQuery = new Query(finalCriteria);
-
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
+        if (!sortKey.isEmpty()) {
+            Comparator<Course> courseComparator = Comparator.comparing(course -> {
+                try {
+                    Field field = Course.class.getDeclaredField(sortKey);
+                    field.setAccessible(true);
+                    Object value = field.get(course);
+                    if (value instanceof String) {
+                        return ((String) value).toLowerCase();
+                    }
+                    return value.toString();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "";
+                }
+            });
 
+            if (sortDirection != 1) {
+                courses.sort(courseComparator.reversed());
+            } else {
+                courses.sort(courseComparator);
+            }
+        }
         List<Course> finalCourseList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
             List<String> courseIds = getCoursesAndTestsByTraineeId(traineeId, EntityType.COURSE);

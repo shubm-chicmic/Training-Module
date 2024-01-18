@@ -70,6 +70,28 @@ public class TestService {
         Query searchQuery = new Query(finalCriteria);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
+        if (!sortKey.isEmpty()) {
+            Comparator<Test> testComparator = Comparator.comparing(test -> {
+                try {
+                    Field field = Test.class.getDeclaredField(sortKey);
+                    field.setAccessible(true);
+                    Object value = field.get(test);
+                    if (value instanceof String) {
+                        return ((String) value).toLowerCase();
+                    }
+                    return value.toString();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "";
+                }
+            });
+
+            if (sortDirection != 1) {
+                tests.sort(testComparator.reversed());
+            } else {
+                tests.sort(testComparator);
+            }
+        }
         System.out.println("Tests : " + tests.size());
         List<Test> testList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
