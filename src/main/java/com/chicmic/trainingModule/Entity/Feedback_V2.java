@@ -16,7 +16,7 @@ import java.util.Set;
 
 import static com.chicmic.trainingModule.Dto.rating.Rating.getRating;
 import static com.chicmic.trainingModule.Dto.rating.Rating.getSubTaskIds;
-import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating;
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating1;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.TEST;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA;
