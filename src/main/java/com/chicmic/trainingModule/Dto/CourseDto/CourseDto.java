@@ -14,7 +14,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@TrimAll
+@TrimAll(exclude = {"figmaLink", "guidelines"})
 public class CourseDto {
     @JsonProperty("courseName")
     private String name;
