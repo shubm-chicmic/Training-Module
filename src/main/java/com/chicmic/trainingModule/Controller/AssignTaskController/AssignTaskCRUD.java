@@ -68,7 +68,7 @@ public class AssignTaskCRUD {
                     if (!planIds.contains(planDtoId)) {
                         Plan plan = planService.getPlanById(planDtoId);
                         plans.add(plan);
-
+                        assignedPlan.setTrainingStatus(TrainingStatus.ONGOING);
                     }
                 }
                 assignedPlan.setUpdatedAt(LocalDateTime.now());
