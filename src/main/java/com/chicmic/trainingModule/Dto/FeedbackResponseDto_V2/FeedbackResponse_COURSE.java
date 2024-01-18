@@ -26,7 +26,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private Float theoreticalRating;
     private Float technicalRating;
     private Float communicationRating;
-    private Date createdOn;
+    private String createdOn;
     private Float rating;
     private String comment;
     private Float overallRating;
@@ -42,6 +42,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
 //        int feedbackTypeId = feedback.getType().charAt(0) - '1';
         Set<String> subTaskIds = feedback.getPhaseIds();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 
         return FeedbackResponse_COURSE.builder()
                 ._id(feedback.get_id())
@@ -54,7 +55,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
                 .feedbackType(new UserIdAndNameDto(VIVA_,"VIVA"))
                 .task(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
-                .createdOn(feedback.getCreatedAt())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
                 .rating(rating_course.computeOverallRating())
                 .build();
     }
