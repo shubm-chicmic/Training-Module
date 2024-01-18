@@ -584,10 +584,11 @@ public class FeedbackService_V2 {
     }
 
     public PhaseResponse_V2 buildPhaseResponseForCourseOrTest(Feedback_V2 feedback_v2,Map<String,String> phaseDetails,Map<String,String> milestoneDetails){
-        PhaseResponse_V2 phaseResponse = PhaseResponse_V2.builder()
+    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");    
+    PhaseResponse_V2 phaseResponse = PhaseResponse_V2.builder()
                 .comment(feedback_v2.getComment())
                 .overallRating(compute_rating(feedback_v2.getDetails().computeOverallRating(),1))
-                .createdAt(feedback_v2.getCreatedAt())
+                .createdAt(formatter.format(feedback_v2.getCreatedAt()))
                 .subTask(new ArrayList<>())
                 .build();
         if(feedback_v2.getType().equals(VIVA_)) {
