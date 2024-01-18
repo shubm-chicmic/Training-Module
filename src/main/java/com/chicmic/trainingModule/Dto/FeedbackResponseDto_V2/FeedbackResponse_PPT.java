@@ -22,7 +22,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto task;
     private UserIdAndNameDto plan;
-    private String createdOn;
+    private Date createdOn;
     private Float rating;
     private String comment;
     private Float communicationRating;
