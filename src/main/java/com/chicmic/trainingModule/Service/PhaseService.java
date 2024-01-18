@@ -274,7 +274,7 @@ public class PhaseService {
             if (planTasks.size() > 0) {
                 return false;
             }
-            phase.setIsDeleted(true);
+
             // Deleting tasks and subtasks associated with the phase
             List<?> tasks = phase.getTasks();
             if (tasks != null) {
@@ -292,7 +292,7 @@ public class PhaseService {
                 Course course = (Course) phase.getEntity();
             }
 
-
+            phase.setIsDeleted(true);
 //            planService.findIfPhaseExists(phase);
 
 
@@ -320,6 +320,19 @@ public class PhaseService {
 
     public boolean deleteTask(PlanTask task) {
         if (task != null) {
+            Phase<PlanTask> phase = task.getPhase();
+            Plan plan = (Plan)phase.getEntity();
+            if(task.getPlanType() == PlanType.VIVA || task.getPlanType() == PlanType.PPT){
+                userProgressService.deleteByMilestoneId(plan.get_id(), task.get_id());
+            }else {
+                List<Object> milestones = task.getMilestones();
+                if (milestones != null) {
+                    for (Object milestone : milestones) {
+                        // delete all userProgress of this milestone
+                        userProgressService.deleteAllBySubTaskId(plan.get_id(), (String) milestone);
+                    }
+                }
+            }
             task.setIsDeleted(true);
             planTaskRepo.save(task);
             return true;

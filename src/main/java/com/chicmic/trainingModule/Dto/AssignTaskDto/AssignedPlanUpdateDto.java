@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Dto.AssignTaskDto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.util.List;
 @Builder
 public class AssignedPlanUpdateDto {
     private List<String> plan;
+    @JsonProperty("startDate")
     private LocalDateTime date;
     public void setDate() {
         if (date != null) {

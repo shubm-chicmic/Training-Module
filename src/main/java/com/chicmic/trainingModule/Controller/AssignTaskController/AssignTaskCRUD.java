@@ -184,6 +184,7 @@ public class AssignTaskCRUD {
             List<Phase> phases = phaseService.getPhaseByIds(phasesListOfString);
             List<Task> taskList = new ArrayList<>();
             for(Phase phase : phases) {
+                if(!phase.getIsDeleted())
                 taskList.addAll(phase.getTasks());
             }
             taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList,planId, courseId, traineeId);

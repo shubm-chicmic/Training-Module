@@ -20,7 +20,7 @@ public class SubTask {
     private Integer entityType;
     private String subTask;
     private Integer estimatedTime;
-    private String link;
+    private String link = "";
     private String reference;
     @DBRef
     @JsonIgnore
