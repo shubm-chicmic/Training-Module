@@ -51,6 +51,8 @@ public class PlanCRUD {
         }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
+            sortKey = "planName";
+            sortDirection = 1;
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
             System.out.println(planList);
             Long count = planService.countNonDeletedPlans(searchString, principal.getName());

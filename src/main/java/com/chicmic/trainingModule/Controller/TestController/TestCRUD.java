@@ -48,6 +48,8 @@ public class TestCRUD {
         }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
+            sortKey = "testName";
+            sortDirection = 1;
             List<Test> testList = testService.getAllTests(searchString, sortDirection, sortKey, taineeId);
             Long count = testService.countNonDeletedTests(searchString, principal.getName());
             List<TestResponseDto> testResponseDtoList = testResponseMapper.mapTestToResponseDto(testList, isPhaseRequired);
