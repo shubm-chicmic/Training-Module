@@ -76,8 +76,6 @@ public class AssignTaskCRUD {
                     assignedPlan.setPlans(plans);
                     assignedPlan.setDate(assignTaskDto.getDate());
                     assignTaskService.updateAssignTask(assignedPlan);
-                }else{
-                    error =true;
                 }
             }
         }
