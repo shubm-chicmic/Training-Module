@@ -768,7 +768,7 @@ public class FeedbackService_V2 {
         int temp = (int)(totalRating * 10 / count);
 //        return roundOff_Rating(totalRating/count);
         float temp1 = temp;
-        return temp/10;
+        return temp1/10;
     }
 
     public Map<String,Object> computeOverallRating(String traineeId,String courseId,String planId,int type){
