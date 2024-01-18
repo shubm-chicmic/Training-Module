@@ -1078,7 +1078,7 @@ public class FeedbackService_V2 {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
 
         Update update = new Update().set("isDeleted",true)
-                .set("updateAt",formatter.format(date));
+                .set("updateAt",date);
         mongoTemplate.updateMulti(new Query(criteria),update,Feedback_V2.class);
     }
 
