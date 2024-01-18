@@ -43,7 +43,7 @@ import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 import static com.mongodb.client.model.Aggregates.facet;
 import static java.util.Arrays.asList;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-
+import org.springframework.data.domain.Sort;
 @Service
 public class FeedbackService_V2 {
     private final MongoTemplate mongoTemplate;
@@ -715,7 +715,9 @@ public class FeedbackService_V2 {
     }
     public List<FeedbackResponseDto> findFirstFiveFeedbacksOfTrainee(String traineeId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false);
-        List<Feedback_V2> feedbackV2List = mongoTemplate.find(new Query(criteria),Feedback_V2.class);
+        Query query = new Query(criteria);
+        query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<Feedback_V2> feedbackV2List = mongoTemplate.find(query,Feedback_V2.class);
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return feedbackV2List.stream().map(f -> FeedbackResponseDto.builder().feedback(f.getComment())
                 .name(TrainingModuleApplication.searchNameById(f.getCreatedBy()))
