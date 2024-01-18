@@ -44,7 +44,7 @@ public class AssignTaskCRUD {
     private final TaskResponseMapper taskResponseMapper;
     private final UserProgressService userProgressService;
 
-//    private final TraineePlanService trainePlanService;
+    //    private final TraineePlanService trainePlanService;
     @PostMapping
     public ApiResponse create(@RequestBody AssignTaskDto assignTaskDto, Principal principal, HttpServletResponse response) {
 //        trainePlanService.assignMultiplePlansToTrainees();
@@ -56,69 +56,68 @@ public class AssignTaskCRUD {
         Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
             AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
-            if(assignedPlan == null || (assignedPlan != null && assignedPlan.getPlans().size() == 0)) {
+            if (assignedPlan == null || (assignedPlan != null && assignedPlan.getPlans().size() == 0)) {
                 AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
-            }else {
+            } else {
                 List<Plan> plans = assignedPlan.getPlans();
                 List<String> planIds = plans.stream()
                         .map(Plan::get_id)
                         .collect(Collectors.toList());
-                int count = 0;
-                for (String planDtoId : assignTaskDto.getPlanIds()){
-                    if(!planIds.contains(planDtoId)){
-                       Plan plan = planService.getPlanById(planDtoId);
-                       plans.add(plan);
-                       count++;
+
+                for (String planDtoId : assignTaskDto.getPlanIds()) {
+                    if (!planIds.contains(planDtoId)) {
+                        Plan plan = planService.getPlanById(planDtoId);
+                        plans.add(plan);
+
                     }
                 }
-                if(count != 0) {
-                    assignedPlan.setUpdatedAt(LocalDateTime.now());
-                    assignedPlan.setPlans(plans);
-                    assignedPlan.setDate(assignTaskDto.getDate());
-                    assignTaskService.updateAssignTask(assignedPlan);
-                }
+                assignedPlan.setUpdatedAt(LocalDateTime.now());
+                assignedPlan.setPlans(plans);
+                assignedPlan.setDate(assignTaskDto.getDate());
+                assignTaskService.updateAssignTask(assignedPlan);
             }
         }
-        if(error) {
+        if (error) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan Already Assigned", null, response);
         }
         return new ApiResponse(HttpStatus.CREATED.value(), "AssignTask Created Successfully", assignTaskDto);
     }
+
     @PutMapping
-    public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response){
+    public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response) {
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
-        if(assignedPlan != null) {
+        if (assignedPlan != null) {
             List<Plan> plans = new ArrayList<>();
             for (String planId : assignTaskDto.getPlan()) {
                 Plan plan = planService.getPlanById(planId);
                 plans.add(plan);
             }
 
-            if(plans != null || plans.size() != 0) {
+            if (plans != null || plans.size() != 0) {
                 List<String> planIds = new ArrayList<>();
                 for (Plan plan : assignedPlan.getPlans()) {
-                    if(plan != null) {
+                    if (plan != null) {
                         planIds.add(plan.get_id());
                     }
                 }
-                for (String planDtoId : assignTaskDto.getPlan()){
-                    if(!planIds.contains(planDtoId)){
+                for (String planDtoId : assignTaskDto.getPlan()) {
+                    if (!planIds.contains(planDtoId)) {
                         //addedPlan
                         assignedPlan.setTrainingStatus(TrainingStatus.ONGOING);
                     }
                 }
-                for (String planId : planIds){
-                    if(!assignTaskDto.getPlan().contains(planId)){
+                for (String planId : planIds) {
+                    if (!assignTaskDto.getPlan().contains(planId)) {
                         //deletedplan
                         assignedPlan.setTrainingStatus(TrainingStatus.ONGOING);
                         System.out.println("Plan Id " + planId);
-                        userProgressService.deleteUserProgressByPlanId(userId,planId);
+                        userProgressService.deleteUserProgressByPlanId(userId, planId);
                     }
                 }
 
                 assignedPlan.setPlans(plans);
             }
-            if(assignTaskDto.getDate() != null){
+            if (assignTaskDto.getDate() != null) {
                 assignedPlan.setDate(assignTaskDto.getDate());
             }
             AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
@@ -126,6 +125,7 @@ public class AssignTaskCRUD {
         }
         return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan Not Assigned", null, response);
     }
+
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -139,9 +139,9 @@ public class AssignTaskCRUD {
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
             HttpServletResponse response,
             Principal principal
-    )  {
+    ) {
 
-        if (traineeId != null || !traineeId.isEmpty()){
+        if (traineeId != null || !traineeId.isEmpty()) {
             System.out.println("im in");
             AssignedPlan assignTaskList = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
 //            System.out.println(assignTaskList.size());
@@ -151,7 +151,7 @@ public class AssignTaskCRUD {
 //                System.out.println("creating copy of db");
 //            }
             int totalPlans = 0;
-            if(assignTaskResponseDto.getPlans() != null && assignTaskResponseDto.getPlans().size() != 0){
+            if (assignTaskResponseDto.getPlans() != null && assignTaskResponseDto.getPlans().size() != 0) {
                 List<PlanDto> plans = assignTaskResponseDto.getPlans();
                 totalPlans = plans.size();
                 plans = Pagenation.paginate(plans, pageNumber, pageSize);
@@ -159,50 +159,52 @@ public class AssignTaskCRUD {
             }
 //            Collections.reverse(assignTaskResponseDtoList);
             Integer planSize = 0;
-            if(assignTaskResponseDto.getPlans() != null) {
+            if (assignTaskResponseDto.getPlans() != null) {
                 planSize = assignTaskResponseDto.getPlans().size();
             }
-            return new ApiResponseWithCount(totalPlans,HttpStatus.OK.value(), planSize + " Plans retrieved", assignTaskResponseDto, response);
+            return new ApiResponseWithCount(totalPlans, HttpStatus.OK.value(), planSize + " Plans retrieved", assignTaskResponseDto, response);
         }
-        return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Trainee Not Found", null, response);
+        return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Trainee Not Found", null, response);
     }
+
     @GetMapping("/plan")
     public ApiResponseWithCount getPlan(@RequestParam String planId,
-                               @RequestParam String traineeId,
-                               @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
-                               @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
-                               HttpServletResponse response,
+                                        @RequestParam String traineeId,
+                                        @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
+                                        @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
+                                        HttpServletResponse response,
                                         Principal principal
-    ){
+    ) {
         Plan plan = planService.getPlanById(planId);
-        if(plan != null) {
-           List<Phase<PlanTask>> phases = plan.getPhases();
-           List<PlanTask> planTasks = new ArrayList<>();
-           for (Phase<PlanTask> phase : phases) {
-               if(phase != null) {
-                   planTasks.addAll(phase.getTasks());
-               }
-           }
-           int totalTasks = planTasks.size();
-           planTasks = Pagenation.paginate(planTasks, pageNumber, pageSize);
+        if (plan != null) {
+            List<Phase<PlanTask>> phases = plan.getPhases();
+            List<PlanTask> planTasks = new ArrayList<>();
+            for (Phase<PlanTask> phase : phases) {
+                if (phase != null) {
+                    planTasks.addAll(phase.getTasks());
+                }
+            }
+            int totalTasks = planTasks.size();
+            planTasks = Pagenation.paginate(planTasks, pageNumber, pageSize);
             System.out.println("PlanTasks: " + planTasks.size());
-           List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId,traineeId, principal.getName());
-           return new ApiResponseWithCount(totalTasks, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
+            List<PlanTaskResponseDto> planTaskResponseDtoList = assignPlanResponseMapper.mapAssignPlanToResponseDto(planTasks, planId, traineeId, principal.getName());
+            return new ApiResponseWithCount(totalTasks, HttpStatus.OK.value(), "Plan Retrieved", planTaskResponseDtoList, response);
         }
         return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Plan Not Found", null, response);
 
     }
+
     @GetMapping("/planTask")
     public ApiResponseWithCount getPlanTask(@RequestParam String planTaskId,
-                                        @RequestParam String traineeId,
-                                        @RequestParam String planId,
+                                            @RequestParam String traineeId,
+                                            @RequestParam String planId,
                                             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
-                                        HttpServletResponse response
-    ){
+                                            HttpServletResponse response
+    ) {
         PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
 
-        if(planTask != null) {
+        if (planTask != null) {
             String courseId = planTask.getPlan();
             List<Object> phasesList = planTask.getMilestones();
             List<TaskDto> taskDtoList = new ArrayList<>();
@@ -212,19 +214,17 @@ public class AssignTaskCRUD {
             }
             List<Phase> phases = phaseService.getPhaseByIds(phasesListOfString);
             List<Task> taskList = new ArrayList<>();
-            for(Phase phase : phases) {
-                if(!phase.getIsDeleted())
-                taskList.addAll(phase.getTasks());
+            for (Phase phase : phases) {
+                if (!phase.getIsDeleted())
+                    taskList.addAll(phase.getTasks());
             }
-            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList,planId, courseId, traineeId);
+            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList, planId, courseId, traineeId);
             int totalTaskList = taskDtoList.size();
             taskDtoList = Pagenation.paginate(taskDtoList, pageNumber, pageSize);
             return new ApiResponseWithCount(totalTaskList, HttpStatus.OK.value(), "Plan Task Retrieved", taskDtoList, response);
         }
         return null;
     }
-
-
 
 
 }
