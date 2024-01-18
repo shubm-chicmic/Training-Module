@@ -22,7 +22,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto plan;
-    private Date createdOn;
+    private String createdOn;
     private Float rating;
     private String comment;
     private Float teamSpiritRating;
@@ -33,7 +33,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
 //        int feedbackTypeId = feedback.getType().charAt(0) - '1';
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return FeedbackResponse_BEHAVIOUR.builder()
                 ._id(feedback.get_id())
                 .reviewer(reviewer)
@@ -42,7 +42,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .teamSpiritRating(rating_behaviour.getTeamSpiritRating())
                 .attitudeRating(rating_behaviour.getAttitudeRating())
                 .feedbackType(new UserIdAndNameDto(BEHAVIUOR_, "BEHAVIOUR"))
-                .createdOn(feedback.getCreatedAt())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
                 .rating(rating_behaviour.computeOverallRating())
                 .build();
     }
