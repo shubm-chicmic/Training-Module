@@ -220,7 +220,7 @@ public class FeedbackService_V2 {
                 .set("updateAt",date)
                 .set("details",rating)
                 .set("comment",feedbackRequestDto.getComment())
-                .set("overallRating",compute_rating(feedbackRequestDto.computeRating(),1));
+                .set("overallRating",compute_rating1(feedbackRequestDto.computeRating(),1));
 
        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
