@@ -22,7 +22,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto plan;
-    private String createdOn;
+    private Date createdOn;
     private Float rating;
     private String comment;
     private Float teamSpiritRating;
