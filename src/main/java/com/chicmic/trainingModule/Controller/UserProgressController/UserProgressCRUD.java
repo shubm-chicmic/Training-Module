@@ -44,6 +44,10 @@ public class UserProgressCRUD {
             AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userProgressDto.getTraineeId());
             if(assignedPlan != null && assignedPlan.getTrainingStatus() == TrainingStatus.COMPLETED){
                 String traineeName = TrainingModuleApplication.searchNameById(userProgressDto.getTraineeId());
+                String currentUserName = TrainingModuleApplication.searchNameById(principal.getName());
+                if(currentUserName.equals(traineeName)){
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Your Training is Already Completed" , null, response);
+                }
                 if(traineeName == null)traineeName = "this Trainee";
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Training Of " + traineeName + " is Already Completed" , null, response);
             }
