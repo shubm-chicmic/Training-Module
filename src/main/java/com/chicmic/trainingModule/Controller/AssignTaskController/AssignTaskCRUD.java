@@ -25,8 +25,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/training/assignedPlan")
@@ -57,7 +59,26 @@ public class AssignTaskCRUD {
             if(assignedPlan == null || (assignedPlan != null && assignedPlan.getPlans().size() == 0)) {
                 AssignedPlan assignTask = assignTaskService.createAssignTask(assignTaskDto, userId, principal);
             }else {
-                error = true;
+                List<Plan> plans = assignedPlan.getPlans();
+                List<String> planIds = plans.stream()
+                        .map(Plan::get_id)
+                        .collect(Collectors.toList());
+                int count = 0;
+                for (String planDtoId : assignTaskDto.getPlanIds()){
+                    if(!planIds.contains(planDtoId)){
+                       Plan plan = planService.getPlanById(planDtoId);
+                       plans.add(plan);
+                       count++;
+                    }
+                }
+                if(count != 0) {
+                    assignedPlan.setUpdatedAt(LocalDateTime.now());
+                    assignedPlan.setPlans(plans);
+                    assignedPlan.setDate(assignTaskDto.getDate());
+                    assignTaskService.updateAssignTask(assignedPlan);
+                }else{
+                    error =true;
+                }
             }
         }
         if(error) {
@@ -82,6 +103,12 @@ public class AssignTaskCRUD {
                         planIds.add(plan.get_id());
                     }
                 }
+                for (String planDtoId : assignTaskDto.getPlan()){
+                    if(!planIds.contains(planDtoId)){
+                        //addedPlan
+                        assignedPlan.setTrainingStatus(TrainingStatus.ONGOING);
+                    }
+                }
                 for (String planId : planIds){
                     if(!assignTaskDto.getPlan().contains(planId)){
                         //deletedplan
@@ -90,6 +117,7 @@ public class AssignTaskCRUD {
                         userProgressService.deleteUserProgressByPlanId(userId,planId);
                     }
                 }
+
                 assignedPlan.setPlans(plans);
             }
             if(assignTaskDto.getDate() != null){
