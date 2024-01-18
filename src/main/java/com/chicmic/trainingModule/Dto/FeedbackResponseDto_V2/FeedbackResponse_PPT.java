@@ -35,7 +35,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
         Rating_PPT rating_ppt = (Rating_PPT) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return FeedbackResponse_PPT.builder()
                 ._id(feedback.get_id())
                 .reviewer(reviewer)
@@ -46,7 +46,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
                 .presentationRating(rating_ppt.getPresentationRating())
                 .feedbackType(new UserIdAndNameDto(PPT_, "PPT"))
                 .task(new UserIdAndNameDto(feedback.getDetails().getCourseId(),feedback.getDetails().getCourseId()))
-                .createdOn(feedback.getCreatedAt())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
                 .rating(rating_ppt.computeOverallRating())
                 .build();
     }

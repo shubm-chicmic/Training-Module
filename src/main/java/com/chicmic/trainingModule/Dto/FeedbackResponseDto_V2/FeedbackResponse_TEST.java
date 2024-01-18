@@ -38,7 +38,8 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
         Set<String> subTaskIds = feedback.getMilestoneIds();
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        
         return FeedbackResponse_TEST.builder()
                 ._id(feedback.get_id())
                 .reviewer(reviewer)
@@ -50,7 +51,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
                 .feedbackType(new UserIdAndNameDto(TEST_, "TEST"))
                 .task(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
-                .createdOn(feedback.getCreatedAt())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
                 .rating(rating_test.computeOverallRating())
                 .build();
     }
