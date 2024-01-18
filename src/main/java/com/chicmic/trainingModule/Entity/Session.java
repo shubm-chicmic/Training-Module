@@ -30,9 +30,11 @@ public class Session {
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
     private LocalDateTime dateTime;
-//    public void setDateTime(LocalDateTime dateTime) {
-//        this.dateTime = dateTime.plusHours(5).plusMinutes(30);
-//    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        if(dateTime != null)
+            this.dateTime = dateTime.plusHours(5).plusMinutes(30);
+    }
     private int status = StatusConstants.PENDING;
     private boolean isDeleted = false;
     private boolean isApproved = false;
