@@ -51,6 +51,8 @@ public class CourseCRUD {
         }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
+            sortKey = "name";
+            sortDirection = 1;
             List<Course> courseList = courseService.getAllCourses(searchString, sortDirection, sortKey, traineeId);
             Long count = courseService.countNonDeletedCourses(searchString, principal.getName());
             List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
