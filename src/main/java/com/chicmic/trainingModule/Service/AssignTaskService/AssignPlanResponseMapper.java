@@ -7,20 +7,23 @@ import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.FeedbackCo
 import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.FeedbackPlanDto;
 import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.FeedbackTestDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Dto.UserProgressDto;
+import com.chicmic.trainingModule.Dto.UserTimeDto.AssignedPlanDto;
+import com.chicmic.trainingModule.Dto.UserTimeDto.PlanDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackProgressService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.Service.PhaseService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,8 @@ public class AssignPlanResponseMapper {
     private final PhaseService phaseService;
     private final UserProgressService userProgressService;
     private final FeedbackProgressService feedbackProgressService;
+    private final PlanService planService;
+    private final PlanTaskService planTaskService;
 
     public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId, String userId) {
         System.out.println("planTasks: " + planTasks.size());
@@ -263,6 +268,122 @@ public class AssignPlanResponseMapper {
         }
         return AssignedPlanResponse.builder()
                 .plans(plans)
+                .build();
+    }
+
+    public AssignedPlanDto mapAssignedPlanWithPlanForTimeSheet(AssignedPlan assignedPlan) {
+        List<PlanDto> plans = new ArrayList<>();
+        for (Plan plan : assignedPlan.getPlans()) {
+            PlanDto planDto = PlanDto.builder()
+                    ._id(plan.get_id())
+                    .createdBy(plan.getCreatedBy())
+                    .description(plan.getDescription())
+                    .createdAt(plan.getCreatedAt())
+                    .deleted(plan.getDeleted())
+                    .updatedAt(plan.getUpdatedAt())
+                    .planName(plan.getPlanName())
+                    .estimatedTime(plan.getEstimatedTimeInSeconds())
+                    .totalTasks(plan.getTotalTasks())
+                    .build();
+            plans.add(planDto);
+        }
+        return AssignedPlanDto.builder()
+                .dateTime(assignedPlan.getDate())
+                ._id(assignedPlan.get_id())
+                .plans(plans)
+                .build();
+    }
+
+    public AssignedPlanDto mapAssignedPlanWithPlanAndPhasesForTimeSheet(AssignedPlan assignedPlan, String planId) {
+        Plan plan = planService.getPlanById(planId);
+        if(plan == null){
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan is Deleted Or Not Exist");
+        }
+        PlanDto planDto = PlanDto.builder()
+                ._id(plan.get_id())
+                .createdBy(plan.getCreatedBy())
+                .description(plan.getDescription())
+                .createdAt(plan.getCreatedAt())
+                .deleted(plan.getDeleted())
+                .updatedAt(plan.getUpdatedAt())
+                .planName(plan.getPlanName())
+                .estimatedTime(plan.getEstimatedTimeInSeconds())
+                .totalTasks(plan.getTotalTasks())
+                .phases(plan.getPhasesWithoutTasks())
+                .build();
+        return AssignedPlanDto.builder()
+                .dateTime(assignedPlan.getDate())
+                ._id(assignedPlan.get_id())
+                .plan(planDto)
+                .build();
+    }
+
+    public AssignedPlanDto mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(AssignedPlan assignedPlan, String planId, String phaseId) {
+        Plan plan = planService.getPlanById(planId);
+        if(plan == null){
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan is Deleted Or Not Exist");
+        }
+        Phase<PlanTask> phase = null;
+        try {
+            phase = (Phase<PlanTask>) phaseService.getPhaseById(phaseId);
+        }catch (Exception ex) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Phase is Deleted Or Not Exist");
+        }
+        PlanDto planDto = PlanDto.builder()
+                ._id(plan.get_id())
+                .createdBy(plan.getCreatedBy())
+                .description(plan.getDescription())
+                .createdAt(plan.getCreatedAt())
+                .deleted(plan.getDeleted())
+                .updatedAt(plan.getUpdatedAt())
+                .planName(plan.getPlanName())
+                .estimatedTime(plan.getEstimatedTimeInSeconds())
+                .totalTasks(plan.getTotalTasks())
+                .phase(phase)
+                .build();
+        return AssignedPlanDto.builder()
+                .dateTime(assignedPlan.getDate())
+                ._id(assignedPlan.get_id())
+                .plan(planDto)
+                .build();
+    }
+
+    public AssignedPlanDto mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(AssignedPlan assignedPlan, String planId, String phaseId, String taskId) {
+        Plan plan = planService.getPlanById(planId);
+        if(plan == null){
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan is Deleted Or Not Exist");
+        }
+        Phase<PlanTask> phase = null;
+        try {
+            phase = (Phase<PlanTask>) phaseService.getPhaseById(phaseId);
+        }catch (Exception ex) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Phase is Deleted Or Not Exist");
+        }
+        if(phase != null){
+            PlanTask planTask = planTaskService.getPlanTaskById(taskId);
+            List<PlanTask> planTaskList = new ArrayList<>();
+            if(planTask == null){
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Task is Deleted Or Not Exist");
+            }
+            planTaskList.add(planTask);
+            phase.setTasks(planTaskList);
+        }
+        PlanDto planDto = PlanDto.builder()
+                ._id(plan.get_id())
+                .createdBy(plan.getCreatedBy())
+                .description(plan.getDescription())
+                .createdAt(plan.getCreatedAt())
+                .deleted(plan.getDeleted())
+                .updatedAt(plan.getUpdatedAt())
+                .planName(plan.getPlanName())
+                .estimatedTime(plan.getEstimatedTimeInSeconds())
+                .totalTasks(plan.getTotalTasks())
+                .phase(phase)
+                .build();
+        return AssignedPlanDto.builder()
+                .dateTime(assignedPlan.getDate())
+                ._id(assignedPlan.get_id())
+                .plan(planDto)
                 .build();
     }
 }

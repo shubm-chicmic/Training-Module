@@ -1,23 +1,17 @@
 package com.chicmic.trainingModule.Controller.DropDown;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
-import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.AssignedPlanResponse;
-import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
+import com.chicmic.trainingModule.Dto.UserTimeDto.AssignedPlanDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService_V2;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/v1/training/dropdown")
@@ -25,7 +19,7 @@ import java.util.List;
 public class AssignedPlanDropdown {
     private final AssignTaskService assignTaskService;
     private final AssignPlanResponseMapper assignPlanResponseMapper;
-    private final TraineePlanService_V2 traineePlanServiceV2;
+
 
     @RequestMapping(value = {"/plan"}, method = RequestMethod.GET)
     public ApiResponse getAll(
@@ -40,12 +34,35 @@ public class AssignedPlanDropdown {
         }
         return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "AssignedPlan not found", response);
     }
-    @PatchMapping("/trainee-status")
-    public ApiResponse updateTraineeStatus(@RequestBody UserIdAndStatusDto userIdAndStatusDto, Principal principal){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean flag = authentication.getAuthorities().contains("TR");
-        if(flag)return new ApiResponse(200,"You Are Not Authorized To Update Status(Role = TR)",null);
-        traineePlanServiceV2.updateTraineeStatus(userIdAndStatusDto, principal.getName());
-        return new ApiResponse(200,"Trainee status updated successfully!!",null);
+
+    @RequestMapping(value = {"/assignedPlan"}, method = RequestMethod.GET)
+    public ApiResponse getAssignedPlans(
+            @RequestParam String traineeId,
+            @RequestParam(required = false) String planId,
+            @RequestParam(required = false) String phaseId,
+            @RequestParam(required = false) String taskId,
+            HttpServletResponse response,
+            Principal principal
+    )  {
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+        if(assignedPlan == null){
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "No Plan not found", response);
+        }
+        AssignedPlanDto assignedPlanDto = null;
+        if(traineeId != null && planId == null && phaseId == null && taskId == null){
+            // give all plans
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanForTimeSheet(assignedPlan);
+        }else if (traineeId != null && planId != null && phaseId == null && taskId == null){
+            // give all phases of plan
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhasesForTimeSheet(assignedPlan, planId);
+        }else if(traineeId != null && planId != null && phaseId != null && taskId == null){
+            // give all plan and perticular phase having all tasks
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(assignedPlan, planId, phaseId);
+        }else if (traineeId != null && planId != null && phaseId != null && taskId != null){
+            // give all plan with perticualr phase perticualr task
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(assignedPlan, planId, phaseId, taskId);
+        }
+        return new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto, response);
     }
+
 }
