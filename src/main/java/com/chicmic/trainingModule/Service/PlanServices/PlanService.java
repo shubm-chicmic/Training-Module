@@ -58,10 +58,9 @@ public class PlanService {
         plan.setCreatedAt(LocalDateTime.now());
         plan.setUpdatedAt(LocalDateTime.now());
         plan.setCreatedBy(principal.getName());
-        try{
+        try {
             plan = planRepo.save(plan);
-        }
-        catch (org.springframework.dao.DuplicateKeyException ex) {
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
             // Catch DuplicateKeyException and throw ApiException with 400 status
             throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
         }
@@ -175,7 +174,7 @@ public class PlanService {
         if (planId == null) {
             return null;
         }
-        Plan plan =  planRepo.findById(planId).orElse(null);
+        Plan plan = planRepo.findById(planId).orElse(null);
         return plan != null && plan.getDeleted() ? null : plan;
     }
 
@@ -202,6 +201,7 @@ public class PlanService {
             return false;
         }
     }
+
     public Plan updatePlan(PlanDto planDto, String planId) {
         System.out.println("PlanDto");
         Plan plan = planRepo.findById(planId).orElse(null);
@@ -239,16 +239,19 @@ public class PlanService {
                 List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
                 plan.setPhases(phases);
             }
-        plan.setUpdatedAt(LocalDateTime.now());
-        planRepo.save(plan);
-        return plan;
-    } else
+            plan.setUpdatedAt(LocalDateTime.now());
+            try {
+                plan = planRepo.save(plan);
+            } catch (org.springframework.dao.DuplicateKeyException ex) {
+                // Catch DuplicateKeyException and throw ApiException with 400 status
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+            }
+            return plan;
+        } else {
+            return null;
+        }
 
-    {
-        return null;
     }
-
-}
 
     public HashMap<String, List<UserIdAndNameDto>> getPlanCourseByPlanIds(List<String> planIds) {
         Query searchQuery = new Query(Criteria.where("_id").in(planIds).and("phases.tasks.planType").is(1));
@@ -303,14 +306,15 @@ public class PlanService {
         }
         return planRepo.save(plan);
     }
-    public HashMap<String,String> getPlanName(List<String> planIds){
+
+    public HashMap<String, String> getPlanName(List<String> planIds) {
         Criteria criteria = Criteria.where("_id").in(planIds);
         Query query = new Query(criteria);
         query.fields().include("planName");
-        List<Plan> plans = mongoTemplate.find(query,Plan.class);
-        HashMap<String,String> planDetails = new HashMap<>();
+        List<Plan> plans = mongoTemplate.find(query, Plan.class);
+        HashMap<String, String> planDetails = new HashMap<>();
         for (Plan plan : plans)
-            planDetails.put(plan.get_id(),plan.getPlanName());
+            planDetails.put(plan.get_id(), plan.getPlanName());
         return planDetails;
     }
 }

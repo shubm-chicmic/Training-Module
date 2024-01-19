@@ -250,7 +250,13 @@ public class TestService {
             }
 
             // Saving the updated test
-            testRepo.save(test);
+            try{
+                test = testRepo.save(test);
+            }
+            catch (org.springframework.dao.DuplicateKeyException ex) {
+                // Catch DuplicateKeyException and throw ApiException with 400 status
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
+            }
             return test;
         } else {
             return null;
