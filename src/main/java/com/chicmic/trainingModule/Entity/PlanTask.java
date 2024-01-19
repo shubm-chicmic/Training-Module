@@ -67,6 +67,7 @@ public class PlanTask {
     }
 
     public void setEstimatedTime(String estimatedTime) {
+        estimatedTime = estimatedTime.trim();
         int hours = 0;
         int minutes = 0;
         Integer formattedTime;

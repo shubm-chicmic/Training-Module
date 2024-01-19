@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.validation.annotation.Validated;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -13,7 +14,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 
-
+@Validated
 public class TrimValidator  extends StdConverter<String, String> implements Converter<String,String> , ConstraintValidator<TrimAll, Object> {
     private static final SpelExpressionParser PARSER = new SpelExpressionParser();
     private String[] fields;

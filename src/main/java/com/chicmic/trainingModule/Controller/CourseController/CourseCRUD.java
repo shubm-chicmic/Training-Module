@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -79,7 +80,7 @@ public class CourseCRUD {
 
 
     @PostMapping
-    public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
+    public ApiResponse create(@RequestBody@Valid CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase<Task>> phases = new ArrayList<>();
 //        for (List<Task> courseTasks : courseDto.getPhases()) {
@@ -120,7 +121,7 @@ public class CourseCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updateCourse(@RequestBody@Valid CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
         System.out.println("course Dto = " + courseDto);
         if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
