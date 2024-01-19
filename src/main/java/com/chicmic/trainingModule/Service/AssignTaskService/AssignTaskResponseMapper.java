@@ -60,8 +60,9 @@ public class AssignTaskResponseMapper {
         List<PlanDto> plans = new ArrayList<>();
         Set<String> mentors = new HashSet<>();
         Integer countOfCompletedPlan = 0;
-        Integer estimatedTime = 0;
         for (Plan plan : assignTask.getPlans()) {
+            Integer estimatedTime = 0;
+
             if(plan != null && !plan.getDeleted()) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
                 Integer totalTask = 0;
