@@ -48,6 +48,27 @@ public class Plan {
                 .filter(phase -> !phase.getIsDeleted())
                 .collect(Collectors.toList());
     }
+    public List<Phase<PlanTask>> getPhasesWithoutTasks() {
+        if (phases == null) {
+            return null;
+        }
+        return phases.stream()
+                .filter(phase -> !phase.getIsDeleted())
+                .map(phase -> {
+                    // Create a new Phase with tasks set to null
+                    Phase<PlanTask> phaseWithoutTasks = new Phase<>();
+                    phaseWithoutTasks.set_id(phase.get_id());
+                    phaseWithoutTasks.setName(phase.getName());
+                    phaseWithoutTasks.setTasks(null);
+                    phaseWithoutTasks.setTotalTasks(phase.getTotalTasks());
+                    phaseWithoutTasks.setEstimatedTimeInSeconds(phase.getEstimatedTimeInSeconds());
+                    phaseWithoutTasks.setIsDeleted(phase.getIsDeleted());
+                    // Set other properties as needed
+
+                    return phaseWithoutTasks;
+                })
+                .collect(Collectors.toList());
+    }
     public void setPhases(List<Phase<PlanTask>> phases) {
         this.phases = phases;
         updateTotalTasks();

@@ -13,9 +13,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class UserTime {
     @Id
     private String _id;
-    private String userId;
+    private String traineeId;
     private String planId;
     private String phaseId;
     private String taskId;
     private Integer consumedTime;
+    private Boolean isDeleted;
+    private String createdBy;
 }
