@@ -40,6 +40,12 @@ public class AssignTaskService {
 
     //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
     public AssignedPlan saveAssignTask(AssignedPlan assignedPlan){
+        if(assignedPlan == null)return null;
+        if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0){
+            assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        }
+
         return assignTaskRepo.save(assignedPlan);
     }
     public AssignedPlan createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
@@ -231,6 +237,7 @@ public class AssignTaskService {
                 .collect(Collectors.toList());
     }
     public AssignedPlan updateAssignTask(AssignedPlan assignedPlan) {
+        if(assignedPlan == null)return null;
         if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         return assignTaskRepo.save(assignedPlan);
