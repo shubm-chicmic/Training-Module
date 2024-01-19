@@ -597,6 +597,7 @@ public class FeedbackService_V2 {
         if(feedback_v2.getType().equals(VIVA_)) {
             Rating_COURSE ratingCourse = (Rating_COURSE) feedback_v2.getDetails();
             feedback_v2.getPhaseIds().forEach(st -> { phaseResponse.getSubTask().add(new UserIdAndNameDto(st, phaseDetails.get(st)));});
+            Collections.sort(phaseResponse.getSubTask());
 //            phaseResponse.set_id(ratingCourse.getPhaseId());
 //            phaseResponse.setName(name.get(ratingCourse.getPhaseId()));
             phaseResponse.setTheoreticalRating(ratingCourse.getTheoreticalRating());
@@ -605,6 +606,7 @@ public class FeedbackService_V2 {
         }else if(feedback_v2.getType().equals(TEST_)){
             Rating_TEST ratingTest = (Rating_TEST) feedback_v2.getDetails();
             feedback_v2.getMilestoneIds().forEach(st -> { phaseResponse.getSubTask().add(new UserIdAndNameDto(st,milestoneDetails.get(st)));});
+            Collections.sort(phaseResponse.getSubTask());
 //            phaseResponse.set_id(ratingTest.getMilestoneId());
 //            phaseResponse.setName(name.get(ratingTest.getMilestoneId()));
             phaseResponse.setTheoreticalRating(ratingTest.getTheoreticalRating());
@@ -646,14 +648,14 @@ public class FeedbackService_V2 {
             if(feedbackType == VIVA) {
                 List<String> phaseIds = planTask.getMilestones().stream().map(m->(String)m).toList();
                // criteria.and("phaseIds").elemMatch(new Criteria().and("phaseIds").in(phaseIds));
-                criteria.and("phaseIds").in(phaseIds);
+                criteria.and("phaseIds").size(phaseIds.size()).in(phaseIds);
             }
              //   criteria.and("phaseIds").is(planTask.getPlan());
         }
         else if(feedbackType == TEST){
             List<String> milestoneIds = planTask.getMilestones().stream().map(m->(String)m).toList();
             criteria.and("details.testId").is(planTask.getPlan());
-            criteria.and("milestoneIds").in(milestoneIds);
+            criteria.and("milestoneIds").size(milestoneIds.size()).in(milestoneIds);
             //criteria.and("milestoneIds").elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         }
         Query query = new Query(criteria);
