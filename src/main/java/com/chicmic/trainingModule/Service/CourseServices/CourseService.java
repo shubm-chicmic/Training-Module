@@ -192,28 +192,6 @@ public class CourseService {
             }
         }
 
-//        if (!sortKey.isEmpty()) {
-//            Comparator<Course> courseComparator = Comparator.comparing(course -> {
-//                try {
-//                    Field field = Course.class.getDeclaredField(sortKey);
-//                    field.setAccessible(true);
-//                    Object value = field.get(course);
-//                    if (value instanceof String) {
-//                        return ((String) value).toLowerCase();
-//                    }
-//                    return value.toString();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    return "";
-//                }
-//            });
-//
-//            if (sortDirection != 1) {
-//                courses.sort(courseComparator.reversed());
-//            } else {
-//                courses.sort(courseComparator);
-//            }
-//        }
 
         return courses;
     }
