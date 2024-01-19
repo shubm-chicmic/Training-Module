@@ -19,7 +19,7 @@ public class ApiResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long count;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Float overallRating;
+    private Double overallRating;
 
     public ApiResponse(int status, String message, Object data){
         this.status = status;

@@ -42,7 +42,7 @@ public class FeedbackCRUD_V2 {
                                     @RequestParam(value = "traineeId",defaultValue = "",required = false) String traineeId,
                                     Principal principal){
         sortDirection = (sortDirection!=1)?-1:1;
-        pageNumber /= pageSize;
+       // pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
 
@@ -71,7 +71,7 @@ public class FeedbackCRUD_V2 {
                                                 @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                                @PathVariable(value = "planId")String planId,
                                                @PathVariable String userId){
-        pageNumber /= pageSize;
+        //pageNumber /= pageSize;
         sortDirection = (sortDirection!=1)?-1:1;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
@@ -95,7 +95,7 @@ public class FeedbackCRUD_V2 {
                                                             @RequestParam(required = false) Integer type,
                                                             Principal principal){
 
-        pageNumber /= pageSize;
+//        pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         if(checkRole("TR") && !principal.getName().equals(userId))

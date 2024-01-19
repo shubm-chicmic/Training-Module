@@ -20,7 +20,7 @@ public interface Rating {
         return null;
     }
 
-    public Float computeOverallRating();
+    public Double computeOverallRating();
 
     static Rating getRating(FeedbackRequestDto feedBackDto) {
         String feedBack_type = feedBackDto.getFeedbackType();

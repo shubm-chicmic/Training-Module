@@ -13,6 +13,6 @@ public class CourseResponse_V2 {
     private String _id;
     private String reviewerName;
     private String code;
-    private Float overallRating;
+    private Double overallRating;
     private List<PhaseResponse_V2> records;
 }

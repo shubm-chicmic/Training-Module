@@ -23,11 +23,11 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto plan;
     private String createdOn;
-    private Float rating;
+    private Double rating;
     private String comment;
-    private Float teamSpiritRating;
-    private Float attitudeRating;
-    private Float overallRating;
+    private Double teamSpiritRating;
+    private Double attitudeRating;
+    private Double overallRating;
     public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
         Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());

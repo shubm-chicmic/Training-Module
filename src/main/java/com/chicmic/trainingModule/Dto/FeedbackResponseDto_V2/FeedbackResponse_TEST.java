@@ -25,13 +25,13 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
     private UserIdAndNameDto task;
     private UserIdAndNameDto plan;
     private List<UserIdAndNameDto> subTask;
-    private Float theoreticalRating;
-    private Float codingRating;
-    private Float communicationRating;
+    private Double theoreticalRating;
+    private Double codingRating;
+    private Double communicationRating;
     private String createdOn;
-    private Float rating;
+    private Double rating;
     private String comment;
-    private Float overallRating;
+    private Double overallRating;
     public  static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
         System.out.println("inside feedback response............");
         Rating_TEST rating_test = (Rating_TEST) feedback.getDetails();

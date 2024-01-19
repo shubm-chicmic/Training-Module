@@ -23,12 +23,12 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
     private UserIdAndNameDto task;
     private UserIdAndNameDto plan;
     private String createdOn;
-    private Float rating;
+    private Double rating;
     private String comment;
-    private Float communicationRating;
-    private Float technicalRating;
-    private Float presentationRating;
-    private Float overallRating;
+    private Double communicationRating;
+    private Double technicalRating;
+    private Double presentationRating;
+    private Double overallRating;
 
     //
     public  static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){

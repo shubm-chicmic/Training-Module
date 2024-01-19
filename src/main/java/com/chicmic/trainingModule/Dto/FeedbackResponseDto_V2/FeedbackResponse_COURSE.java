@@ -23,13 +23,13 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
     private UserIdAndNameDto task;
     private List<UserIdAndNameDto> subTask;
     private UserIdAndNameDto plan;
-    private Float theoreticalRating;
-    private Float technicalRating;
-    private Float communicationRating;
+    private Double theoreticalRating;
+    private Double technicalRating;
+    private Double communicationRating;
     private String createdOn;
-    private Float rating;
+    private Double rating;
     private String comment;
-    private Float overallRating;
+    private Double overallRating;
 
 
     public void setSubTask(List<UserIdAndNameDto> subTask) {

@@ -51,14 +51,16 @@ public class FeedbackProgressService {
             if (type.equals(VIVA_)) {
                 matchCriteria1.append("phaseIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
 //                matchCriteria1.append("phaseIds", subtaskIds);
-                matchCriteria2.append("phaseIds", new Document("$all", subtaskIds));
+                matchCriteria2.append("phaseIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
+//                matchCriteria2.append("phaseIds", new Document("$all", subtaskIds));
             }
         } else if (type.equals(TEST_)) {
             matchCriteria1.append("details.testId", taskId);
             matchCriteria1.append("milestoneIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
 //            matchCriteria1.append("milestoneIds", subtaskIds);
             matchCriteria2.append("details.testId", taskId);
-            matchCriteria2.append("milestoneIds", new Document("$all", subtaskIds));
+            matchCriteria2.append("milestoneIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
+//            matchCriteria2.append("milestoneIds", new Document("$all", subtaskIds));
         }
         matchCriteria2.append("createdBy", userId);
         Document document = new Document();

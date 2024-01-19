@@ -8,12 +8,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Rating_PPT implements Rating{
-    private Float communicationRating;
-    private Float technicalRating;
-    private Float presentationRating;
+    private Double communicationRating;
+    private Double technicalRating;
+    private Double presentationRating;
     private String courseId;
-    public Float computeOverallRating(){
-        float total = communicationRating + technicalRating + presentationRating;
+    public Double computeOverallRating(){
+        double total = communicationRating + technicalRating + presentationRating;
         return total/3;
     }
 }

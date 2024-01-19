@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Builder
-public class UserIdAndNameDto {
+public class UserIdAndNameDto implements Comparable<UserIdAndNameDto>{
     private String _id;
     private String name;
 
@@ -19,4 +19,9 @@ public class UserIdAndNameDto {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double overallRating;
+
+    @Override
+    public int compareTo(UserIdAndNameDto o) {
+        return String.CASE_INSENSITIVE_ORDER.compare(_id, o._id);
+    }
 }

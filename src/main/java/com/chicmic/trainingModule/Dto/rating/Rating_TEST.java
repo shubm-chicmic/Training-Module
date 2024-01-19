@@ -10,11 +10,11 @@ import lombok.Setter;
 @Setter
 public class Rating_TEST implements Rating{
     private String testId;
-    private Float theoreticalRating;
-    private Float codingRating;
-    private Float communicationRating;
-    public Float computeOverallRating(){
-        float total = communicationRating + theoreticalRating + codingRating;
+    private Double theoreticalRating;
+    private Double codingRating;
+    private Double communicationRating;
+    public Double computeOverallRating(){
+        double total = communicationRating + theoreticalRating + codingRating;
         return total/3;
     }
 }

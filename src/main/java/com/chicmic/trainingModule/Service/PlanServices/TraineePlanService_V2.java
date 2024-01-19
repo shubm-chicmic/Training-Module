@@ -158,9 +158,6 @@ public class TraineePlanService_V2 {
             String userId = (String) tr.get("_id");
             AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
             if(assignedPlan != null){
-                if(assignedPlan.getPlans() == null || assignedPlan.getPlans().isEmpty())
-                    tr.put("status", TrainingStatus.PENDING);
-                else
                 tr.put("status", assignedPlan.getTrainingStatus());
                 tr.put("startDate", formatter.format(DateTimeUtil.convertLocalDateTimeToDate(assignedPlan.getDate())));
             }else {

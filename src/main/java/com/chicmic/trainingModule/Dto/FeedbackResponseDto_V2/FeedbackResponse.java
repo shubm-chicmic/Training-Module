@@ -17,7 +17,7 @@ public interface FeedbackResponse {
     public void setPlan(UserIdAndNameDto plan);
     public UserIdAndNameDto getPlan();
     public String get_id();
-    public void setOverallRating(Float overallRating);
+    public void setOverallRating(Double overallRating);
     public static FeedbackResponse buildFeedbackResponse(Feedback_V2 feedback){
         String type = feedback.getType();
         switch (type){

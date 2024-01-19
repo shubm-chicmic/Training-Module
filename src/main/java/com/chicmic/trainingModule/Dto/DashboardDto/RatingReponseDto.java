@@ -6,11 +6,11 @@ import lombok.Setter;
 
 @Getter @Setter @Builder
 public class RatingReponseDto {
-    private float overall;
+    private double overall;
     private String comment;
-    private float presentation;
-    private float course;
-    private float test;
-    private float behaviour;
-    private float attendance;
+    private double presentation;
+    private double course;
+    private double test;
+    private double behaviour;
+    private double attendance;
 }
