@@ -231,6 +231,8 @@ public class AssignTaskService {
                 .collect(Collectors.toList());
     }
     public AssignedPlan updateAssignTask(AssignedPlan assignedPlan) {
+        if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         return assignTaskRepo.save(assignedPlan);
     }
 }
