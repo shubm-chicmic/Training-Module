@@ -24,9 +24,12 @@ public class SubTask {
     private String _id;
     private Integer entityType;
     @JsonProperty(value = "subTask", required = true)
+    @Trim
     private String subTask;
     private Integer estimatedTime;
+    @Trim
     private String link = "";
+    @Trim
     private String reference;
     @DBRef
     @JsonIgnore
