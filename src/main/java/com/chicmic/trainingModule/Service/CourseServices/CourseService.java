@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
@@ -120,31 +121,32 @@ public class CourseService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria)
         );
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-        Query searchQuery = new Query(finalCriteria);
+        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));;
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
-        if (!sortKey.isEmpty()) {
-            Comparator<Course> courseComparator = Comparator.comparing(course -> {
-                try {
-                    Field field = Course.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(course);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection != 1) {
-                courses.sort(courseComparator.reversed());
-            } else {
-                courses.sort(courseComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Course> courseComparator = Comparator.comparing(course -> {
+//                try {
+//                    Field field = Course.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(course);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                courses.sort(courseComparator.reversed());
+//            } else {
+//                courses.sort(courseComparator);
+//            }
+//        }
         List<Course> finalCourseList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
             List<String> courseIds = getCoursesAndTestsByTraineeId(traineeId, EntityType.COURSE);
@@ -162,14 +164,7 @@ public class CourseService {
 
     public List<Course> getAllCourses(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
-        if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
-        }
-
+        pageable = PageRequest.of(pageNumber, pageSize);
 
         Criteria criteria = Criteria.where("name").regex(query, "i")
                 .and("isDeleted").is(false);
@@ -185,8 +180,9 @@ public class CourseService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-        Query searchQuery = new Query(finalCriteria).with(pageable);
+        Query searchQuery = new Query(finalCriteria).with(pageable).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
         if (!sortKey.isEmpty() && sortKey.equals("createdByName")) {
@@ -196,28 +192,28 @@ public class CourseService {
             }
         }
 
-        if (!sortKey.isEmpty()) {
-            Comparator<Course> courseComparator = Comparator.comparing(course -> {
-                try {
-                    Field field = Course.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(course);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection != 1) {
-                courses.sort(courseComparator.reversed());
-            } else {
-                courses.sort(courseComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Course> courseComparator = Comparator.comparing(course -> {
+//                try {
+//                    Field field = Course.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(course);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                courses.sort(courseComparator.reversed());
+//            } else {
+//                courses.sort(courseComparator);
+//            }
+//        }
 
         return courses;
     }

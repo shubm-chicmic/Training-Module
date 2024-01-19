@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
@@ -55,6 +56,7 @@ public class TestService {
     }
 
     public List<Test> getAllTests(String query, Integer sortDirection, String sortKey, String traineeId) {
+
         Criteria criteria = Criteria.where("testName").regex(query, "i")
                 .and("deleted").is(false);
 
@@ -66,32 +68,33 @@ public class TestService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria)
         );
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-        Query searchQuery = new Query(finalCriteria);
+        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));;
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-        if (!sortKey.isEmpty()) {
-            Comparator<Test> testComparator = Comparator.comparing(test -> {
-                try {
-                    Field field = Test.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(test);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection != 1) {
-                tests.sort(testComparator.reversed());
-            } else {
-                tests.sort(testComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Test> testComparator = Comparator.comparing(test -> {
+//                try {
+//                    Field field = Test.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(test);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                tests.sort(testComparator.reversed());
+//            } else {
+//                tests.sort(testComparator);
+//            }
+//        }
         System.out.println("Tests : " + tests.size());
         List<Test> testList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
@@ -106,40 +109,35 @@ public class TestService {
             }
             return testList;
         }
-        if (!sortKey.isEmpty()) {
-            Comparator<Test> testComparator = Comparator.comparing(test -> {
-                try {
-                    Field field = Test.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(test);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection != 1) {
-                tests.sort(testComparator.reversed());
-            } else {
-                tests.sort(testComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Test> testComparator = Comparator.comparing(test -> {
+//                try {
+//                    Field field = Test.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(test);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                tests.sort(testComparator.reversed());
+//            } else {
+//                tests.sort(testComparator);
+//            }
+//        }
 
         return tests;
     }
     public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
-        if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
-        }
+        pageable = PageRequest.of(pageNumber, pageSize);
+
         Criteria criteria = Criteria.where("testName").regex(query, "i")
                 .and("deleted").is(false);
 
@@ -153,7 +151,9 @@ public class TestService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
-        Query searchQuery = new Query(finalCriteria).with(pageable);
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
+
+        Query searchQuery = new Query(finalCriteria).with(pageable).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
 //        Query searchQuery = new Query()
 //                .addCriteria(Criteria.where("testName").regex(query, "i"))
 //                .addCriteria(Criteria.where("deleted").is(false))
@@ -171,28 +171,28 @@ public class TestService {
 //            }
 //        }
 //        tests = finalTestList;
-        if (!sortKey.isEmpty()) {
-            Comparator<Test> testComparator = Comparator.comparing(test -> {
-                try {
-                    Field field = Test.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(test);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection != 1) {
-                tests.sort(testComparator.reversed());
-            } else {
-                tests.sort(testComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Test> testComparator = Comparator.comparing(test -> {
+//                try {
+//                    Field field = Test.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(test);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                tests.sort(testComparator.reversed());
+//            } else {
+//                tests.sort(testComparator);
+//            }
+//        }
 
         return tests;
     }

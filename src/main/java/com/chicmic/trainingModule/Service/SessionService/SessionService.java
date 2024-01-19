@@ -15,16 +15,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -51,13 +49,8 @@ public class SessionService {
         System.out.println("sortDirection = " + sortDirection);
         System.out.println("sortKey = " + sortKey);
         Pageable pageable;
-        if(!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 1) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        }else {
-           pageable = PageRequest.of(pageNumber, pageSize);
-        }
+        pageable = PageRequest.of(pageNumber, pageSize);
+
 
         Criteria criteria = Criteria.where("title").regex(query, "i")
                 .and("isDeleted").is(false);
@@ -80,8 +73,8 @@ public class SessionService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
-
-        Query searchQuery = new Query(finalCriteria).with(pageable);
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
+        Query searchQuery = new Query(finalCriteria).with(pageable).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));;
 
 
 //        // Create a query object with criteria for title search and isDeleted filtering
@@ -92,28 +85,28 @@ public class SessionService {
 
         // Fetch data based on the query and apply sorting by title
         List<Session> sessions = mongoTemplate.find(searchQuery, Session.class);
-        if(!sortKey.isEmpty()) {
-            Comparator<Session> sessionComparator = Comparator.comparing(session -> {
-                try {
-                    Field field = Session.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(session);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection != 1) {
-                sessions.sort(sessionComparator.reversed());
-            } else {
-                sessions.sort(sessionComparator);
-            }
-        }
+//        if(!sortKey.isEmpty()) {
+//            Comparator<Session> sessionComparator = Comparator.comparing(session -> {
+//                try {
+//                    Field field = Session.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(session);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                sessions.sort(sessionComparator.reversed());
+//            } else {
+//                sessions.sort(sessionComparator);
+//            }
+//        }
 
 
 
