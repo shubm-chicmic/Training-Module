@@ -14,6 +14,7 @@ import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -82,7 +83,7 @@ public class PlanCRUD {
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody PlanDto planDto, Principal principal) {
+    public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
 
@@ -114,7 +115,7 @@ public class PlanCRUD {
     }
 
     @PutMapping
-    public ApiResponse updatePlan(@RequestBody PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updatePlan(@RequestBody@Valid PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
         if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);

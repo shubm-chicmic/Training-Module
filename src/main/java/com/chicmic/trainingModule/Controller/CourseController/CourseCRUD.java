@@ -121,7 +121,7 @@ public class CourseCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updateCourse(@RequestBody@Valid CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
         System.out.println("course Dto = " + courseDto);
         if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
