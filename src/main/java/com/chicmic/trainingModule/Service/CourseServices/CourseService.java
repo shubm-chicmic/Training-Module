@@ -277,7 +277,13 @@ public class CourseService {
                 }
                 course.setApprovedBy(approvedBy);
             }
-            courseRepo.save(course);
+            try{
+                course = courseRepo.save(course);
+            }
+            catch (org.springframework.dao.DuplicateKeyException ex) {
+                // Catch DuplicateKeyException and throw ApiException with 400 status
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+            }
             return course;
         } else {
             return null;
