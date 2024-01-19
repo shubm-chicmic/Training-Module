@@ -79,7 +79,7 @@ public class TestCRUD {
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody TestDto testDto, Principal principal) {
+    public ApiResponse create(@RequestBody@Valid TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
 
         Test test = Test.builder()
@@ -112,7 +112,7 @@ public class TestCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateTest(@RequestBody TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updateTest(@RequestBody@Valid TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
         Test test = testService.getTestById(testId);
         System.out.println("testDto = " + testDto.getApprover());
 //        if (testDto.getReviewers() != null && testDto.getReviewers().size() == 0) {

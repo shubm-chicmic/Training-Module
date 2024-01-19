@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.TestDto;
 
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,8 +17,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@TrimAll
 public class TestDto {
+    @Trim
     private String testName;
     private List<String> teams;
     private List<Phase<Task>> milestones;
