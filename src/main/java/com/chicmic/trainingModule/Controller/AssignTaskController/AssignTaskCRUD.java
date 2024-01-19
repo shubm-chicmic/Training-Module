@@ -5,6 +5,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.*;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
@@ -84,7 +85,7 @@ public class AssignTaskCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response) {
+    public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response, Principal principal) {
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
         if (assignedPlan != null) {
             List<Plan> plans = new ArrayList<>();
@@ -123,7 +124,22 @@ public class AssignTaskCRUD {
             AssignedPlan assignTask = assignTaskService.updateAssignTask(assignedPlan);
             return new ApiResponse(HttpStatus.OK.value(), "Assign Plan Updated successfully", assignTask, response);
         }
-        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan Not Assigned", null, response);
+        try {
+            List<Plan> plans = planService.getPlanByIds(assignTaskDto.getPlan());
+            assignedPlan = AssignedPlan.builder()
+                    .createdBy(principal.getName())
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .plans(plans)
+                    .userId(userId)
+                    .trainingStatus(TrainingStatus.ONGOING)
+                    .date(assignTaskDto.getDate())
+                    .build();
+            assignedPlan = assignTaskService.saveAssignTask(assignedPlan);
+            return new ApiResponse(HttpStatus.OK.value(), "Plan Created Successfully", assignedPlan, response);
+        }catch (Exception ex) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan Cannot be Created Error Occur");
+        }
     }
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
