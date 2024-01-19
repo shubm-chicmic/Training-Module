@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
 import com.chicmic.trainingModule.annotation.CascadeSave;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
@@ -22,6 +23,7 @@ public class Task {
     @Id
     private String _id;
     private Integer entityType;
+    @Trim
     private String mainTask;
     private Integer estimatedTime;
     @DBRef
