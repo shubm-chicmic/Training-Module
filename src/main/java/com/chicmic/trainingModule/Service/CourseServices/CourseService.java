@@ -11,6 +11,7 @@ import com.chicmic.trainingModule.Repository.SubTaskRepo;
 import com.chicmic.trainingModule.Repository.TaskRepo;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.Pagenation;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
@@ -51,17 +52,14 @@ public class CourseService {
         course.setPhases(phases);
 
         System.out.println("course in service " + course);
-        try{
+        try {
             course = courseRepo.save(course);
-        }
-        catch (org.springframework.dao.DuplicateKeyException ex) {
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
             // Catch DuplicateKeyException and throw ApiException with 400 status
             throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
         }
         return course;
     }
-
-
 
 
     public HashMap<String, String> getCourseNamePhaseNameById(String courseId, String phaseId) {
@@ -81,7 +79,8 @@ public class CourseService {
 //        }
         return result;
     }
-    public List<String>  getCoursesAndTestsByTraineeId(String traineeId, Integer planType) {
+
+    public List<String> getCoursesAndTestsByTraineeId(String traineeId, Integer planType) {
         Query query1 = new Query(Criteria.where("userId").in(traineeId));
         AssignedPlan assignTask = mongoTemplate.findOne(query1, AssignedPlan.class);
         List<Plan> plans = assignTask.getPlans();
@@ -123,7 +122,8 @@ public class CourseService {
         );
         Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));;
+        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
+        ;
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
 //        if (!sortKey.isEmpty()) {
 //            Comparator<Course> courseComparator = Comparator.comparing(course -> {
@@ -150,7 +150,7 @@ public class CourseService {
         List<Course> finalCourseList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
             List<String> courseIds = getCoursesAndTestsByTraineeId(traineeId, EntityType.COURSE);
-            if(courseIds != null && courseIds.size() > 0) {
+            if (courseIds != null && courseIds.size() > 0) {
                 for (Course course : courses) {
                     if (courseIds.contains(course.get_id())) {
                         finalCourseList.add(course);
@@ -163,6 +163,31 @@ public class CourseService {
     }
 
     public List<Course> getAllCourses(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
+        if (!sortKey.isEmpty() && sortKey.equals("createdByName")) {
+            Criteria criteria = Criteria.where("name").regex(query, "i")
+                    .and("isDeleted").is(false);
+
+            Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+            Criteria reviewersCriteria = Criteria.where("isApproved").is(false)
+                    .and("approver").in(userId);
+            Criteria createdByCriteria = Criteria.where("isApproved").is(false)
+                    .and("createdBy").is(userId);
+
+            // Combining the conditions
+            Criteria finalCriteria = new Criteria().andOperator(
+                    criteria,
+                    new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+            );
+            Query searchQuery = new Query(finalCriteria);
+            List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
+            courses.sort(Comparator.comparing(course -> TrainingModuleApplication.searchNameById(course.getCreatedBy())));
+            if (sortDirection != 1) {
+                Collections.reverse(courses);
+            }
+            courses = Pagenation.paginateWithoutPageIndexConversion(courses, pageNumber, pageSize);
+            return courses;
+
+        }
         Pageable pageable;
         pageable = PageRequest.of(pageNumber, pageSize);
 
@@ -185,22 +210,21 @@ public class CourseService {
         Query searchQuery = new Query(finalCriteria).with(pageable).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
 
         List<Course> courses = mongoTemplate.find(searchQuery, Course.class);
-        if (!sortKey.isEmpty() && sortKey.equals("createdByName")) {
-            courses.sort(Comparator.comparing(course -> TrainingModuleApplication.searchNameById(course.getCreatedBy())));
-            if (sortDirection != 1) {
-                Collections.reverse(courses);
-            }
-        }
+//        if (!sortKey.isEmpty() && sortKey.equals("createdByName")) {
+//            courses.sort(Comparator.comparing(course -> TrainingModuleApplication.searchNameById(course.getCreatedBy())));
+//            if (sortDirection != 1) {
+//                Collections.reverse(courses);
+//            }
+//        }
 
 
         return courses;
     }
 
     public Course getCourseById(String courseId) {
-        Course course =  courseRepo.findById(courseId).orElse(null);
+        Course course = courseRepo.findById(courseId).orElse(null);
         return course != null && course.getIsDeleted() ? null : course;
     }
-
 
 
     public Boolean deleteCourseById(String courseId) {
@@ -255,10 +279,9 @@ public class CourseService {
                 }
                 course.setApprovedBy(approvedBy);
             }
-            try{
+            try {
                 course = courseRepo.save(course);
-            }
-            catch (org.springframework.dao.DuplicateKeyException ex) {
+            } catch (org.springframework.dao.DuplicateKeyException ex) {
                 // Catch DuplicateKeyException and throw ApiException with 400 status
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
             }
@@ -302,17 +325,18 @@ public class CourseService {
         }
         return courseRepo.save(course);
     }
-    public List<Map<String,String>> findCoursesByIds(List<String> Ids){
+
+    public List<Map<String, String>> findCoursesByIds(List<String> Ids) {
         Criteria criteria = Criteria.where("_id").in(Ids);
         Query query = new Query(criteria);
-        query.fields().include("_id","name","phases._id","phases.name");
-        List<Course> course = mongoTemplate.find(new Query(criteria),Course.class);
+        query.fields().include("_id", "name", "phases._id", "phases.name");
+        List<Course> course = mongoTemplate.find(new Query(criteria), Course.class);
 //        HashMap<String,String> courseDetails = new HashMap<>();
-        List<Map<String,String>> courseDetailsList = Arrays.asList(new HashMap<>(),new HashMap<>());
+        List<Map<String, String>> courseDetailsList = Arrays.asList(new HashMap<>(), new HashMap<>());
         course.forEach(c -> {
-            courseDetailsList.get(0).put(c.get_id(),c.getName());
+            courseDetailsList.get(0).put(c.get_id(), c.getName());
             c.getPhases().forEach(p -> {
-                courseDetailsList.get(1).put(p.get_id(),p.getName());
+                courseDetailsList.get(1).put(p.get_id(), p.getName());
             });
         });
         return courseDetailsList;
