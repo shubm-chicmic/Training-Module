@@ -51,6 +51,15 @@ public class UserProgressCRUD {
                 if(traineeName == null)traineeName = "this Trainee";
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Training Of " + traineeName + " is Already Completed" , null, response);
             }
+            if(assignedPlan != null && assignedPlan.getTrainingStatus() == TrainingStatus.CANCELLED){
+                String traineeName = TrainingModuleApplication.searchNameById(userProgressDto.getTraineeId());
+                String currentUserName = TrainingModuleApplication.searchNameById(principal.getName());
+                if(currentUserName.equals(traineeName)){
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plans Already Cancelled" , null, response);
+                }
+                if(traineeName == null)traineeName = "this Trainee";
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plans Of " + traineeName + " are Already Cancelled" , null, response);
+            }
             if (userProgressDto.getProgressType() == PlanType.VIVA || userProgressDto.getProgressType() == PlanType.PPT) {
                 PlanTask planTask = planTaskService.getPlanTaskById(userProgressDto.getSubTaskId());
                 if (planTask == null) {
