@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -127,7 +128,9 @@ public class FeedbackService_V2 {
         String testId = feedback_v2.getDetails().getTestId();
         if(testId != null)
                 criteria.and("details.testId").is(testId);
-
+        String planId = feedback_v2.getPlanId();
+        if(planId != null)
+            criteria.and("planId").is(planId);
         if (feedback_v2.getPhaseIds() != null)
             criteria.and("phaseIds").is(feedback_v2.getPhaseIds());
         if (feedback_v2.getMilestoneIds() != null)
@@ -220,7 +223,7 @@ public class FeedbackService_V2 {
                 .set("updateAt",date)
                 .set("details",rating)
                 .set("comment",feedbackRequestDto.getComment())
-                .set("overallRating",compute_rating1(feedbackRequestDto.computeRating(),1));
+                .set("overallRating",compute_rating(feedbackRequestDto.computeRating(),1));
 
        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
@@ -630,6 +633,7 @@ public class FeedbackService_V2 {
     }
     public List<CourseResponse_V2> findFeedbacksByTaskIdAndTraineeId(String taskId,String planId,String traineeId,int feedbackType){
         PlanTask planTask = findMilestonesFromPlanTask(taskId);
+        planTask.getMilestones().forEach(System.out::println);
         if(planTask == null)
             throw new ApiException(HttpStatus.BAD_REQUEST,"PlanTask not found!!");
 
@@ -716,7 +720,7 @@ public class FeedbackService_V2 {
     public List<FeedbackResponseDto> findFirstFiveFeedbacksOfTrainee(String traineeId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false);
         Query query = new Query(criteria);
-        query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+        query.with(Sort.by(Sort.Direction.DESC, "createdAt")).limit(5);
         List<Feedback_V2> feedbackV2List = mongoTemplate.find(query,Feedback_V2.class);
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return feedbackV2List.stream().map(f -> FeedbackResponseDto.builder().feedback(f.getComment())

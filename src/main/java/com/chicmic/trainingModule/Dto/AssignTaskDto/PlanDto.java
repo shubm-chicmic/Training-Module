@@ -22,7 +22,7 @@ public class PlanDto {
     private Integer totalTasks;
     private Integer completedTasks;
     //    private String estimatedTime;
-    private Float rating;
+    private Double rating;
     private String feedbackId;
     private Set<UserIdAndNameDto> mentors;
     private Boolean isCompleted = null;

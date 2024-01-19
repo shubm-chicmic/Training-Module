@@ -56,7 +56,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
                 .task(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(formatter.format(feedback.getCreatedAt()))
-                .rating(rating_course.computeOverallRating())
+                .rating(feedback.getOverallRating())
                 .build();
     }
 }

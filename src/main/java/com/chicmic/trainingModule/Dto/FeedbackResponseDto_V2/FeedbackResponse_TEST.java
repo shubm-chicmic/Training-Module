@@ -52,7 +52,7 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
                 .task(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
                 .createdOn(formatter.format(feedback.getCreatedAt()))
-                .rating(rating_test.computeOverallRating())
+                .rating(feedback.getOverallRating())
                 .build();
     }
 }

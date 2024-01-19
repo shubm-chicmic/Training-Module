@@ -27,5 +27,5 @@ public class PlanTaskResponseDto {
     private LocalDateTime date;
     private Boolean isCompleted;
     private String feedbackId;
-    private float rating;
+    private double rating;
 }

@@ -18,5 +18,5 @@ public class UserIdAndNameDto {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Float overallRating;
+    private Double overallRating;
 }

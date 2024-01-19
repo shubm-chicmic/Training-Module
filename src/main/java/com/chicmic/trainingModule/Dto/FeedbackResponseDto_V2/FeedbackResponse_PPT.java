@@ -47,7 +47,7 @@ public class FeedbackResponse_PPT implements FeedbackResponse{
                 .feedbackType(new UserIdAndNameDto(PPT_, "PPT"))
                 .task(new UserIdAndNameDto(feedback.getDetails().getCourseId(),feedback.getDetails().getCourseId()))
                 .createdOn(formatter.format(feedback.getCreatedAt()))
-                .rating(rating_ppt.computeOverallRating())
+                .rating(feedback.getOverallRating())
                 .build();
     }
     @Override

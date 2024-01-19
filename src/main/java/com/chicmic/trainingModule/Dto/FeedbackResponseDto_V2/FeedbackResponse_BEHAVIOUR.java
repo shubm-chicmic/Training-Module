@@ -43,7 +43,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .attitudeRating(rating_behaviour.getAttitudeRating())
                 .feedbackType(new UserIdAndNameDto(BEHAVIUOR_, "BEHAVIOUR"))
                 .createdOn(formatter.format(feedback.getCreatedAt()))
-                .rating(rating_behaviour.computeOverallRating())
+                .rating(feedback.getOverallRating())
                 .build();
     }
     @Override

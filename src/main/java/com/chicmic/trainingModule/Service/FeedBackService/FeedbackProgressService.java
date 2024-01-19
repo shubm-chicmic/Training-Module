@@ -49,12 +49,14 @@ public class FeedbackProgressService {
             matchCriteria1.append("details.courseId", taskId);
             matchCriteria2.append("details.courseId", taskId);
             if (type.equals(VIVA_)) {
-                matchCriteria1.append("phaseIds", new Document("$in", subtaskIds));
+                matchCriteria1.append("phaseIds", new Document("$all", subtaskIds));
+//                matchCriteria1.append("phaseIds", subtaskIds);
                 matchCriteria2.append("phaseIds", new Document("$all", subtaskIds));
             }
         } else if (type.equals(TEST_)) {
             matchCriteria1.append("details.testId", taskId);
-            matchCriteria1.append("milestoneIds", new Document("$in", subtaskIds));
+            matchCriteria1.append("milestoneIds", new Document("$all", subtaskIds));
+//            matchCriteria1.append("milestoneIds", subtaskIds);
             matchCriteria2.append("details.testId", taskId);
             matchCriteria2.append("milestoneIds", new Document("$all", subtaskIds));
         }
@@ -75,7 +77,7 @@ public class FeedbackProgressService {
         Map<String, Object> response = new HashMap<>();
         List<Document> traineeOverAllRating = (List<Document>) results.get("overallRating");
         if (traineeOverAllRating == null || traineeOverAllRating.isEmpty()) {
-            response.put("overallRating", 0f);
+            response.put("overallRating", 0.00);
         } else {
             Double totalOverAllRating = (Double) traineeOverAllRating.get(0).get("totalOverAllRating");
             Integer count = (Integer) traineeOverAllRating.get(0).get("count");

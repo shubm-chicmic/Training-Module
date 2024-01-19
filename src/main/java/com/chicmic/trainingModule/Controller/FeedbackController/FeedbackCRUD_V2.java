@@ -35,7 +35,7 @@ public class FeedbackCRUD_V2 {
     public ApiResponse getFeedbacks(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                     @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
                                     @RequestParam(value = "searchString", defaultValue = ".*", required = false) String searchString,
-                                    @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
+                                    @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
                                     @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                     @RequestParam(value = "_id",defaultValue = "",required = false) String _id,
                                     @RequestParam(value = "feedbackType",defaultValue = "",required = false) Integer feedbackType,
@@ -89,7 +89,7 @@ public class FeedbackCRUD_V2 {
     public ApiResponse findCourseAndTestFeedbacksForTrainee(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                                             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
                                                             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
-                                                            @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
+                                                            @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
                                                             @RequestParam(value = "sortKey", defaultValue = "createdAt", required = false) String sortKey,
                                                             @PathVariable String userId,@RequestParam(required = false) String _id,
                                                             @RequestParam(required = false) Integer type,
@@ -163,7 +163,7 @@ public class FeedbackCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
         FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
-        float overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
+        double overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
         feedbackResponse.setOverallRating(overallRating);
         //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
         ApiResponse apiResponse = new ApiResponse(200,"Feedback updated successfully",feedbackResponse);

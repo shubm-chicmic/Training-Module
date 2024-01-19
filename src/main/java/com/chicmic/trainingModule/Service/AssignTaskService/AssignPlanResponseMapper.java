@@ -184,7 +184,7 @@ public class AssignPlanResponseMapper {
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
                 .feedbackId(response.containsKey("_id")?response.get("_id").toString():null)//(feedbackV2 == null ? null : feedbackV2.get_id())
-                .rating((Float) response.get("overallRating"))//(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
+                .rating((Double) response.get("overallRating"))//(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
                 .build();
     }
 
