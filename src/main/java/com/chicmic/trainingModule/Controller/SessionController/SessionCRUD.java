@@ -126,8 +126,8 @@ public class SessionCRUD {
             sessionDto.setStatus(session.getStatus());
             if(sessionDto != null && sessionDto.getMessage() != null && !sessionDto.getMessage().isEmpty()) {
                 if(session.getStatus() == StatusConstants.COMPLETED) {
-                    System.out.println("sessionDto = " + sessionDto);
-                    if (session.getSessionBy().contains(principal.getName())) {
+                    System.out.println("sessionDto = " + sessionDto);//give status edit access to approvedBy,sessionBy
+                    if (session.getSessionBy().contains(principal.getName()) || session.getApprovedBy().contains(principal.getName()) || session.getCreatedBy().equals(principal.getName())) {
                         session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
                     } else {
                         session = sessionService.updateStatus(sessionId, originalStatus);

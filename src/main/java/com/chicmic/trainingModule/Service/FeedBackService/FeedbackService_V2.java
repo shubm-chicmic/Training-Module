@@ -314,7 +314,31 @@ public class FeedbackService_V2 {
             feedbackResponse_v2List.add(buildFeedbackResponse(feedbackV2));
 
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
-        long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
+        Aggregation aggregation1 = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", asList("$$user.id", "$createdBy")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", asList(
+                        new Document("userData.reviewerName", new Document("$regex", namePattern))
+                ))),
+                context -> new Document("$count", "count")
+        );
+        Document results = mongoTemplate.aggregate(
+                aggregation1, "feedback_V2", Document.class
+        ).getUniqueMappedResult();
+
+        long count = (results==null)?0:(int) results.get("count");
 
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
     }
@@ -401,7 +425,34 @@ public class FeedbackService_V2 {
 
 
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
-        long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
+
+        Aggregation aggregation1 = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", asList("$$user.id", "$createdBy")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", asList(
+                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+                        new Document("userData.reviewerTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),// Apply skip to paginate
+                context -> new Document("$count", "count")
+        );
+
+        Document results = mongoTemplate.aggregate(
+                aggregation1, "feedback_V2", Document.class
+        ).getUniqueMappedResult();
+
+        long count = (results==null)?0:(int) results.get("count");//mongoTemplate.count(new Query(criteria),Feedback_V2.class);
         Double overallRating = computeOverallRatingOfTrainee(traineeId);
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count,overallRating);
     }
@@ -452,7 +503,32 @@ public class FeedbackService_V2 {
         for (Feedback_V2 feedbackV2 : feedbackList)
             feedbackResponse_v2List.add(buildFeedbackResponse(feedbackV2));
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
-        long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
+        Aggregation aggregation1 = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", asList("$$user.id", "$traineeId")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", asList(
+                        new Document("userData.traineeName", new Document("$regex", namePattern)),
+                        new Document("userData.traineeTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),
+                context -> new Document("$count", "count")
+        );
+        Document results = mongoTemplate.aggregate(
+                aggregation1, "feedback_V2", Document.class
+        ).getUniqueMappedResult();
+
+        long count = (results==null)?0:(int) results.get("count");
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count);
     }

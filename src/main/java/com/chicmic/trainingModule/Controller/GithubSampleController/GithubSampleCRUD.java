@@ -81,7 +81,7 @@ public class GithubSampleCRUD {
     @PutMapping
     public ApiResponse updateGithubSample(@RequestBody GithubSampleDto githubSampleDto, @RequestParam String githubSampleId, Principal principal, HttpServletResponse response) {
         GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
-        if (githubSample != null) {
+        if (githubSample != null) {//give edit access to creators,approvers!!
             if (githubSampleDto.getApproved()) {
                 Set<String> approver = githubSample.getApprover();
                 if (approver.contains(principal.getName())) {
