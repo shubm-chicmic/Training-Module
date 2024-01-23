@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -16,6 +17,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/v1/training/dropdown")
 @AllArgsConstructor
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
 public class AssignedPlanDropdown {
     private final AssignTaskService assignTaskService;
     private final AssignPlanResponseMapper assignPlanResponseMapper;

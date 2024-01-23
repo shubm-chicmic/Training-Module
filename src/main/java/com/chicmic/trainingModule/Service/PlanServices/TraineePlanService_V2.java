@@ -48,7 +48,7 @@ public class TraineePlanService_V2 {
         System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
         if(query==null || query.isBlank()) query = ".*";
-        int skipValue = (pageNumber - 1) * pageSize;
+        int skipValue = pageNumber;//(pageNumber - 1) * pageSize;
 
 
         //query1.fields().include("plans._id")

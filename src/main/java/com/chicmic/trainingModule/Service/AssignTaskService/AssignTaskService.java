@@ -58,6 +58,7 @@ public class AssignTaskService {
                     plans.add(plan);
                 }
             }
+            assignTask.setTrainingStatus(TrainingStatus.ONGOING);
             assignTask.setPlans(plans);
             return assignTaskRepo.save(assignTask);
         }

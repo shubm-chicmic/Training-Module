@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService_V2;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +17,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/v1/training/dropdown")
 @AllArgsConstructor
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
 public class TraineeStatusDropdown {
     private final TraineePlanService_V2 traineePlanServiceV2;
     @PatchMapping("/trainee-status")

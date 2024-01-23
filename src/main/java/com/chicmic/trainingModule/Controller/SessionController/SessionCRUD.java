@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.SessionService.SessionResponseMapper;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
@@ -13,14 +14,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
 
+import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
+
 @RestController
 @RequestMapping("/v1/training/session")
 @AllArgsConstructor
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
 public class SessionCRUD {
     private final SessionService sessionService;
     private final SessionResponseMapper sessionResponseMapper;
@@ -61,6 +66,8 @@ public class SessionCRUD {
 
     @PostMapping
     public ApiResponse create(@RequestBody SessionDto sessionDto, Principal principal) {
+        if (checkRole("IND"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
         System.out.println("sessionDto = " + sessionDto);
         sessionDto.setCreatedBy(principal.getName());
         sessionDto.setStatus(StatusConstants.PENDING);
@@ -71,9 +78,11 @@ public class SessionCRUD {
     }
 
     @DeleteMapping("/{sessionId}")
-    public ApiResponse delete(@PathVariable String sessionId) {
+    public ApiResponse delete(@PathVariable String sessionId,Principal principal) {
+        if (checkRole("TR"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
         System.out.println("sessionId = " + sessionId);
-        Boolean deleted = sessionService.deleteSessionById(sessionId);
+        Boolean deleted = sessionService.deleteSessionById(sessionId,principal.getName());
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Session deleted successfully", null);
         }
@@ -84,6 +93,8 @@ public class SessionCRUD {
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
         Integer originalStatus = session.getStatus();
+        if (checkRole("TR"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
         if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
@@ -128,6 +139,16 @@ public class SessionCRUD {
                 }
 
             }
+//            if(sessionDto != null && sessionDto.getTrainees() != null){
+//                if(sessionDto.getTrainees().isEmpty())
+//                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Trainee List can't be empty", null, response);
+//                else if(!session.getApprovedBy().contains(principal.getName()) || !session.getCreatedBy().equals(principal.getName())){
+//                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not Authorized to edit trainee list", null, response);
+//                }
+//            }
+            if(!session.getSessionBy().contains(principal.getName()) && !session.getApprover().contains(principal.getName()) && !session.getCreatedBy().equals(principal.getName()))
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to edit this session", null, response);
+
             SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {

@@ -226,6 +226,7 @@ public class PhaseService {
                     planTask.setEstimatedTimeInSeconds(estimatedTime);
                     planTaskRepo.save(planTask);
                     phaseRepo.save(planTaskPhase);
+                    if(plan != null)
                     planRepo.save(plan);
                 }
             }

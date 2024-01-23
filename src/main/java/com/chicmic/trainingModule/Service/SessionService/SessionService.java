@@ -1,9 +1,11 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.MomMessage;
 import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.SessionRepo;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.Session;
@@ -18,6 +20,7 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -129,8 +132,11 @@ public class SessionService {
         return sessionRepo.findById(sessionId).orElse(null);
     }
 
-    public Boolean deleteSessionById(String sessionId) {
+    public Boolean deleteSessionById(String sessionId,String name) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
+        if(!session.getSessionBy().contains(name) || !session.getApprover().contains(name) || !session.getCreatedBy().equals(name))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not Authorize to delete this session");
+            //return new ApiResponse(HttpStatus.OK.value(), "Session deleted successfully", null);
         if (session != null) {
             session.setDeleted(true);
             sessionRepo.save(session);

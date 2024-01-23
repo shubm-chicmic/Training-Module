@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,9 @@ import java.util.*;
 
 import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
-
 @RestController
 @RequestMapping("/v1/training/feedback")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
 

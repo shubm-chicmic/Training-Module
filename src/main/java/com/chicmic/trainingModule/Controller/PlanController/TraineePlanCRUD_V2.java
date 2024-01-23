@@ -8,6 +8,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @RequestMapping("/v1/training/traineeList")
 @RestController
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
 public class TraineePlanCRUD_V2 {
     private final TraineePlanService_V2 traineePlanService;
    private final MongoTemplate mongoTemplate;
@@ -31,7 +33,7 @@ public class TraineePlanCRUD_V2 {
                                         @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
                                         @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
                                         @RequestParam(value = "sortKey", defaultValue = "employeeCode", required = false) String sortKey){
-        pageNumber /= pageSize;
+        //pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         System.out.println("request reaches here!!");

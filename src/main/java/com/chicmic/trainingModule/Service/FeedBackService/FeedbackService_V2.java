@@ -80,14 +80,14 @@ public class FeedbackService_V2 {
                 if(pt == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
                 pt.forEach(ptask ->{
                     if(ptask.getPlanType() == type) {
-                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId)) {
+                        if (Objects.equals(ptask.getPlanType(), VIVA) && ptask.getPlan().equals(taskId) && ptask.getMilestones().containsAll(feedbackRequestDto.getPhase())){
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
-                            phaseIds.addAll(ptask.getMilestones());
-                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId)) {
+                           // phaseIds.addAll(ptask.getMilestones());
+                        } else if (Objects.equals(ptask.getPlanType(), TEST) && ptask.getPlan().equals(taskId) && ptask.getMilestones().containsAll(feedbackRequestDto.getMilestone())) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
-                            phaseIds.addAll(ptask.getMilestones());
+                            //phaseIds.addAll(ptask.getMilestones());
                         } else if (Objects.equals(ptask.getPlanType(), PPT) && ptask.getPlan().equals(taskId)) {
                             value.set(1);
                             mentorIds.addAll(ptask.getMentorIds());
@@ -96,23 +96,26 @@ public class FeedbackService_V2 {
                 });
             });
         });
+        if(mentorIds.isEmpty())
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
 
-        if(!feedbackRequestDto.getFeedbackType().equals(PPT_)) {
-            if(phaseIds.isEmpty())
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
-            HashSet<String> taskName = new HashSet<>();
-            phaseIds.forEach(ph -> {
-                taskName.add((String) ph);
-            });
-            boolean flag = taskName.containsAll(subTaskId);
-            if (!flag)
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
-        }
+//        if(!feedbackRequestDto.getFeedbackType().equals(PPT_)) {
+//            if(phaseIds.isEmpty())
+//                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
+//            HashSet<String> taskName = new HashSet<>();
+//            phaseIds.forEach(ph -> {
+//                taskName.add((String) ph);
+//            });
+//            boolean flag = taskName.containsAll(subTaskId);
+//            if (!flag)
+//                throw new ApiException(HttpStatus.BAD_REQUEST, "Task not assigned!!!");
+//        }
 
-        if(value.get() == 1)
-            return mentorIds;
-
-        throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
+//        if(value.get() == 1)
+//            return mentorIds;
+//
+//        throw new ApiException(HttpStatus.BAD_REQUEST,"Task not assigned!!!");
+        return mentorIds;
     }
 
     public boolean feedbackExist(Feedback_V2 feedback_v2, String reviewer){
@@ -634,7 +637,7 @@ public class FeedbackService_V2 {
     }
     public List<CourseResponse_V2> findFeedbacksByTaskIdAndTraineeId(String taskId,String planId,String traineeId,int feedbackType){
         PlanTask planTask = findMilestonesFromPlanTask(taskId);
-        planTask.getMilestones().forEach(System.out::println);
+        //planTask.getMilestones().forEach(System.out::println);
         if(planTask == null)
             throw new ApiException(HttpStatus.BAD_REQUEST,"PlanTask not found!!");
 
