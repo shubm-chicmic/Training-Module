@@ -25,7 +25,7 @@ import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 @RestController
 @RequestMapping("/v1/training/session")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class SessionCRUD {
     private final SessionService sessionService;
     private final SessionResponseMapper sessionResponseMapper;

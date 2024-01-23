@@ -17,7 +17,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/v1/training/dropdown")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class AssignedPlanDropdown {
     private final AssignTaskService assignTaskService;
     private final AssignPlanResponseMapper assignPlanResponseMapper;

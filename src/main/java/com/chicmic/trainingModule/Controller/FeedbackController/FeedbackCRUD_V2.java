@@ -25,7 +25,7 @@ import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResp
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 @RestController
 @RequestMapping("/v1/training/feedback")
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
 

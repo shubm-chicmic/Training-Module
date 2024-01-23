@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +63,32 @@ public class PhaseService {
             newPhase.setEntity(entity);
             createdPhases.add(phaseRepo.save(newPhase));
         }
+        if (entity instanceof Course) {
+            Course course = (Course) entity;
+
+            if (course.getPhases() != null && course.getPhases().isEmpty()) {
+                Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                for (Phase<Task> phase : course.getPhases()) {
+                    if (!phaseIds.contains(phase.get_id())) {
+                        System.out.println("Deleted Phase " + phase.getName());
+                        // Delete the phase
+                        deletePhase(phase);
+                    }
+                   }
+            }
+        }else if(entity instanceof Test) {
+            Test test = (Test) entity;
+            if(test.getMilestones() != null && test.getMilestones().isEmpty()) {
+                Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                for (Phase<Task> milestone: test.getMilestones()) {
+                    if(!phaseIds.contains(milestone)){
+                        System.out.println("Deleted Milestone " + milestone.getName());
+                        //delete milestone
+                        deletePhase(milestone);
+                    }
+                }
+            }
+        }
         return createdPhases;
     }
 
@@ -82,6 +111,19 @@ public class PhaseService {
             newPhase.setTasks(tasks);
             newPhase.setEntity(entity);
             createdPhases.add(phaseRepo.save(newPhase));
+        }
+        if (entity instanceof Plan) {
+            Plan plan = (Plan) entity;
+            if (plan.getPhases() != null && plan.getPhases().isEmpty()) {
+                Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                for (Phase<PlanTask> phase : plan.getPhases()) {
+                    if(!phaseIds.contains(phase.get_id())){
+                        System.out.println("Deleted Phase " + phase.getName());
+                        //delete phase
+                        deletePhase(phase);
+                    }
+                }
+            }
         }
         return createdPhases;
     }
@@ -148,6 +190,18 @@ public class PhaseService {
 //            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
 //            task.set_id(id);
         }
+        if(phase != null){
+            List<PlanTask> originalPlanTasks = phase.getTasks();
+            Set<String> planTaskIds = planTasks.stream().map(PlanTask::get_id).collect(Collectors.toSet());
+
+            for (PlanTask originalPlanTask : originalPlanTasks) {
+                if (!planTaskIds.contains(originalPlanTask.get_id())) {
+                    System.out.println("\u001B[31m Deleted planTask " + originalPlanTask.getPlan());
+                    //delete planTask
+                    deleteTask(originalPlanTask);
+                }
+            }
+        }
         return createdPlanTasks;
     }
 
@@ -171,6 +225,18 @@ public class PhaseService {
             System.out.println("\u001B[32m" + task + "\u001B[0m");
 
             createdTasks.add(taskRepo.save(newTask));
+        }
+        if(phase != null){
+            List<Task> originalTasks = phase.getTasks();
+            Set<String> taskIds = tasks.stream().map(Task::get_id).collect(Collectors.toSet());
+
+            for (Task originalTask : originalTasks) {
+                if (!taskIds.contains(originalTask.get_id())) {
+                    System.out.println("\u001B[31m Deleted Task " + originalTask.getMainTask());
+                    //delete task
+                    deleteTask(originalTask);
+                }
+            }
         }
         return createdTasks;
     }
@@ -241,6 +307,18 @@ public class PhaseService {
             newSubTask.setPhase(subTask.getPhase());
             createdSubTasks.add(subTaskRepo.save(newSubTask));
         }
+        if(task != null){
+            List<SubTask>  originalSubTasks = task.getSubtasks();
+            Set<String> subTaskIds = subTasks.stream().map(SubTask::get_id).collect(Collectors.toSet());
+
+            for (SubTask originalSubTask : originalSubTasks) {
+                if (!subTaskIds.contains(originalSubTask.get_id())) {
+                    System.out.println("\u001B[31m Deleted subtask " + originalSubTask.getSubTask());
+                    //delete subtask
+                    deleteSubtask(originalSubTask);
+                }
+            }
+        }
         return createdSubTasks;
     }
 
@@ -269,7 +347,7 @@ public class PhaseService {
         return task.getIsDeleted() ? null : task;
     }
 
-    public boolean deletePhase(Phase<T> phase) {
+    public <T> boolean deletePhase(Phase<T> phase) {
         if (phase != null) {
             List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
             if (planTasks.size() > 0) {

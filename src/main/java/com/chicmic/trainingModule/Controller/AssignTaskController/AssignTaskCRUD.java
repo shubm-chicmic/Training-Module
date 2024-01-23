@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/v1/training/assignedPlan")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM' , 'IND')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM' , 'IND', 'TR')")
 public class AssignTaskCRUD {
     private final AssignTaskService assignTaskService;
     private final PlanService planService;

@@ -17,7 +17,7 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping("/v1/training/dashboard")
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
 public class DashboardCRUD_V2 {
     private final DashboardService_V2 dashboardService;
 

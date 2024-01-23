@@ -10,6 +10,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,7 @@ public class Phase<T> {
     private Boolean isDeleted = false;
     public List<T> getTasks() {
         if (tasks == null) {
-            return null;
+            return new ArrayList<>();
         }
         return tasks.stream()
                 .filter(task -> {

@@ -18,7 +18,7 @@ import java.util.List;
 
 @RequestMapping("/v1/training/traineeList")
 @RestController
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class TraineePlanCRUD_V2 {
     private final TraineePlanService_V2 traineePlanService;
    private final MongoTemplate mongoTemplate;
