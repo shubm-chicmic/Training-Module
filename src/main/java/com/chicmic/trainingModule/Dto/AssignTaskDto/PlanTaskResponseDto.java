@@ -16,6 +16,7 @@ import java.util.List;
 @Builder
 public class PlanTaskResponseDto {
     private String _id;
+    private String phaseName;
     private Integer planType;
     private UserIdAndNameDto plan;
     private Integer completedTasks;

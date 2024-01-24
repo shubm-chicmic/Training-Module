@@ -16,8 +16,8 @@ public class UserTime {
     private String traineeId;
     private String planId;
     private String phaseId;
-    private String taskId;
+    private String planTaskId;
+    private String subTaskId;
     private Integer consumedTime;
     private Boolean isDeleted;
-    private String createdBy;
 }

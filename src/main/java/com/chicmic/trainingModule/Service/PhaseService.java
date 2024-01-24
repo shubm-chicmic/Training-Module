@@ -17,13 +17,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+//TODO we need to add validation to create a plan
 @Service
 @RequiredArgsConstructor
 public class PhaseService {
@@ -34,62 +36,69 @@ public class PhaseService {
     private final PlanTaskRepo planTaskRepo;
     private final PlanRepo planRepo;
     private final UserProgressService userProgressService;
-
+    @Transactional
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
-        int count = 0;
-        String phaseNameInitial = "";
-        if (entityType == EntityType.TEST) {
-            phaseNameInitial = "Milestone ";
-        } else {
-            phaseNameInitial = "Phase ";
-        }
-        System.out.println("\u001B[35m " + phases);
-        List<Phase<Task>> createdPhases = new ArrayList<>();
-        for (Phase<Task> phase : phases) {
-            Phase<Task> newPhase = new Phase<>();
-            if (phase.get_id() == null || phase.get_id().isEmpty()) {
-                newPhase.set_id(String.valueOf(new ObjectId()));
+        try {
+            int count = 0;
+            String phaseNameInitial = "";
+            if (entityType == EntityType.TEST) {
+                phaseNameInitial = "Milestone ";
             } else {
-                newPhase = (Phase<Task>) getPhaseById(phase.get_id());
+                phaseNameInitial = "Phase ";
             }
-            count++;
-            System.out.println("\u001B[33m" + phase + "\u001B[0m");
-//            System.out.println("\u001B[32m" + task + "\u001B[0m");
-            List<Task> tasks = createTasks(phase.getTasks(), newPhase, entityType);
+            System.out.println("\u001B[35m " + phases);
+            List<Phase<Task>> createdPhases = new ArrayList<>();
+            for (Phase<Task> phase : phases) {
+                Phase<Task> newPhase = new Phase<>();
+                if (phase.get_id() == null || phase.get_id().isEmpty()) {
+                    newPhase.set_id(String.valueOf(new ObjectId()));
+                } else {
+                    newPhase = (Phase<Task>) getPhaseById(phase.get_id());
+                }
+                count++;
+                System.out.println("\u001B[33m" + phase + "\u001B[0m");
+    //            System.out.println("\u001B[32m" + task + "\u001B[0m");
+                List<Task> tasks = createTasks(phase.getTasks(), newPhase, entityType);
 
-            newPhase.setName(phaseNameInitial + count);
-            newPhase.setEntityType(entityType);
-            newPhase.setTasks(tasks);
-            newPhase.setEntity(entity);
-            createdPhases.add(phaseRepo.save(newPhase));
-        }
-        if (entity instanceof Course) {
-            Course course = (Course) entity;
-
-            if (course.getPhases() != null && course.getPhases().isEmpty()) {
-                Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
-                for (Phase<Task> phase : course.getPhases()) {
-                    if (!phaseIds.contains(phase.get_id())) {
-                        System.out.println("Deleted Phase " + phase.getName());
-                        // Delete the phase
-                        deletePhase(phase);
-                    }
-                   }
+                newPhase.setName(phaseNameInitial + count);
+                newPhase.setEntityType(entityType);
+                newPhase.setTasks(tasks);
+                newPhase.setEntity(entity);
+                createdPhases.add(phaseRepo.save(newPhase));
             }
-        }else if(entity instanceof Test) {
-            Test test = (Test) entity;
-            if(test.getMilestones() != null && test.getMilestones().isEmpty()) {
-                Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
-                for (Phase<Task> milestone: test.getMilestones()) {
-                    if(!phaseIds.contains(milestone)){
-                        System.out.println("Deleted Milestone " + milestone.getName());
-                        //delete milestone
-                        deletePhase(milestone);
+            if (entity instanceof Course) {
+                Course course = (Course) entity;
+
+                if (course.getPhases() != null && course.getPhases().isEmpty()) {
+                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                    for (Phase<Task> phase : course.getPhases()) {
+                        if (!phaseIds.contains(phase.get_id())) {
+                            System.out.println("Deleted Phase " + phase.getName());
+                            // Delete the phase
+                            deletePhase(phase);
+                        }
+                       }
+                }
+            }else if(entity instanceof Test) {
+                Test test = (Test) entity;
+                if(test.getMilestones() != null && test.getMilestones().isEmpty()) {
+                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                    for (Phase<Task> milestone: test.getMilestones()) {
+                        if(!phaseIds.contains(milestone)){
+                            System.out.println("Deleted Milestone " + milestone.getName());
+                            //delete milestone
+                            deletePhase(milestone);
+                        }
                     }
                 }
             }
+            return createdPhases;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Rollback the transaction
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return null;
         }
-        return createdPhases;
     }
 
     public List<Phase<PlanTask>> createPlanPhases(List<Phase<PlanTask>> phases, Object entity) {

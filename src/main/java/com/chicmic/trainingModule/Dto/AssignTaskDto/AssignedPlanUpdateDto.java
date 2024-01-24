@@ -11,7 +11,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class AssignedPlanUpdateDto {
     private List<String> plan;
     @JsonProperty("startDate")

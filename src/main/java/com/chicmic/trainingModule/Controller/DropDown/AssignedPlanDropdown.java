@@ -39,30 +39,32 @@ public class AssignedPlanDropdown {
 
     @RequestMapping(value = {"/assignedPlan"}, method = RequestMethod.GET)
     public ApiResponse getAssignedPlans(
-            @RequestParam String traineeId,
-            @RequestParam(required = false) String planId,
-            @RequestParam(required = false) String phaseId,
+            @RequestParam(required = false) String projectId,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) String milestoneId,
             @RequestParam(required = false) String taskId,
-            HttpServletResponse response,
-            Principal principal
+            Principal principal,
+            HttpServletResponse response
     )  {
+        String traineeId = principal.getName();
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
         if(assignedPlan == null){
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "No Plan not found", response);
         }
         AssignedPlanDto assignedPlanDto = null;
-        if(traineeId != null && planId == null && phaseId == null && taskId == null){
+        if(traineeId != null && projectId == null &&  milestoneId == null && taskId == null){
             // give all plans
             assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanForTimeSheet(assignedPlan);
-        }else if (traineeId != null && planId != null && phaseId == null && taskId == null){
+        }else if (traineeId != null && (projectId != null && type != null) && milestoneId == null && taskId == null){
             // give all phases of plan
-            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhasesForTimeSheet(assignedPlan, planId);
-        }else if(traineeId != null && planId != null && phaseId != null && taskId == null){
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhasesForTimeSheet(assignedPlan, projectId, type);
+        }else if(traineeId != null && (projectId != null && type != null) && milestoneId != null && taskId == null){
             // give all plan and perticular phase having all tasks
-            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(assignedPlan, planId, phaseId);
-        }else if (traineeId != null && planId != null && phaseId != null && taskId != null){
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(assignedPlan, projectId, milestoneId, type);
+        }else if (traineeId != null && (projectId != null && type != null) && milestoneId != null && taskId != null){
             // give all plan with perticualr phase perticualr task
-            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(assignedPlan, planId, phaseId, taskId);
+            System.out.println("Im in//////////////////////////////");
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(assignedPlan, projectId, milestoneId, type, taskId);
         }
         return new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto, response);
     }

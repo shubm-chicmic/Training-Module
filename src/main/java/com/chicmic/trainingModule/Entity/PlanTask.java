@@ -31,7 +31,7 @@ public class PlanTask {
     @Transient
     private String planName;
     @NotNull(message = "Milestones cannot be Empty")
-    private List<Object> milestones;
+    private List<Object> milestones= new ArrayList<>();
 //    @Transient
 //    private List<UserIdAndNameDto> milestoneDetails;
     private List<String> mentor;

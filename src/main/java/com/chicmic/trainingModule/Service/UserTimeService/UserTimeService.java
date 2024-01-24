@@ -17,14 +17,14 @@ public class UserTimeService {
         return userTimeRepo.save(userTime);
     }
 
-    public UserTime createUserTime(UserTimeDto userTimeDto, String createdBy) {
+    public UserTime createUserTime(UserTimeDto userTimeDto, String traineeId) {
         UserTime userTime = UserTime.builder()
-                .createdBy(createdBy)
+//                .createdBy(traineeId)
                 .consumedTime(userTimeDto.getConsumedTime())
-                .traineeId(userTimeDto.getTraineeId())
+                .traineeId(traineeId)
                 .isDeleted(false)
                 .planId(userTimeDto.getPlanId())
-                .taskId(userTimeDto.getTaskId())
+                .planTaskId(userTimeDto.getTaskId())
                 .phaseId(userTimeDto.getPhaseId())
                 .build();
         return saveUserTime(userTime);
