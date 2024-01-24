@@ -17,6 +17,6 @@ public class AssignedPlanUpdateDto {
     private LocalDateTime date;
     public void setDate(LocalDateTime date) {
         if(date != null)
-            this.date = date.plusHours(5).plusMinutes(30);
+        this.date = date.plusHours(5).plusMinutes(30);
     }
 }
