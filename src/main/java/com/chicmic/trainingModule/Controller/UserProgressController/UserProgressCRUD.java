@@ -120,6 +120,7 @@ public class UserProgressCRUD {
                             .subTaskId(userProgressDto.getSubTaskId())
                             .startDate(LocalDateTime.now())
                             .progressType(userProgressDto.getProgressType())
+                            .planTaskId(userProgressDto.getPlanTaskId())
                             .status(userProgressDto.getStatus())
                             .build();
 

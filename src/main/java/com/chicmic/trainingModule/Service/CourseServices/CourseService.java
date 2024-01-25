@@ -28,6 +28,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -238,56 +240,67 @@ public class CourseService {
         }
     }
 
+    @Transactional
     public Course updateCourse(CourseDto courseDto, String courseId) {
-        Course course = courseRepo.findById(courseId).orElse(null);
-        if (course != null) {
-            if (courseDto.getPhases() != null) {
-                System.out.println("Course Dto ");
-                System.out.println(courseDto.getPhases());
-                List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE);
-                course.setPhases(phases);
-            }
-            if (courseDto.getName() != null) {
-                course.setName(courseDto.getName());
-            }
-            if (courseDto.getFigmaLink() != null) {
-                course.setFigmaLink(courseDto.getFigmaLink());
-            }
-            if (courseDto.getGuidelines() != null) {
-                course.setGuidelines(courseDto.getGuidelines());
-            }
-            if (courseDto.getApprover() != null) {
-                System.out.println("Insdie update " + courseDto);
-                course.setApprover(courseDto.getApprover());
-                Integer count = 0;
-                for (String reviewer : course.getApprover()) {
-                    if (course.getApprovedBy().contains(reviewer)) {
-                        count++;
+        try {
+            Course course = courseRepo.findById(courseId).orElse(null);
+            if (course != null) {
+                if (courseDto.getPhases() != null) {
+                    System.out.println("Course Dto ");
+                    System.out.println(courseDto.getPhases());
+                    List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE);
+                    course.setPhases(phases);
+                }
+                if (courseDto.getName() != null) {
+                    course.setName(courseDto.getName());
+                }
+                if (courseDto.getFigmaLink() != null) {
+                    course.setFigmaLink(courseDto.getFigmaLink());
+                }
+                if (courseDto.getGuidelines() != null) {
+//                    if(!course.getGuidelines().equals(courseDto.getGuidelines())){
+//                        float x = 4/0;
+//                    }
+                    course.setGuidelines(courseDto.getGuidelines());
+                }
+                if (courseDto.getApprover() != null) {
+                    System.out.println("Insdie update " + courseDto);
+                    course.setApprover(courseDto.getApprover());
+                    Integer count = 0;
+                    for (String reviewer : course.getApprover()) {
+                        if (course.getApprovedBy().contains(reviewer)) {
+                            count++;
+                        }
                     }
-                }
-                if (count == course.getApprover().size()) {
-                    course.setIsApproved(true);
-                } else {
-                    course.setIsApproved(false);
-                }
+                    if (count == course.getApprover().size()) {
+                        course.setIsApproved(true);
+                    } else {
+                        course.setIsApproved(false);
+                    }
 
-                Set<String> approvedBy = new HashSet<>();
-                for (String approver : course.getApprovedBy()) {
-                    if (course.getApprover().contains(approver)) {
-                        approvedBy.add(approver);
+                    Set<String> approvedBy = new HashSet<>();
+                    for (String approver : course.getApprovedBy()) {
+                        if (course.getApprover().contains(approver)) {
+                            approvedBy.add(approver);
+                        }
                     }
+                    course.setApprovedBy(approvedBy);
                 }
-                course.setApprovedBy(approvedBy);
+                try {
+                    course = courseRepo.save(course);
+                    float x = 4/0;
+                } catch (org.springframework.dao.DuplicateKeyException ex) {
+                    // Catch DuplicateKeyException and throw ApiException with 400 status
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+                }
+                return course;
+            } else {
+                return null;
             }
-            try {
-                course = courseRepo.save(course);
-            } catch (org.springframework.dao.DuplicateKeyException ex) {
-                // Catch DuplicateKeyException and throw ApiException with 400 status
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
-            }
-            return course;
-        } else {
-            return null;
+        } catch (Exception e) {
+            // The exception will automatically trigger a rollback
+            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
+
         }
     }
 

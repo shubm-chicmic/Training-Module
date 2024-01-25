@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.*;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
@@ -16,6 +17,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -25,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-//TODO we need to add validation to create a plan
+//TODO we need to add validation to create a plan phase that phase should not be repeated
 @Service
 @RequiredArgsConstructor
 public class PhaseService {
@@ -36,7 +38,7 @@ public class PhaseService {
     private final PlanTaskRepo planTaskRepo;
     private final PlanRepo planRepo;
     private final UserProgressService userProgressService;
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
         try {
             int count = 0;
@@ -96,239 +98,268 @@ public class PhaseService {
         } catch (Exception e) {
             e.printStackTrace();
             // Rollback the transaction
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            return null;
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
-
+    @Transactional
     public List<Phase<PlanTask>> createPlanPhases(List<Phase<PlanTask>> phases, Object entity) {
-        System.out.println("\u001B[35m " + phases);
-        List<Phase<PlanTask>> createdPhases = new ArrayList<>();
-        for (Phase<PlanTask> phase : phases) {
-            Phase<PlanTask> newPhase = new Phase<>();
-            if (phase.get_id() == null || phase.get_id().isEmpty() || phase.get_id().isBlank()) {
-                newPhase.set_id(String.valueOf(new ObjectId()));
-            } else {
-                newPhase = (Phase<PlanTask>) getPhaseById(phase.get_id());
-            }
-            System.out.println("\u001B[33m" + phase + "\u001B[0m");
-//            System.out.println("\u001B[32m" + task + "\u001B[0m");
-            List<PlanTask> tasks = createPlanTasks(phase.getTasks(), newPhase, (Plan) entity);
+        try {
+            System.out.println("\u001B[35m " + phases);
+            List<Phase<PlanTask>> createdPhases = new ArrayList<>();
+            for (Phase<PlanTask> phase : phases) {
+                Phase<PlanTask> newPhase = new Phase<>();
+                if (phase.get_id() == null || phase.get_id().isEmpty() || phase.get_id().isBlank()) {
+                    newPhase.set_id(String.valueOf(new ObjectId()));
+                } else {
+                    newPhase = (Phase<PlanTask>) getPhaseById(phase.get_id());
+                }
+                System.out.println("\u001B[33m" + phase + "\u001B[0m");
+    //            System.out.println("\u001B[32m" + task + "\u001B[0m");
+                List<PlanTask> tasks = createPlanTasks(phase.getTasks(), newPhase, (Plan) entity);
 
-            newPhase.setName(phase.getName());
-            newPhase.setEntityType(EntityType.PLAN);
-            newPhase.setTasks(tasks);
-            newPhase.setEntity(entity);
-            createdPhases.add(phaseRepo.save(newPhase));
-        }
-        if (entity instanceof Plan) {
-            Plan plan = (Plan) entity;
-            if (plan.getPhases() != null && plan.getPhases().isEmpty()) {
-                Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
-                for (Phase<PlanTask> phase : plan.getPhases()) {
-                    if(!phaseIds.contains(phase.get_id())){
-                        System.out.println("Deleted Phase " + phase.getName());
-                        //delete phase
-                        deletePhase(phase);
+                newPhase.setName(phase.getName());
+                newPhase.setEntityType(EntityType.PLAN);
+                newPhase.setTasks(tasks);
+                newPhase.setEntity(entity);
+                createdPhases.add(phaseRepo.save(newPhase));
+            }
+            if (entity instanceof Plan) {
+                Plan plan = (Plan) entity;
+                if (plan.getPhases() != null && plan.getPhases().isEmpty()) {
+                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                    for (Phase<PlanTask> phase : plan.getPhases()) {
+                        if(!phaseIds.contains(phase.get_id())){
+                            System.out.println("Deleted Phase " + phase.getName());
+                            //delete phase
+                            deletePhase(phase);
+                        }
                     }
                 }
             }
+            return createdPhases;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Rollback the transaction
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return createdPhases;
     }
-
+    @Transactional
     private List<PlanTask> createPlanTasks(List<PlanTask> planTasks, Phase<PlanTask> phase, Plan plan) {
-        List<PlanTask> createdPlanTasks = new ArrayList<>();
-        for (PlanTask planTask : planTasks) {
-            PlanTask newPlanTask = new PlanTask();
-            System.out.println("plan task id " + planTask.get_id());
-            if (planTask.get_id() == null || planTask.get_id().isEmpty() || planTask.get_id().isBlank()) {
-                System.out.println("sdisdois " + planTask.get_id());
+        try {
+            List<PlanTask> createdPlanTasks = new ArrayList<>();
+            for (PlanTask planTask : planTasks) {
+                PlanTask newPlanTask = new PlanTask();
+                System.out.println("plan task id " + planTask.get_id());
+                if (planTask.get_id() == null || planTask.get_id().isEmpty() || planTask.get_id().isBlank()) {
+                    System.out.println("sdisdois " + planTask.get_id());
 
-                newPlanTask.set_id(String.valueOf(new ObjectId()));
-                System.out.println("new Id = " + newPlanTask.get_id());
-            } else {
-                System.out.println("fljgdkofdklf " + planTask.get_id());
+                    newPlanTask.set_id(String.valueOf(new ObjectId()));
+                    System.out.println("new Id = " + newPlanTask.get_id());
+                } else {
+                    System.out.println("fljgdkofdklf " + planTask.get_id());
 
 
-                newPlanTask = planTaskRepo.findById(planTask.get_id()).orElse(null);
-                List<Object> milestones = newPlanTask.getMilestones(); // original milestones
-                if (milestones != null) {
-                    for (Object milestone : milestones) {
-                        if (!planTask.getMilestones().contains(milestone)) {
-                            // this milestone is deleted
-                            // delete all userProgress of this milestone
-                            System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
-                            userProgressService.deleteAllBySubTaskId(plan.get_id(), (String) milestone);
+                    newPlanTask = planTaskRepo.findById(planTask.get_id()).orElse(null);
+                    List<Object> milestones = newPlanTask.getMilestones(); // original milestones
+                    if (milestones != null) {
+                        for (Object milestone : milestones) {
+                            if (!planTask.getMilestones().contains(milestone)) {
+                                // this milestone is deleted
+                                // delete all userProgress of this milestone
+                                System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
+                                userProgressService.deleteAllBySubTaskId(plan.get_id(), (String) milestone);
+                            }
                         }
                     }
-                }
-                if (newPlanTask.getPlanType() == PlanType.VIVA) {
-                    List<Object> milestones1 = newPlanTask.getMilestones(); // original milestones
-                    for (Object milestone : milestones1) {
-                        if (!planTask.getMilestones().contains(milestone)) {
-                            // this milestone is deleted
-                            // delete all userProgress of this milestone
-                            System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
-                            userProgressService.deleteByMilestoneId(plan.get_id(), newPlanTask.get_id());
+                    if (newPlanTask.getPlanType() == PlanType.VIVA) {
+                        List<Object> milestones1 = newPlanTask.getMilestones(); // original milestones
+                        for (Object milestone : milestones1) {
+                            if (!planTask.getMilestones().contains(milestone)) {
+                                // this milestone is deleted
+                                // delete all userProgress of this milestone
+                                System.out.println("\u001B[42m PlanTask not countain " + planTask.get_id() + "\u001B[0m");
+                                userProgressService.deleteByMilestoneId(plan.get_id(), newPlanTask.get_id());
+                            }
                         }
                     }
-                }
-                System.out.println("new Id 2 = " + newPlanTask.get_id());
+                    System.out.println("new Id 2 = " + newPlanTask.get_id());
 
-            }
-            Integer totalTask = 0;
-            if (planTask.getMilestones() != null) {
-                for (Object milestone : planTask.getMilestones()) {
-                    Phase<Task> coursePhase = (Phase<Task>) getPhaseById((String) milestone);
-                    totalTask += coursePhase.getTotalTasks();
                 }
+                Integer totalTask = 0;
+                if (planTask.getMilestones() != null) {
+                    for (Object milestone : planTask.getMilestones()) {
+                        Phase<Task> coursePhase = (Phase<Task>) getPhaseById((String) milestone);
+                        totalTask += coursePhase.getTotalTasks();
+                    }
+                }
+                List<Plan> plans = newPlanTask.getPlans();
+                plans.add(plan);
+                newPlanTask.setPlans(plans);
+                newPlanTask.setTotalTasks(totalTask);
+                newPlanTask.setMentor(planTask.getMentorIds());
+                newPlanTask.setMilestones(planTask.getMilestones());
+                newPlanTask.setPlanType(planTask.getPlanType());
+                newPlanTask.setPlan(planTask.getPlan());
+                newPlanTask.setDate(planTask.getDate());
+                newPlanTask.setEstimatedTime(planTask.getEstimatedTime());
+                newPlanTask.setPhase(phase);
+                createdPlanTasks.add(planTaskRepo.save(newPlanTask));
+    //            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
+    //            task.set_id(id);
             }
-            List<Plan> plans = newPlanTask.getPlans();
-            plans.add(plan);
-            newPlanTask.setPlans(plans);
-            newPlanTask.setTotalTasks(totalTask);
-            newPlanTask.setMentor(planTask.getMentorIds());
-            newPlanTask.setMilestones(planTask.getMilestones());
-            newPlanTask.setPlanType(planTask.getPlanType());
-            newPlanTask.setPlan(planTask.getPlan());
-            newPlanTask.setDate(planTask.getDate());
-            newPlanTask.setEstimatedTime(planTask.getEstimatedTime());
-            newPlanTask.setPhase(phase);
-            createdPlanTasks.add(planTaskRepo.save(newPlanTask));
-//            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
-//            task.set_id(id);
-        }
-        if(phase != null){
-            List<PlanTask> originalPlanTasks = phase.getTasks();
-            Set<String> planTaskIds = planTasks.stream().map(PlanTask::get_id).collect(Collectors.toSet());
+            if(phase != null){
+                List<PlanTask> originalPlanTasks = phase.getTasks();
+                Set<String> planTaskIds = planTasks.stream().map(PlanTask::get_id).collect(Collectors.toSet());
 
-            for (PlanTask originalPlanTask : originalPlanTasks) {
-                if (!planTaskIds.contains(originalPlanTask.get_id())) {
-                    System.out.println("\u001B[31m Deleted planTask " + originalPlanTask.getPlan());
-                    //delete planTask
-                    deleteTask(originalPlanTask);
+                for (PlanTask originalPlanTask : originalPlanTasks) {
+                    if (!planTaskIds.contains(originalPlanTask.get_id())) {
+                        System.out.println("\u001B[31m Deleted planTask " + originalPlanTask.getPlan());
+                        //delete planTask
+                        deleteTask(originalPlanTask);
+                    }
                 }
             }
+            return createdPlanTasks;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Rollback the transaction
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return createdPlanTasks;
     }
-
+    @Transactional
     public List<Task> createTasks(List<Task> tasks, Phase<Task> phase, Integer entityType) {
-        List<Task> createdTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            Task newTask = new Task();
-            if (task.get_id() == null || task.get_id().isEmpty() || task.get_id().isBlank()) {
-                newTask.set_id(String.valueOf(new ObjectId()));
-            } else {
-                newTask = taskRepo.findById(task.get_id()).orElse(null);
+        try {
+            List<Task> createdTasks = new ArrayList<>();
+            for (Task task : tasks) {
+                Task newTask = new Task();
+                if (task.get_id() == null || task.get_id().isEmpty() || task.get_id().isBlank()) {
+                    newTask.set_id(String.valueOf(new ObjectId()));
+                } else {
+                    newTask = taskRepo.findById(task.get_id()).orElse(null);
+                }
+    //            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
+    //            task.set_id(id);
+                List<SubTask> subTasks = createSubTasks(task.getSubtasks(), newTask, entityType, phase);
+                newTask.setEntityType(entityType);
+                newTask.setMainTask(task.getMainTask());
+                newTask.setSubtasks(subTasks);
+                newTask.setPhase(phase);
+                System.out.println("\u001B[31m" + newTask + "\u001B[0m");
+                System.out.println("\u001B[32m" + task + "\u001B[0m");
+
+                createdTasks.add(taskRepo.save(newTask));
             }
-//            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
-//            task.set_id(id);
-            List<SubTask> subTasks = createSubTasks(task.getSubtasks(), newTask, entityType, phase);
-            newTask.setEntityType(entityType);
-            newTask.setMainTask(task.getMainTask());
-            newTask.setSubtasks(subTasks);
-            newTask.setPhase(phase);
-            System.out.println("\u001B[31m" + newTask + "\u001B[0m");
-            System.out.println("\u001B[32m" + task + "\u001B[0m");
+            if(phase != null){
+                List<Task> originalTasks = phase.getTasks();
+                Set<String> taskIds = tasks.stream().map(Task::get_id).collect(Collectors.toSet());
 
-            createdTasks.add(taskRepo.save(newTask));
-        }
-        if(phase != null){
-            List<Task> originalTasks = phase.getTasks();
-            Set<String> taskIds = tasks.stream().map(Task::get_id).collect(Collectors.toSet());
-
-            for (Task originalTask : originalTasks) {
-                if (!taskIds.contains(originalTask.get_id())) {
-                    System.out.println("\u001B[31m Deleted Task " + originalTask.getMainTask());
-                    //delete task
-                    deleteTask(originalTask);
+                for (Task originalTask : originalTasks) {
+                    if (!taskIds.contains(originalTask.get_id())) {
+                        System.out.println("\u001B[31m Deleted Task " + originalTask.getMainTask());
+                        //delete task
+                        deleteTask(originalTask);
+                    }
                 }
             }
+            return createdTasks;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Rollback the transaction
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return createdTasks;
     }
 
+    @Transactional
     public List<SubTask> createSubTasks(List<SubTask> subTasks, Task task, Integer entityType, Phase<Task> phase) {
-        List<SubTask> createdSubTasks = new ArrayList<>();
-        for (SubTask subTask : subTasks) {
-            SubTask newSubTask = new SubTask();
-            if (subTask.get_id() == null || subTask.get_id().isEmpty() || subTask.get_id().isBlank()) {
-                newSubTask.set_id(String.valueOf(new ObjectId()));
-                // new subtask is created
-                // task count to plantask
-                List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
-                for (PlanTask planTask : planTasks) {
-                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
-                    Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
-                    planTask.setEstimatedTimeInSeconds(estimatedTime + subTask.getEstimatedTimeInSeconds());
+        try {
+            List<SubTask> createdSubTasks = new ArrayList<>();
+            for (SubTask subTask : subTasks) {
+                SubTask newSubTask = new SubTask();
+                if (subTask.get_id() == null || subTask.get_id().isEmpty() || subTask.get_id().isBlank()) {
+                    newSubTask.set_id(String.valueOf(new ObjectId()));
+                    // new subtask is created
+                    // task count to plantask
+                    List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+                    for (PlanTask planTask : planTasks) {
+                        planTask.setTotalTasks(planTask.getTotalTasks() + 1);
+                        Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                        planTask.setEstimatedTimeInSeconds(estimatedTime + subTask.getEstimatedTimeInSeconds());
 
-                    Phase<PlanTask> planTaskPhase = planTask.getPhase();
-                    Plan plan = (Plan)planTaskPhase.getEntity();
-                    planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() + subTask.getEstimatedTimeInSeconds());
-                    plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() + subTask.getEstimatedTimeInSeconds());
-                    planTaskRepo.save(planTask);
-                    phaseRepo.save(planTaskPhase);
-                    planRepo.save(plan);
-
-                }
-            } else {
-                newSubTask = subTaskRepo.findById(subTask.get_id()).orElse(null);
-                List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
-                for (PlanTask planTask : planTasks) {
-//                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
-                    Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
-                    Phase<PlanTask> planTaskPhase = planTask.getPhase();
-                    Plan plan = (Plan)planTaskPhase.getEntity();
-
-
-                    if(newSubTask.getEstimatedTimeInSeconds() > subTask.getEstimatedTimeInSeconds()){
-                        Integer changeInEstimateTime = (newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
-                        estimatedTime = estimatedTime - changeInEstimateTime;
-                        planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() - changeInEstimateTime);
-                        plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() - changeInEstimateTime);
-
-                    }else if(newSubTask.getEstimatedTimeInSeconds() < subTask.getEstimatedTimeInSeconds()){
-                        Integer changeInEstimateTime = (subTask.getEstimatedTimeInSeconds() - newSubTask.getEstimatedTimeInSeconds());
-
-                        estimatedTime = estimatedTime + changeInEstimateTime;
-                        planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() + changeInEstimateTime);
-                        plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() + changeInEstimateTime);
+                        Phase<PlanTask> planTaskPhase = planTask.getPhase();
+                        Plan plan = (Plan)planTaskPhase.getEntity();
+                        planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() + subTask.getEstimatedTimeInSeconds());
+                        plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() + subTask.getEstimatedTimeInSeconds());
+                        planTaskRepo.save(planTask);
+                        phaseRepo.save(planTaskPhase);
+                        planRepo.save(plan);
 
                     }
-                    if (estimatedTime < 0) estimatedTime = 0;
-                    planTask.setEstimatedTimeInSeconds(estimatedTime);
-                    planTaskRepo.save(planTask);
-                    phaseRepo.save(planTaskPhase);
-                    if(plan != null)
-                    planRepo.save(plan);
-                }
-            }
-//            String id = (subTask.get_id() == null || subTask.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : subTask.get_id();
-//            subTask.set_id(id);
-            newSubTask.setSubTask(subTask.getSubTask());
-            newSubTask.setLink(subTask.getLink());
-            newSubTask.setReference(subTask.getReference());
-            newSubTask.setEstimatedTime(subTask.getEstimatedTime());
-            newSubTask.setEntityType(entityType);
-            newSubTask.setTask(task);
-            newSubTask.setPhase(subTask.getPhase());
-            createdSubTasks.add(subTaskRepo.save(newSubTask));
-        }
-        if(task != null){
-            List<SubTask>  originalSubTasks = task.getSubtasks();
-            Set<String> subTaskIds = subTasks.stream().map(SubTask::get_id).collect(Collectors.toSet());
+                } else {
+                    newSubTask = subTaskRepo.findById(subTask.get_id()).orElse(null);
+                    List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+                    for (PlanTask planTask : planTasks) {
+    //                    planTask.setTotalTasks(planTask.getTotalTasks() + 1);
+                        Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                        Phase<PlanTask> planTaskPhase = planTask.getPhase();
+                        Plan plan = (Plan)planTaskPhase.getEntity();
 
-            for (SubTask originalSubTask : originalSubTasks) {
-                if (!subTaskIds.contains(originalSubTask.get_id())) {
-                    System.out.println("\u001B[31m Deleted subtask " + originalSubTask.getSubTask());
-                    //delete subtask
-                    deleteSubtask(originalSubTask);
+
+                        if(newSubTask.getEstimatedTimeInSeconds() > subTask.getEstimatedTimeInSeconds()){
+                            Integer changeInEstimateTime = (newSubTask.getEstimatedTimeInSeconds() - subTask.getEstimatedTimeInSeconds());
+                            estimatedTime = estimatedTime - changeInEstimateTime;
+                            planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() - changeInEstimateTime);
+                            plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() - changeInEstimateTime);
+
+                        }else if(newSubTask.getEstimatedTimeInSeconds() < subTask.getEstimatedTimeInSeconds()){
+                            Integer changeInEstimateTime = (subTask.getEstimatedTimeInSeconds() - newSubTask.getEstimatedTimeInSeconds());
+
+                            estimatedTime = estimatedTime + changeInEstimateTime;
+                            planTaskPhase.setEstimatedTimeInSeconds(planTaskPhase.getEstimatedTimeInSeconds() + changeInEstimateTime);
+                            plan.setEstimatedTimeInSeconds(plan.getEstimatedTimeInSeconds() + changeInEstimateTime);
+
+                        }
+                        if (estimatedTime < 0) estimatedTime = 0;
+                        planTask.setEstimatedTimeInSeconds(estimatedTime);
+                        planTaskRepo.save(planTask);
+                        phaseRepo.save(planTaskPhase);
+                        if(plan != null)
+                        planRepo.save(plan);
+                    }
+                }
+    //            String id = (subTask.get_id() == null || subTask.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : subTask.get_id();
+    //            subTask.set_id(id);
+                newSubTask.setSubTask(subTask.getSubTask());
+                newSubTask.setLink(subTask.getLink());
+                newSubTask.setReference(subTask.getReference());
+                newSubTask.setEstimatedTime(subTask.getEstimatedTime());
+                newSubTask.setEntityType(entityType);
+                newSubTask.setTask(task);
+                newSubTask.setPhase(subTask.getPhase());
+                createdSubTasks.add(subTaskRepo.save(newSubTask));
+            }
+            if(task != null){
+                List<SubTask>  originalSubTasks = task.getSubtasks();
+                Set<String> subTaskIds = subTasks.stream().map(SubTask::get_id).collect(Collectors.toSet());
+
+                for (SubTask originalSubTask : originalSubTasks) {
+                    if (!subTaskIds.contains(originalSubTask.get_id())) {
+                        System.out.println("\u001B[31m Deleted subtask " + originalSubTask.getSubTask());
+                        //delete subtask
+                        deleteSubtask(originalSubTask);
+                    }
                 }
             }
+            return createdSubTasks;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Rollback the transaction
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return createdSubTasks;
     }
 
     public Phase<?> getPhaseById(String phaseId) {
