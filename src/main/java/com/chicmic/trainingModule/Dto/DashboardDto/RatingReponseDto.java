@@ -6,11 +6,11 @@ import lombok.Setter;
 
 @Getter @Setter @Builder
 public class RatingReponseDto {
-    private Double overall;
+    private double overall;
     private String comment;
-    private Double presentation;
-    private Double course;
-    private Double test;
-    private Double behaviour;
-    private Double attendance;
+    private double presentation;
+    private double course;
+    private double test;
+    private double behaviour;
+    private double attendance;
 }

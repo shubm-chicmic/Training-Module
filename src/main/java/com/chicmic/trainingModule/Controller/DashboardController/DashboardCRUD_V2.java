@@ -5,6 +5,7 @@ import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.DashboardService.DashboardService_V2;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping("/v1/training/dashboard")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
 public class DashboardCRUD_V2 {
     private final DashboardService_V2 dashboardService;
 
@@ -30,6 +32,7 @@ public class DashboardCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not allowed to view other dashboard!!");
 
         DashboardResponse dashboardResponse = dashboardService.getTraineeRatingSummary(traineeId);
+
         return new ApiResponse(200,"Trainee Rating summary",dashboardResponse);
     }
 }

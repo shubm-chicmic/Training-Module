@@ -7,7 +7,7 @@ import com.chicmic.trainingModule.Entity.Feedback_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private UserIdAndNameDto feedbackType;
     private UserIdAndNameDto plan;
     private String createdOn;
-    private double rating;
+    private Double rating;
     private String comment;
     private Double teamSpiritRating;
     private Double attitudeRating;
@@ -33,7 +33,7 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
 //        int feedbackTypeId = feedback.getType().charAt(0) - '1';
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return FeedbackResponse_BEHAVIOUR.builder()
                 ._id(feedback.get_id())
                 .reviewer(reviewer)
@@ -42,8 +42,8 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .teamSpiritRating(rating_behaviour.getTeamSpiritRating())
                 .attitudeRating(rating_behaviour.getAttitudeRating())
                 .feedbackType(new UserIdAndNameDto(BEHAVIUOR_, "BEHAVIOUR"))
-                .createdOn(feedback.getCreatedAt())
-                .rating(rating_behaviour.computeOverallRating())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
+                .rating(feedback.getOverallRating())
                 .build();
     }
     @Override

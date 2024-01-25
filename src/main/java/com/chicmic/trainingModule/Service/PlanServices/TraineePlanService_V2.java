@@ -1,19 +1,31 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.DateTimeUtil;
+import com.mongodb.client.result.UpdateResult;
+import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating;
 import static com.chicmic.trainingModule.TrainingModuleApplication.findTraineeAndMap;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchNameById;
 import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
@@ -24,16 +36,19 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newU
 public class TraineePlanService_V2 {
     private final MongoTemplate mongoTemplate;
     private final FeedbackService_V2 feedbackService;
+    private final AssignTaskService assignTaskService;
 
-    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService_V2 feedbackService) {
+    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService_V2 feedbackService, AssignTaskService assignTaskService) {
         this.mongoTemplate = mongoTemplate;
         this.feedbackService = feedbackService;
+        this.assignTaskService = assignTaskService;
     }
+
     public List<Document> fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey){
         System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
         if(query==null || query.isBlank()) query = ".*";
-        int skipValue = (pageNumber - 1) * pageSize;
+        int skipValue = pageNumber;//(pageNumber - 1) * pageSize;
 
 
         //query1.fields().include("plans._id")
@@ -54,11 +69,6 @@ public class TraineePlanService_V2 {
                         userDatasDocuments
                 )),
                 context -> new Document("$unwind", new Document("path", "$userDatas").append("preserveNullAndEmptyArrays", true)),
-                context -> new Document("$lookup", new Document("from", "AssignedPlan")
-                        .append("localField", "userDatas._id")
-                        .append("foreignField", "userId")
-                        .append("as", "assignedPlans")
-                ),
                 context -> new Document("$group", new Document("_id", "$userDatas._id")
                         .append("name", new Document("$first", "$userDatas.name"))
                         .append("team", new Document("$first", "$userDatas.team"))
@@ -71,14 +81,10 @@ public class TraineePlanService_V2 {
                                         "$$REMOVE"
                                 ))
                         ))
-//                        .append("startDate", new Document("$first", "$assignedPlans.date"))
+                        .append("status", new Document("$first", "$$ROOT.trainingStatus"))
+                        .append("startDate",new Document("$first","$$ROOT.date"))// Include the "deleted" field
                 ),
-                context -> new Document("$merge",
-                        new Document("into", "mergedResults")
-                                .append("whenMatched", Arrays.asList(
-                                        new Document("$set", new Document("startDate", "$assignedPlans.date"))
-                                ))
-                ),
+//                context -> new Document("$project", new Document().append("status",1).append("date",1)),
                 context -> new Document("$match", new Document("$or", Arrays.asList(
                         new Document("name", new Document("$regex", namePattern)),
                         new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
@@ -119,7 +125,7 @@ public class TraineePlanService_V2 {
 //                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
 //                context -> new Document("$limit", pageSize)
 //        );
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
 
         for (Document tr : traineePlanResponseList){
@@ -141,10 +147,30 @@ public class TraineePlanService_V2 {
                             }
                     );
             });
-            HashSet<String> mentorNames = new HashSet<>();
-            names.forEach(nm-> mentorNames.add(searchNameById(nm)));
+            HashSet<UserIdAndNameDto> mentorNames = new HashSet<>();
+            //HashSet<String> mentorNames = new HashSet<>();
+            //names.forEach(nm-> mentorNames.add(searchNameById(nm)));//mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
+            names.forEach(nm->mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
             tr.put("mentor",mentorNames);
             tr.put("plan",planDetails);
+            System.out.println(tr.get("status") + "}}}}}}}}}}}}}}");
+            System.out.println(tr.get("startDate") + "}}}}}}}}}}}}}}");
+            String userId = (String) tr.get("_id");
+            AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
+            if(assignedPlan != null){
+                tr.put("status", assignedPlan.getTrainingStatus());
+                tr.put("startDate", formatter.format(DateTimeUtil.convertLocalDateTimeToDate(assignedPlan.getDate())));
+            }else {
+                tr.put("status", TrainingStatus.PENDING);
+                tr.put("startDate",formatter.format(DateTimeUtil.convertLocalDateTimeToDate(LocalDateTime.now())));
+            }
+//                if (tr.get("status") == null && assignedPlan == null)
+//                    tr.put("status", 1);
+//                if (tr.get("startDate") == null)
+//                    tr.put("startDate", formatter.format(new Date()));
+//                else
+//                    tr.put("startDate", formatter.format(tr.get("startDate")));
+
         };
 
         Set<String> userIds = new HashSet<>();
@@ -152,6 +178,7 @@ public class TraineePlanService_V2 {
         int count = 0;
         for (Document document : traineePlanResponseList){
             String _id = (String) document.get("_id");
+
             userIds.add(_id);
             userSummary.put(_id,count++);
 //            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
@@ -163,8 +190,30 @@ public class TraineePlanService_V2 {
         for (Document document : traineeRatingSummary){
             String _id = (String) document.get("_id");
             int index = userSummary.get(_id);
-            traineePlanResponseList.get(index).put("rating",roundOff_Rating((Double)document.get("overallRating")/(int)document.get("count")));
+            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count")));
         }
         return traineePlanResponseList;
+    }
+
+    public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto, String createdBy){
+        Criteria criteria = Criteria.where("userId").is(userIdAndStatusDto.getTraineeId());
+        Update update = new Update();
+        update.set("trainingStatus",userIdAndStatusDto.getStatus());
+        UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria),update,AssignedPlan.class);
+        if (updateResult.getModifiedCount() == 0)
+        {
+            AssignedPlan assignedPlan = AssignedPlan.builder()
+                    .plans(new ArrayList<>())
+                    .date(LocalDateTime.now())
+                    .trainingStatus(userIdAndStatusDto.getStatus())
+                    .userId(userIdAndStatusDto.getTraineeId())
+                    .updatedAt(LocalDateTime.now())
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(createdBy)
+                    .deleted(false)
+                    .approved(false)
+                    .build();
+            assignTaskService.saveAssignTask(assignedPlan);
+        }
     }
 }

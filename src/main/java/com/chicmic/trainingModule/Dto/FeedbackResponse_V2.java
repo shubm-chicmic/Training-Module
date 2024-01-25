@@ -9,7 +9,7 @@ import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,19 +27,20 @@ public class FeedbackResponse_V2 {
     private List<UserIdAndNameDto> phase;
     private UserIdAndNameDto test;
     private List<UserIdAndNameDto> milestone;
-    private double communicationRating;
+    private Double communicationRating;
     private UserIdAndNameDto plan;
-    private double presentationRating;
-    private double technicalRating;
-    private double theoreticalRating;
-    private double codingRating;
-    private double attitudeRating;
-    private double teamSpiritRating;
+    private Double presentationRating;
+    private Double technicalRating;
+    private Double theoreticalRating;
+    private Double codingRating;
+    private Double attitudeRating;
+    private Double teamSpiritRating;
+    private String createdOn;
     private String comment;
     public static FeedbackResponse_V2 buildResponse(Feedback_V2 feedback){
         //Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
         UserDto userDto = searchUserById(feedback.getTraineeId());
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         //int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
         FeedbackResponse_V2  feedbackResponse1 = FeedbackResponse_V2.builder()
@@ -47,6 +48,7 @@ public class FeedbackResponse_V2 {
                          .trainee(new Trainee(feedback.getTraineeId(),userDto.getName()))
                  .reviewer(new Trainee(feedback.getCreatedBy(), TrainingModuleApplication.searchNameById(feedback.getCreatedBy())))
                  .comment(feedback.getComment())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
                  .build();
 
          if(feedback.getType().equals(VIVA_)){

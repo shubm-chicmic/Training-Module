@@ -4,13 +4,16 @@ import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.formula.functions.T;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +21,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -34,34 +39,15 @@ public class PlanService {
     private final PhaseRepo phaseRepo;
     private final PlanTaskRepo planTaskRepo;
     private final CourseService courseService;
+    private final PhaseService phaseService;
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
 
     public Plan createPlan(PlanDto planDto, Principal principal) {
-        List<Phase<PlanTask>> phases = new ArrayList<>();
         Plan plan = Plan.builder()
                 ._id(String.valueOf(new ObjectId()))
                 .build();
-        for (Phase<PlanTask> phase : planDto.getPhases()) {
-            phase.set_id(String.valueOf(new ObjectId()));
-            List<PlanTask> tasks = new ArrayList<>();
-            for (PlanTask task : phase.getTasks()) {
-                task.set_id(String.valueOf(new ObjectId()));
-                Integer totalTask = 0;
-                if(task.getMilestones() != null) {
-                    for (Object milestone : task.getMilestones()) {
-                        Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
-                        totalTask += coursePhase.getTotalTasks();
-                    }
-                }
-                task.setTotalTasks(totalTask);
-                tasks.add(planTaskRepo.save(task));
-            }
-            phase.setEntityType(EntityType.PLAN);
-            phase.setTasks(tasks);
-            phase.setEntity(plan);
-            phases.add(phaseRepo.save(phase));
-        }
+        List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
         plan.setPhases(phases);
         plan.setApproved(false);
         plan.setDeleted(false);
@@ -72,7 +58,12 @@ public class PlanService {
         plan.setCreatedAt(LocalDateTime.now());
         plan.setUpdatedAt(LocalDateTime.now());
         plan.setCreatedBy(principal.getName());
-        plan = planRepo.save(plan);
+        try {
+            plan = planRepo.save(plan);
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+        }
         return plan;
     }
 
@@ -93,45 +84,41 @@ public class PlanService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria)
         );
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-        Query searchQuery = new Query(finalCriteria);
+        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
 
         List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
-        if (!sortKey.isEmpty()) {
-            Comparator<Plan> planComparator = Comparator.comparing(plan -> {
-                try {
-                    Field field = Plan.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(plan);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
-
-            if (sortDirection == 1) {
-                plans.sort(planComparator.reversed());
-            } else {
-                plans.sort(planComparator);
-            }
-        }
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Plan> planComparator = Comparator.comparing(plan -> {
+//                try {
+//                    Field field = Plan.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(plan);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                plans.sort(planComparator.reversed());
+//            } else {
+//                plans.sort(planComparator);
+//            }
+//        }
 
         return plans;
     }
 
     public List<Plan> getAllPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
-        if (!sortKey.isEmpty()) {
-            Sort.Direction direction = (sortDirection == 0) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            Sort sort = Sort.by(direction, sortKey);
-            pageable = PageRequest.of(pageNumber, pageSize, sort);
-        } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
-        }
+        pageable = PageRequest.of(pageNumber, pageSize);
+
 
 //        Query searchQuery = new Query()
 //                .addCriteria(Criteria.where("planName").regex(query, "i"))
@@ -153,30 +140,32 @@ public class PlanService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
-        Query searchQuery = new Query(finalCriteria).with(pageable);
-        List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
-        if (!sortKey.isEmpty()) {
-            Comparator<Plan> planComparator = Comparator.comparing(plan -> {
-                try {
-                    Field field = Plan.class.getDeclaredField(sortKey);
-                    field.setAccessible(true);
-                    Object value = field.get(plan);
-                    if (value instanceof String) {
-                        return ((String) value).toLowerCase();
-                    }
-                    return value.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            });
+        Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-            if (sortDirection == 1) {
-                plans.sort(planComparator.reversed());
-            } else {
-                plans.sort(planComparator);
-            }
-        }
+        Query searchQuery = new Query(finalCriteria).with(pageable).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
+        List<Plan> plans = mongoTemplate.find(searchQuery, Plan.class);
+//        if (!sortKey.isEmpty()) {
+//            Comparator<Plan> planComparator = Comparator.comparing(plan -> {
+//                try {
+//                    Field field = Plan.class.getDeclaredField(sortKey);
+//                    field.setAccessible(true);
+//                    Object value = field.get(plan);
+//                    if (value instanceof String) {
+//                        return ((String) value).toLowerCase();
+//                    }
+//                    return value.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return "";
+//                }
+//            });
+//
+//            if (sortDirection != 1) {
+//                plans.sort(planComparator.reversed());
+//            } else {
+//                plans.sort(planComparator);
+//            }
+//        }
 
         return plans;
     }
@@ -185,7 +174,8 @@ public class PlanService {
         if (planId == null) {
             return null;
         }
-        return planRepo.findById(planId).orElse(null);
+        Plan plan = planRepo.findById(planId).orElse(null);
+        return plan != null && plan.getDeleted() ? null : plan;
     }
 
     public List<Plan> getPlanByIds(List<String> planIds) {
@@ -197,6 +187,14 @@ public class PlanService {
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
             plan.setDeleted(true);
+            List<Phase<PlanTask>> phases = plan.getPhases();
+            for (Phase<PlanTask> phase : phases) {
+                List<PlanTask> tasks = phase.getTasks();
+                for (PlanTask task : tasks) {
+                    task.setIsDeleted(true);
+                    planTaskRepo.save(task);
+                }
+            }
             planRepo.save(plan);
             return true;
         } else {
@@ -209,6 +207,7 @@ public class PlanService {
         Plan plan = planRepo.findById(planId).orElse(null);
         if (plan != null) {
             if (planDto.getPlanName() != null) {
+                System.out.println("PlanDto Name = " + planDto.getPlanName());
                 plan.setPlanName(planDto.getPlanName());
             }
             if (planDto.getApprover() != null) {
@@ -237,82 +236,22 @@ public class PlanService {
                 plan.setDescription(planDto.getDescription());
             }
             if (planDto.getPhases() != null) {
-                List<Phase<PlanTask>> phases = new ArrayList<>();
-                int i = 0;
-                for (Phase<PlanTask> planPhase : plan.getPhases()) {
-                    if (i < planDto.getPhases().size()) {
-                        List<PlanTask> taskList = planDto.getPhases().get(i).getTasks();
-                        List<PlanTask> tasks = new ArrayList<>();
-
-                        int j = 0;
-                        for (PlanTask planTask : planPhase.getTasks()) {
-                            if (j < taskList.size()) {
-                                PlanTask planTaskDto = taskList.get(j);
-                                planTask.setPlanType(planTask.getPlanType());
-                                planTask.setPlan(planTaskDto.getPlan());
-                                planTask.setEstimatedTime(planTaskDto.getEstimatedTime());
-                                planTask.setMilestones(planTaskDto.getMilestones());
-                                planTask.setMentor(planTaskDto.getMentorIds());
-                                planTask.setDate(planTaskDto.getDate());
-                                tasks.add(planTaskRepo.save(planTask));
-                            }
-                            j++;
-                        }
-                        while (j < taskList.size()) {
-                            PlanTask planTaskDto = taskList.get(j);
-                            PlanTask planTask = PlanTask.builder()
-                                    .mentor(planTaskDto.getMentorIds())
-                                    .planType(planTaskDto.getPlanType())
-                                    .plan(planTaskDto.getPlan())
-                                    .date(planTaskDto.getDate())
-                                    .build();
-                            planTask.setEstimatedTime(planTaskDto.getEstimatedTime());
-                            planTask.setMilestones(planTaskDto.getMilestones());
-                            tasks.add(planTaskRepo.save(planTask));
-
-                            j++;
-                        }
-                        planPhase.setTasks(tasks);
-                        phases.add(phaseRepo.save(planPhase));
-                    }
-                    i++;
-                }
-
-            while (i < planDto.getPhases().size()) {
-                Phase<PlanTask> phase = new Phase<>();
-                phase.set_id(String.valueOf(new ObjectId()));
-                List<PlanTask> tasks = new ArrayList<>();
-                for (PlanTask task : planDto.getPhases().get(i).getTasks()) {
-                    task.set_id(String.valueOf(new ObjectId()));
-                    Integer totalTask = 0;
-                    if(task.getMilestones() != null) {
-                        for (Object milestone : task.getMilestones()) {
-                            Phase<Task> coursePhase = courseService.getPhaseById((String) milestone);
-                            totalTask += coursePhase.getTotalTasks();
-                        }
-                    }
-                    task.setTotalTasks(totalTask);
-                    tasks.add(planTaskRepo.save(task));
-                }
-                phase.setEntityType(EntityType.PLAN);
-                phase.setName(planDto.getPhases().get(i).getName());
-                phase.setTasks(tasks);
-                phase.setEntity(plan);
-                phases.add(phaseRepo.save(phase));
-                i++;
+                List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
+                plan.setPhases(phases);
             }
-            plan.setPhases(phases);
+            plan.setUpdatedAt(LocalDateTime.now());
+            try {
+                plan = planRepo.save(plan);
+            } catch (org.springframework.dao.DuplicateKeyException ex) {
+                // Catch DuplicateKeyException and throw ApiException with 400 status
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+            }
+            return plan;
+        } else {
+            return null;
         }
-        plan.setUpdatedAt(LocalDateTime.now());
-        planRepo.save(plan);
-        return plan;
-    } else
 
-    {
-        return null;
     }
-
-}
 
     public HashMap<String, List<UserIdAndNameDto>> getPlanCourseByPlanIds(List<String> planIds) {
         Query searchQuery = new Query(Criteria.where("_id").in(planIds).and("phases.tasks.planType").is(1));
@@ -337,9 +276,21 @@ public class PlanService {
     }
 
 
-    public long countNonDeletedPlans(String query) {
-        MatchOperation matchStage = Aggregation.match(Criteria.where("planName").regex(query, "i")
-                .and("deleted").is(false));
+    public long countNonDeletedPlans(String query, String userId) {
+        Criteria criteria = Criteria.where("planName").regex(query, "i")
+                .and("deleted").is(false);
+
+        Criteria approvedCriteria = Criteria.where("approved").is(true);
+        Criteria reviewersCriteria = Criteria.where("approved").is(false)
+                .and("approver").in(userId);
+        Criteria createdByCriteria = Criteria.where("approved").is(false)
+                .and("createdBy").is(userId);
+
+        Criteria finalCriteria = new Criteria().andOperator(
+                criteria,
+                new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
+        );
+        MatchOperation matchStage = Aggregation.match(finalCriteria);
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         return mongoTemplate.aggregate(aggregation, "plan", Plan.class).getMappedResults().size();
     }
@@ -355,14 +306,15 @@ public class PlanService {
         }
         return planRepo.save(plan);
     }
-    public HashMap<String,String> getPlanName(List<String> planIds){
+
+    public HashMap<String, String> getPlanName(List<String> planIds) {
         Criteria criteria = Criteria.where("_id").in(planIds);
         Query query = new Query(criteria);
         query.fields().include("planName");
-        List<Plan> plans = mongoTemplate.find(query,Plan.class);
-        HashMap<String,String> planDetails = new HashMap<>();
+        List<Plan> plans = mongoTemplate.find(query, Plan.class);
+        HashMap<String, String> planDetails = new HashMap<>();
         for (Plan plan : plans)
-            planDetails.put(plan.get_id(),plan.getPlanName());
+            planDetails.put(plan.get_id(), plan.getPlanName());
         return planDetails;
     }
 }

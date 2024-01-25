@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 @Getter @Setter @Builder
-public class PhaseResponse_V2 {
+public class PhaseResponse_V2{
     private List<UserIdAndNameDto> subTask;
     private Double overallRating;
     private Double communicationRating;

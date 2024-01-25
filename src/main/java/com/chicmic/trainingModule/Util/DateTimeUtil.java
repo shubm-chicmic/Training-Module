@@ -1,24 +1,38 @@
 package com.chicmic.trainingModule.Util;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 public class DateTimeUtil {
 
-    public static String getTimeFromDate(String dateTimeString) {
-        if (dateTimeString == null) {
+    public static String getTimeFromDate(LocalDateTime dateTime) {
+        if (dateTime == null) {
             return "Invalid DateTime";
         }
 
-        LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         String formattedTime = dateTime.format(DateTimeFormatter.ofPattern("h:mm a"));
         formattedTime = formattedTime.replaceAll("(?i)AM", "Am").replaceAll("(?i)PM", "Pm");
         return formattedTime;
     }
-    public static String getDateFromDate(String dateTimeString) {
-        if (dateTimeString == null) {
+    public static Date convertLocalDateTimeToDate(LocalDateTime localDateTime){
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
+        Date date = Date.from(zonedDateTime.toInstant());
+        return date;
+    }
+    public static String getDateFromDate(LocalDateTime dateTime) {
+        if (dateTime == null) {
             return "Invalid DateTime";
         }
-        LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    public static String convertSecondsToString(Integer estimatedTime) {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
     }
 }

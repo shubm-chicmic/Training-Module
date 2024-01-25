@@ -43,7 +43,7 @@ public class FeedbackUtil {
         return authentication.getAuthorities().contains(authority);
     }
 
-    public static String getFeedbackMessageBasedOnOverallRating(Double overallRating){
+    public static String getFeedbackMessageBasedOnOverallRating(double overallRating){
         if(overallRating==0) return "";
         else if(overallRating < 1 && overallRating > 0)
             return  "Considerable Work Required.";

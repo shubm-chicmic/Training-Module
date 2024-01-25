@@ -16,6 +16,7 @@ import java.util.List;
 @Builder
 public class PlanTaskResponseDto {
     private String _id;
+    private String phaseName;
     private Integer planType;
     private UserIdAndNameDto plan;
     private Integer completedTasks;
@@ -26,5 +27,6 @@ public class PlanTaskResponseDto {
     private String consumedTime;
     private LocalDateTime date;
     private Boolean isCompleted;
-    private float rating;
+    private String feedbackId;
+    private double rating;
 }

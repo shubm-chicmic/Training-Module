@@ -51,69 +51,13 @@ public class TestResponseMapper {
     }
 
     public static TestResponseDto mapTestToResponseDto(Test test) {
-//        List<UserIdAndNameDto> approver = Optional.ofNullable(test.getReviewers())
-//                .map(approverIds -> approverIds.stream()
-//                        .map(approverId -> {
-//                            String name = TrainingModuleApplication.searchNameById(approverId);
-//                            return new UserIdAndNameDto(approverId, name);
-//                        })
-//                        .collect(Collectors.toList())
-//                )
-//                .orElse(null);
-//
-//        List<UserIdAndNameDto> approvedBy = Optional.ofNullable(test.getApprovedBy())
-//                .map(approvedByIds -> approvedByIds.stream()
-//                        .map(approverId -> {
-//                            String name = TrainingModuleApplication.searchNameById(approverId);
-//                            return new UserIdAndNameDto(approverId, name);
-//                        })
-//                        .collect(Collectors.toList())
-//                )
-//                .orElse(null);
-//        List<UserIdAndNameDto> teams = Optional.ofNullable(test.getTeams())
-//                .map(approvedByIds -> approvedByIds.stream()
-//                        .map(approverId -> {
-//                            String name = TrainingModuleApplication.searchTeamById(approverId);
-//                            return new UserIdAndNameDto(approverId, name);
-//                        })
-//                        .collect(Collectors.toList())
-//                )
-//                .orElse(null);
-//
-//        String totalEstimatedTime = calculateTotalEstimatedTimeInTest(test.getMilestones());
-//        int noOfTopics = 0;
-//        for (Milestone milestone : test.getMilestones()) {
-//            int numOfTopics = 0;
-//            String estimatedTime = null;
-//            for (TestTask testTask : milestone.getTasks()) {
-//                noOfTopics += testTask.getSubtasks().size();
-//                numOfTopics += testTask.getSubtasks().size();
-//                long totalHours = 0;
-//                long totalMinutes = 0;
-//                long phaseHours = 0;
-//                long phaseMinutes = 0;
-//                for (TestSubTask testSubTask : testTask.getSubtasks()) {
-//                    String[] timeParts = testSubTask.getEstimatedTime().split(":");
-//                    if (timeParts.length == 1) {
-//                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-//                    } else if (timeParts.length == 2) {
-//                        phaseHours += (timeParts[0] != null && !timeParts[0].isEmpty()) ? Long.parseLong(timeParts[0]) : 0;
-//                        phaseMinutes += (timeParts[1] != null && !timeParts[1].isEmpty()) ? Long.parseLong(timeParts[1]) : 0;
-//                    }
-//                }
-//                totalHours += phaseHours + phaseMinutes / 60;
-//                totalMinutes += phaseMinutes % 60;
-//                estimatedTime = String.format("%02d:%02d", totalHours, totalMinutes);
-//            }
-//            milestone.setEstimatedTime(estimatedTime);
-//            milestone.setNoOfTasks(numOfTopics);
-//        }
+
         return TestResponseDto.builder()
                 ._id(test.get_id())
                 .testName(test.getTestName())
-//                .estimatedTime(totalEstimatedTime)
+                .estimatedTime(test.getEstimatedTime())
                 .noOfMilestones(test.getMilestones().size())
-//                .noOfTopics(noOfTopics)
+                .noOfTopics(test.getTotalTasks())
                 .teams(test.getTeamsDetails())
                 .approver(test.getApproverDetails())
                 .milestones(test.getMilestones())

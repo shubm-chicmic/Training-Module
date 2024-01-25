@@ -7,7 +7,7 @@ import com.chicmic.trainingModule.Entity.Feedback_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +38,8 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
         Set<String> subTaskIds = feedback.getMilestoneIds();
-
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        
         return FeedbackResponse_TEST.builder()
                 ._id(feedback.get_id())
                 .reviewer(reviewer)
@@ -50,8 +51,8 @@ public class FeedbackResponse_TEST implements FeedbackResponse{
                 .feedbackType(new UserIdAndNameDto(TEST_, "TEST"))
                 .task(new UserIdAndNameDto(rating_test.getTestId(), rating_test.getTestId()))
                 .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
-                .createdOn(feedback.getCreatedAt())
-                .rating(rating_test.computeOverallRating())
+                .createdOn(formatter.format(feedback.getCreatedAt()))
+                .rating(feedback.getOverallRating())
                 .build();
     }
 }

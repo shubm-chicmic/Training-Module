@@ -13,7 +13,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,12 +34,19 @@ public class TrainingModuleApplication {
 		JsonNode dataArray = responseNode.get("data");
 
 		for (JsonNode node : dataArray) {
+			List<String> teams = new ArrayList<>();
+			JsonNode teamsNode = node.get("teams");
+			if (teamsNode.isArray()) {
+				for (JsonNode team : teamsNode) {
+					teams.add(team.asText());
+				}
+			}
 			UserDto userDto = UserDto.builder()
 					.token(null)
 					._id(node.get("_id").asText())
 					.name(node.get("name").asText())
 					.empCode(node.get("employeeId").asText())
-					.teamId((node.get("teams").asText()))
+					.teams(teams)
 					.teamName((node.get("teamNames").asText()))
 					.build();
 			idUserMap.put(userDto.get_id(), userDto);
@@ -74,12 +83,19 @@ public class TrainingModuleApplication {
 
 		HashMap<String,UserDto> idTraineeMap = new HashMap<>();
 		for (JsonNode node : dataArray) {
+			List<String> teams = new ArrayList<>();
+			JsonNode teamsNode = node.get("teams");
+			if (teamsNode.isArray()) {
+				for (JsonNode team : teamsNode) {
+					teams.add(team.asText());
+				}
+			}
 			UserDto userDto = UserDto.builder()
 					.token(null)
 					._id(node.get("_id").asText())
 					.name(node.get("name").asText())
 					.empCode(node.get("employeeId").asText())
-					.teamId((node.get("teams").get(0).get("_id").asText()))
+					.teams(teams)
 					.teamName((node.get("teams").get(0).get("name").asText()))
 					.build();
 			idTraineeMap.put(userDto.get_id(), userDto);

@@ -2,10 +2,9 @@ package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
-import com.chicmic.trainingModule.Entity.Phase;
-import com.chicmic.trainingModule.Entity.Plan;
-import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +20,7 @@ import java.util.stream.Collectors;
 public class PlanResponseMapper {
     private final TestService testService;
     private final CourseService courseService;
+    private final PhaseService phaseService;
 
     public List<PlanResponseDto> mapPlanToResponseDto(List<Plan> plans, Boolean isMilestoneRequired) {
         List<PlanResponseDto> planResponseDtoList = new ArrayList<>();
@@ -34,13 +34,17 @@ public class PlanResponseMapper {
         List<Phase<PlanTask>> phases = plan.getPhases();
         for (Phase<PlanTask> phase : phases) {
             for (PlanTask planTask : phase.getTasks()) {
+                if(planTask == null){
+                    System.out.println("planTask is null  " + phase.get_id());
+                    continue;
+                }
                 List<Object> milestoneDetails = new ArrayList<>();
                 if(planTask.getMilestones() != null) {
                     for (Object milestoneId : planTask.getMilestones()) {
                         UserIdAndNameDto milestoneDetail = null;
                         System.out.println("Milestone Hello Response: " + milestoneId);
                         milestoneDetail = UserIdAndNameDto.builder()
-                                .name(courseService.getPhaseById((String)milestoneId).getName())
+                                .name((phaseService.getPhaseById((String)milestoneId)) == null ? null : phaseService.getPhaseById((String)milestoneId).getName())
                                 ._id((String) milestoneId)
                                 .build();
 //                        if (planTask.getPlanType() == 2) {
@@ -62,6 +66,13 @@ public class PlanResponseMapper {
                         milestoneDetails.add(milestoneDetail);
                     }
                 }
+                if(planTask.getPlanType() == 2) {
+                    Test test = testService.getTestById(planTask.getPlan());
+                    planTask.setPlanName(test == null ? "Test Not Found" : test.getTestName());
+                }else {
+                    Course course = courseService.getCourseById(planTask.getPlan());
+                    planTask.setPlanName(course == null ? "Course Not Found" : course.getName());
+                }
                 planTask.setMilestones(milestoneDetails);
             }
         }
@@ -69,9 +80,9 @@ public class PlanResponseMapper {
                 ._id(plan.get_id())
                 .planName(plan.getPlanName())
                 .description(plan.getDescription())
-                .estimatedTime("00:00")
+                .estimatedTime(plan.getEstimatedTime())
                 .noOfPhases(plan.getPhases().size())
-                .noOfTasks(0)
+                .noOfTasks(plan.getTotalTasks())
                 .approver(plan.getApproverDetails())
                 .totalPhases(plan.getPhases().size())
                 .phases(phases)

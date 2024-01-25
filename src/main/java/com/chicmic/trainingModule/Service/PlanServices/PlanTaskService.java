@@ -5,6 +5,8 @@ import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PlanTaskService {
@@ -13,4 +15,7 @@ public class PlanTaskService {
         return planTaskRepo.findById(planTaskId).orElse(null);
     }
 
+    public List<PlanTask> findByMilestoneId(String milestoneId) {
+        return planTaskRepo.findByMilestoneId(milestoneId);
+    }
 }

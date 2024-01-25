@@ -16,8 +16,8 @@ public class Rating_BEHAVIOUR implements Rating{
 //    public String getTaskId() {
 //        return null;
 //    }
-    public double computeOverallRating(){
-        Double total = teamSpiritRating + attitudeRating;
+    public Double computeOverallRating(){
+        double total = teamSpiritRating + attitudeRating;
         return total/2;
     }
 }

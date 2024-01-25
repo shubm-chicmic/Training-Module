@@ -4,20 +4,19 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseDto;
 import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
-
-import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Course;
 
 import com.chicmic.trainingModule.Entity.Phase;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -27,8 +26,10 @@ import java.util.*;
 @RestController
 @RequestMapping("/v1/training/course")
 @AllArgsConstructor
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM')")
 public class CourseCRUD {
     private final CourseService courseService;
+    private final PlanTaskRepo planTaskRepo;
     private final CourseResponseMapper courseResponseMapper;
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
@@ -45,13 +46,18 @@ public class CourseCRUD {
             @RequestParam(required = false ) String traineeId,
             Principal principal
     )  {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         if(sortKey != null && !sortKey.isEmpty() && sortKey.equals("courseName")){
             sortKey = "name";
         }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
+            sortKey = "name";
+            sortDirection = 1;
             List<Course> courseList = courseService.getAllCourses(searchString, sortDirection, sortKey, traineeId);
-            Long count = courseService.countNonDeletedCourses(searchString);
+            Long count = courseService.countNonDeletedCourses(searchString, principal.getName());
             List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         }
@@ -60,7 +66,7 @@ public class CourseCRUD {
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<Course> courseList = courseService.getAllCourses(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            Long count = courseService.countNonDeletedCourses(searchString);
+            Long count = courseService.countNonDeletedCourses(searchString, principal.getName());
 
             List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
@@ -76,23 +82,23 @@ public class CourseCRUD {
 
 
     @PostMapping
-    public ApiResponse create(@RequestBody CourseDto courseDto, Principal principal) {
+    public ApiResponse create(@RequestBody@Valid CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase<Task>> phases = new ArrayList<>();
-        for (List<Task> courseTasks : courseDto.getPhases()) {
-            Phase<Task> phase = Phase.<Task>builder()
-                    .entityType(EntityType.COURSE)
-                    .tasks(courseTasks)
-                    .build();
-            phases.add(phase);
-        }
+//        for (List<Task> courseTasks : courseDto.getPhases()) {
+//            Phase<Task> phase = Phase.<Task>builder()
+//                    .entityType(EntityType.COURSE)
+//                    .tasks(courseTasks)
+//                    .build();
+//            phases.add(phase);
+//        }
         Course course = Course.builder()
                 .createdBy(principal.getName())
                 .name(courseDto.getName())
                 .figmaLink(courseDto.getFigmaLink())
                 .guidelines(courseDto.getGuidelines())
                 .approver(courseDto.getApprover())
-                .phases(phases)
+                .phases(courseDto.getPhases())
                 .isDeleted(false)
                 .isApproved(false)
                 .build();
@@ -102,17 +108,22 @@ public class CourseCRUD {
     }
 
     @DeleteMapping("/{courseId}")
-    public ApiResponse delete(@PathVariable String courseId) {
+    public ApiResponse delete(@PathVariable String courseId, HttpServletResponse response) {
         System.out.println("courseId = " + courseId);
+        List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
+        if(planTasks.size() > 0){
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course is already assigned to a plan", null, response
+            );
+        }
         Boolean deleted = courseService.deleteCourseById(courseId);
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Course deleted successfully", null);
         }
-        return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Course not found", null);
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course not found", null);
     }
 
     @PutMapping
-    public ApiResponse updateCourse(@RequestBody CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updateCourse(@RequestBody@Valid CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
         System.out.println("course Dto = " + courseDto);
         if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
@@ -129,6 +140,13 @@ public class CourseCRUD {
                 }
             }
             courseDto.setApproved(course.getIsApproved());
+            if (courseDto.getApprover() != null && !courseDto.getApprover().equals(course.getApprover())) {
+                List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
+                if(planTasks.size() > 0){
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be edited since course is already assigned to a plan", null, response
+                    );
+                }
+            }
 //            courseDto.setApprover(course.getApprover());
             CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId), true);
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);

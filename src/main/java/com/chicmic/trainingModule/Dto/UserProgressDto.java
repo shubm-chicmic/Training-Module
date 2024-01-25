@@ -13,6 +13,7 @@ public class UserProgressDto {
     private Integer progressType;
     private String planId;
     private String courseId;
+    private String planTaskId;
     private String traineeId;
     @JsonProperty("id") // Map subTaskId to id
     private String subTaskId;

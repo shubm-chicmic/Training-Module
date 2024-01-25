@@ -15,10 +15,10 @@ public class FeedbackResponseForCourse {
     private String type;
     private String course;
     private String phase;
-    private Float theoreticalRating;
-    private Float technicalRating;
-    private Float communicationRating;
+    private Double theoreticalRating;
+    private Double technicalRating;
+    private Double communicationRating;
     private Date createdOn;
-    private Float rating;
+    private Double rating;
     private String comment;
 }

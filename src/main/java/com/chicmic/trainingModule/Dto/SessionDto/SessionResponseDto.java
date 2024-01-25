@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
 import org.bson.types.ObjectId;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 @Getter
@@ -16,7 +17,7 @@ public class SessionResponseDto {
     private String title;
     private String time;
     private String date;
-    private String dateTime;
+    private LocalDateTime dateTime;
     private List<UserIdAndNameDto> teams;
     private List<UserIdAndNameDto> trainees;
     private List<UserIdAndNameDto> sessionBy;

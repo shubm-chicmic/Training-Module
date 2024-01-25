@@ -7,15 +7,15 @@ import lombok.Setter;
 @Getter @Setter @Builder
 public class TraineeRating {
     int index;
-    double rating;
+    Double rating;
     int count;
 
-    public TraineeRating(int index, double rating, int count) {
+    public TraineeRating(int index, Double rating, int count) {
         this.index = index;
         this.rating = rating;
         this.count = count;
     }
-    public void incrRating(double val){
+    public void incrRating(Double val){
         rating += val;
     }
     public void incrCount(){

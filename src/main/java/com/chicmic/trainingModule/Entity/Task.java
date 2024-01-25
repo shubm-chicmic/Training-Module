@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
 import com.chicmic.trainingModule.annotation.CascadeSave;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
@@ -9,7 +10,9 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -21,6 +24,7 @@ public class Task {
     @Id
     private String _id;
     private Integer entityType;
+    @Trim
     private String mainTask;
     private Integer estimatedTime;
     @DBRef
@@ -29,6 +33,16 @@ public class Task {
     @DBRef
     @CascadeSave
     private List<SubTask> subtasks;
+    private Boolean isDeleted = false;
+    public List<SubTask> getSubtasks() {
+        if (subtasks == null) {
+            return new ArrayList<>();
+        }
+        return subtasks.stream()
+                .filter(subTask -> !subTask.getIsDeleted())
+                .collect(Collectors.toList());
+    }
+
     public void setSubtasks(List<SubTask> subtasks) {
         this.subtasks = subtasks;
         updateTotalEstimateTime();
@@ -50,8 +64,12 @@ public class Task {
 
         return String.format("%02d:%02d", hours, minutes);
     }
-
+    public void setEstimatedTimeInSeconds(Integer estimatedTime){
+        this.estimatedTime = estimatedTime;
+    }
     public void setEstimatedTime(String estimatedTime) {
+        System.out.println("estimatedTime = " + estimatedTime);
+        estimatedTime = estimatedTime.trim();
         int hours = 0;
         int minutes = 0;
         Integer formattedTime;
@@ -68,4 +86,15 @@ public class Task {
         this.estimatedTime = totalSeconds;
     }
 
+    @Override
+    public String toString() {
+        return "Task{" +
+                "_id='" + _id + '\'' +
+                ", entityType=" + entityType +
+                ", mainTask='" + mainTask + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", subtasks=" + subtasks +
+                ", isDeleted=" + isDeleted +
+                '}';
+    }
 }

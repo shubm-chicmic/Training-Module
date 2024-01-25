@@ -10,7 +10,9 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -32,6 +34,22 @@ public class Phase<T> {
     @DBRef
     @JsonIgnore
     private Object entity;
+    private Boolean isDeleted = false;
+    public List<T> getTasks() {
+        if (tasks == null) {
+            return new ArrayList<>();
+        }
+        return tasks.stream()
+                .filter(task -> {
+                    if (task instanceof Task) {
+                        return !((Task) task).getIsDeleted();
+                    } else if (task instanceof PlanTask) {
+                        return !((PlanTask) task).getIsDeleted();
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
+    }
     public void setTasks(List<T> tasks) {
         this.tasks = tasks;
         updateTotalSubTasks();
@@ -79,6 +97,9 @@ public class Phase<T> {
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+    public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
+        this.estimatedTime = estimatedTimeInSeconds;
+    }
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;
@@ -97,17 +118,16 @@ public class Phase<T> {
     }
 
 
-//    @Override
-//    public String toString() {
-//        return "Phase{" +
-//                "_id='" + _id + '\'' +
-//                ", entityType=" + entityType +
-//                ", name='" + name + '\'' +
-//                ", estimatedTime=" + estimatedTime +
-//                ", completedTasks=" + completedTasks +
-//                ", totalTasks=" + totalTasks +
-//                ", tasks=" + tasks +
-//                ", entity=" + entity +
-//                '}';
-//    }
+    @Override
+    public String toString() {
+        return "Phase{" +
+                "_id='" + _id + '\'' +
+                ", entityType=" + entityType +
+                ", name='" + name + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", completedTasks=" + completedTasks +
+                ", totalTasks=" + totalTasks +
+                ", tasks=" + tasks +
+                '}';
+    }
 }

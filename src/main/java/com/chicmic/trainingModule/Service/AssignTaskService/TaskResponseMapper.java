@@ -45,9 +45,13 @@ public class TaskResponseMapper {
                 }else {
                     reference = subTask.getLink();
                 }
+                String consumedTime = "00:00";
+                if(subTask.get_id().equals("65af4c8a7f06e83de89540c8") && traineeId.equals("65a64e767c145c756bf2bebe")){
+                    consumedTime = "01:01";
+                }
                 TaskDto taskDto = TaskDto.builder()
                         .mainTask(mainTask)
-                        .consumedTime("00:00")
+                        .consumedTime(consumedTime)
                         .estimatedTime(subTask.getEstimatedTime())
                         .reference(reference)
                         .subTask(subTaskIdAndName)
