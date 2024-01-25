@@ -74,6 +74,19 @@ public class DashboardService_V2 {
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
 
+        Aggregation aggregation1 = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("status").is(3)),
+                Aggregation.group("planTaskId")
+                        .count().as("count"),
+                Aggregation.project("count","planTaskId")
+//                        .and("_id.planId").as("planId").and("_id.phaseId").as("phaseId")
+        );
+        AggregationResults<Document> aggregationResults1 = mongoTemplate.aggregate(aggregation1, "userProgress", Document.class);
+        List<Document> documentList1 = aggregationResults1.getMappedResults();//--->completed!!!
+        Map<String,Integer> planTaskProgress = new HashMap<>();
+        documentList1.forEach(d ->
+            planTaskProgress.put((String) d.get("_id") ,(Integer) d.get("count"))
+        );
 
         plans.forEach((p)->{
             if (!p.getDeleted()) {
@@ -87,9 +100,24 @@ public class DashboardService_V2 {
                             criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()).and("status").is(3));
                         }
                         if(pt!= null && pt instanceof  PlanTask){
-                            planDtoList.add(PlanDto.builder().name(p.getPlanName()).taskName(pt.getPlan()).subtasks(pt.getMilestones()).isComplete(false).date(pt.getDate()).type(pt.getPlanType()).build());
-                                if(pt.getPlanType().equals(TEST)) testIds.add(pt.getPlan());
-                                else courseIds.add(pt.getPlan());
+                            PlanDto planDto = PlanDto.builder().name(p.getPlanName()).taskName(pt.getPlan()).subtasks(pt.getMilestones()).isComplete(false).date(pt.getDate()).type(pt.getPlanType()).build();
+                            planDtoList.add(planDto);
+                                if(pt.getPlanType().equals(TEST)){
+                                    int totalTask = phaseService.countTotalSubtask(pt.getMilestones());
+                                    int completedTask = planTaskProgress.getOrDefault(pt.get_id(), 0);
+                                    planDto.setComplete(totalTask == completedTask);
+                                    testIds.add(pt.getPlan());
+                                }
+                                else{
+                                    if(pt.getPlanType().equals(COURSE)){
+                                        int totalTask = phaseService.countTotalSubtask(pt.getMilestones());
+                                        int completedTask = planTaskProgress.getOrDefault(pt.get_id(), 0);
+                                        planDto.setComplete(totalTask == completedTask);
+                                    }else{
+                                        planDto.setComplete(planTaskProgress.containsKey(pt.get_id()));
+                                    }
+                                    courseIds.add(pt.getPlan());
+                                }
                         }
                     });
 //                    planDtoList.add(PlanDto.builder().name(p.getPlanName()).phase(ps.getName())
