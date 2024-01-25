@@ -17,6 +17,8 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -41,6 +43,10 @@ public class GithubSampleService {
     }
 
     public List<GithubSample> getAllGithubSamples(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
+        Boolean isRolePermit = false;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isRolePermit = authentication.getAuthorities().contains("PA")||authentication.getAuthorities().contains("PM");
+
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
@@ -66,7 +72,9 @@ public class GithubSampleService {
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
-
+        if(isRolePermit){
+            approvedCriteria = Criteria.where("isApproved").is(true);
+        }
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)

@@ -194,6 +194,8 @@ public class PlanService {
                     task.setIsDeleted(true);
                     planTaskRepo.save(task);
                 }
+                phase.setIsDeleted(true);
+                phaseRepo.save(phase);
             }
             planRepo.save(plan);
             return true;

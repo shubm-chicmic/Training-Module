@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +44,7 @@ public class Test {
     private LocalDateTime updatedAt;
     public List<Phase<Task>> getMilestones() {
         if (milestones == null) {
-            return null;
+            return new ArrayList<>();
         }
         return milestones.stream()
                 .filter(phase -> !phase.getIsDeleted()) // Filter out deleted milestones

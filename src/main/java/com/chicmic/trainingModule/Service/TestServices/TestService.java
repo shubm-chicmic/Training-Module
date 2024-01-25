@@ -43,6 +43,7 @@ public class TestService {
         test.setCreatedAt(LocalDateTime.now());
         test.setUpdatedAt(LocalDateTime.now());
         test.set_id(String.valueOf(new ObjectId()));
+
         List<Phase<Task>> milestones = phaseService.createPhases(test.getMilestones(), test, EntityType.TEST);
         test.setMilestones(milestones);
         try{

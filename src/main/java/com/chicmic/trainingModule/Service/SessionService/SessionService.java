@@ -21,6 +21,8 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -46,6 +48,9 @@ public class SessionService {
         return session;
     }
     public List<Session> getAllSessions(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
+        Boolean isRolePermit;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isRolePermit = authentication.getAuthorities().contains("PA")||authentication.getAuthorities().contains("PM");
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
@@ -71,7 +76,9 @@ public class SessionService {
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
-
+        if(isRolePermit){
+           approvedCriteria = Criteria.where("isApproved").is(true);
+        }
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)

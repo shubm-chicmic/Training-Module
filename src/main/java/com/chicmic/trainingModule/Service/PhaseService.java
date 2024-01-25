@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service;
 
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
@@ -22,10 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 //TODO we need to add validation to create a plan phase that phase should not be repeated
 @Service
@@ -38,9 +36,93 @@ public class PhaseService {
     private final PlanTaskRepo planTaskRepo;
     private final PlanRepo planRepo;
     private final UserProgressService userProgressService;
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
         try {
+            Boolean error = false;
+            Set<String> errorPhasesName = new HashSet<>();
+            System.out.println("Phaes = " + phases);
+            Set<String> phaseIds = phases.stream()
+                    .map(Phase::get_id)
+                    .filter(id -> id != null) // Filter out null ids
+                    .collect(Collectors.toSet());
+            System.out.println(phaseIds);
+            System.out.println(phaseIds.size());
+            if (entity instanceof Course) {
+                Course course = (Course) entity;
+                System.out.println("*********************************************************************");
+                System.out.println(course.getPhases());
+                if (course.getPhases() != null && !course.getPhases().isEmpty() && phaseIds.size() > 0) {
+                    System.out.println("Im in");
+                    for (Phase<Task> phase : course.getPhases()) {
+                        System.out.println("*********************************************************************");
+
+                        if (!phaseIds.contains(phase.get_id())) {
+                            System.out.println("*********************************************************************");
+
+                            System.out.println("Deleted Phase " + phase.getName());
+                            // Check if the entity type is Test
+                            List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(phase.get_id());
+                            System.out.println("\u001B[43m planTasks " + planTasks.size());
+                            if(planTasks.size() > 0){
+                                error = true;
+                                errorPhasesName.add(phase.getName());
+//                                continue;
+//                                throw new ApiException(HttpStatus.BAD_REQUEST, "Already Assigned " + name + " Cannot Be Deleted");
+                            }
+                            // Delete the phase
+                        }
+                    }
+                    if(!error) {
+                        for (Phase<Task> phase : course.getPhases()) {
+                            if (!phaseIds.contains(phase.get_id())) {
+                                // Delete the phase
+                                deletePhase(phase);
+                            }
+                        }
+                    }
+                }
+            }else if(entity instanceof Test) {
+                System.out.println("***********************************************************");
+                Test test = (Test) entity;
+                if(test.getMilestones() != null && !test.getMilestones().isEmpty() && phaseIds.size() > 0) {
+//                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                    System.out.println("Milestones : " + test.getMilestones());
+                    for (Phase<Task> milestone: test.getMilestones()) {
+                        System.out.println("Phase id " + phaseIds);
+                        System.out.println("milesotne id " + milestone.get_id());
+                        if(!phaseIds.contains(milestone.get_id())){
+                            System.out.println("Deleted Milestone " + milestone.getName());
+                            //delete milestone
+                            List<PlanTask> planTasks = planTaskRepo.findByMilestoneId(milestone.get_id());
+                            if(planTasks.size() > 0){
+                                error = true;
+                                errorPhasesName.add(milestone.getName());
+                                continue;
+//                                throw new ApiException(HttpStatus.BAD_REQUEST, "Already Assigned " + name + " Cannot Be Deleted");
+                            }
+                        }
+                    }
+                    if(!error) {
+                        System.out.println("Deleted Milestone " + test.getMilestones().size());
+                        System.out.println("Milestones " + test.getMilestones());
+                        System.out.println("Milestone " + phaseIds);
+                        for (Phase<Task> milestone: test.getMilestones()) {
+                            if(!phaseIds.contains(milestone.get_id())){
+                                // Delete the phase
+//                                deletePhase(phase);
+                                deletePhase(milestone);
+
+                            }
+                        }
+                    }
+                }
+            }
+            if(error){
+                String resultantError = String.join(", ", errorPhasesName);
+                System.out.println("\u001B[33m" + resultantError);
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Already Assigned " + resultantError + " Cannot Be Deleted!");
+            }
             int count = 0;
             String phaseNameInitial = "";
             if (entityType == EntityType.TEST) {
@@ -55,10 +137,13 @@ public class PhaseService {
                 if (phase.get_id() == null || phase.get_id().isEmpty()) {
                     newPhase.set_id(String.valueOf(new ObjectId()));
                 } else {
+                    System.out.println("phase id " + phase.get_id());
                     newPhase = (Phase<Task>) getPhaseById(phase.get_id());
                 }
                 count++;
                 System.out.println("\u001B[33m" + phase + "\u001B[0m");
+                System.out.println("\u001B[34m" + newPhase + "\u001B[0m");
+
     //            System.out.println("\u001B[32m" + task + "\u001B[0m");
                 List<Task> tasks = createTasks(phase.getTasks(), newPhase, entityType);
 
@@ -68,32 +153,9 @@ public class PhaseService {
                 newPhase.setEntity(entity);
                 createdPhases.add(phaseRepo.save(newPhase));
             }
-            if (entity instanceof Course) {
-                Course course = (Course) entity;
+            System.out.println("*********************************************************************");
 
-                if (course.getPhases() != null && course.getPhases().isEmpty()) {
-                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
-                    for (Phase<Task> phase : course.getPhases()) {
-                        if (!phaseIds.contains(phase.get_id())) {
-                            System.out.println("Deleted Phase " + phase.getName());
-                            // Delete the phase
-                            deletePhase(phase);
-                        }
-                       }
-                }
-            }else if(entity instanceof Test) {
-                Test test = (Test) entity;
-                if(test.getMilestones() != null && test.getMilestones().isEmpty()) {
-                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
-                    for (Phase<Task> milestone: test.getMilestones()) {
-                        if(!phaseIds.contains(milestone)){
-                            System.out.println("Deleted Milestone " + milestone.getName());
-                            //delete milestone
-                            deletePhase(milestone);
-                        }
-                    }
-                }
-            }
+
             return createdPhases;
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,9 +164,21 @@ public class PhaseService {
             throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
-    @Transactional
     public List<Phase<PlanTask>> createPlanPhases(List<Phase<PlanTask>> phases, Object entity) {
         try {
+            if (entity instanceof Plan) {
+                Plan plan = (Plan) entity;
+                if (plan.getPhases() != null && !plan.getPhases().isEmpty()) {
+                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
+                    for (Phase<PlanTask> phase : plan.getPhases()) {
+                        if(!phaseIds.contains(phase.get_id())){
+                            System.out.println("Deleted Phase " + phase.getName());
+                            //delete phase
+                            deletePhase(phase);
+                        }
+                    }
+                }
+            }
             System.out.println("\u001B[35m " + phases);
             List<Phase<PlanTask>> createdPhases = new ArrayList<>();
             for (Phase<PlanTask> phase : phases) {
@@ -124,30 +198,17 @@ public class PhaseService {
                 newPhase.setEntity(entity);
                 createdPhases.add(phaseRepo.save(newPhase));
             }
-            if (entity instanceof Plan) {
-                Plan plan = (Plan) entity;
-                if (plan.getPhases() != null && plan.getPhases().isEmpty()) {
-                    Set<String> phaseIds = phases.stream().map(Phase::get_id).collect(Collectors.toSet());
-                    for (Phase<PlanTask> phase : plan.getPhases()) {
-                        if(!phaseIds.contains(phase.get_id())){
-                            System.out.println("Deleted Phase " + phase.getName());
-                            //delete phase
-                            deletePhase(phase);
-                        }
-                    }
-                }
-            }
+
             return createdPhases;
         } catch (Exception e) {
             e.printStackTrace();
             // Rollback the transaction
-//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
-    @Transactional
     private List<PlanTask> createPlanTasks(List<PlanTask> planTasks, Phase<PlanTask> phase, Plan plan) {
         try {
+
             List<PlanTask> createdPlanTasks = new ArrayList<>();
             for (PlanTask planTask : planTasks) {
                 PlanTask newPlanTask = new PlanTask();
@@ -225,13 +286,12 @@ public class PhaseService {
         } catch (Exception e) {
             e.printStackTrace();
             // Rollback the transaction
-//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
-    @Transactional
     public List<Task> createTasks(List<Task> tasks, Phase<Task> phase, Integer entityType) {
         try {
+
             List<Task> createdTasks = new ArrayList<>();
             for (Task task : tasks) {
                 Task newTask = new Task();
@@ -268,14 +328,13 @@ public class PhaseService {
         } catch (Exception e) {
             e.printStackTrace();
             // Rollback the transaction
-//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
-    @Transactional
     public List<SubTask> createSubTasks(List<SubTask> subTasks, Task task, Integer entityType, Phase<Task> phase) {
         try {
+
             List<SubTask> createdSubTasks = new ArrayList<>();
             for (SubTask subTask : subTasks) {
                 SubTask newSubTask = new SubTask();
@@ -353,11 +412,11 @@ public class PhaseService {
                     }
                 }
             }
+
             return createdSubTasks;
         } catch (Exception e) {
             e.printStackTrace();
             // Rollback the transaction
-//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }

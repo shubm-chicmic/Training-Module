@@ -240,7 +240,6 @@ public class CourseService {
         }
     }
 
-    @Transactional
     public Course updateCourse(CourseDto courseDto, String courseId) {
         try {
             Course course = courseRepo.findById(courseId).orElse(null);
@@ -258,9 +257,6 @@ public class CourseService {
                     course.setFigmaLink(courseDto.getFigmaLink());
                 }
                 if (courseDto.getGuidelines() != null) {
-//                    if(!course.getGuidelines().equals(courseDto.getGuidelines())){
-//                        float x = 4/0;
-//                    }
                     course.setGuidelines(courseDto.getGuidelines());
                 }
                 if (courseDto.getApprover() != null) {
@@ -288,7 +284,6 @@ public class CourseService {
                 }
                 try {
                     course = courseRepo.save(course);
-                    float x = 4/0;
                 } catch (org.springframework.dao.DuplicateKeyException ex) {
                     // Catch DuplicateKeyException and throw ApiException with 400 status
                     throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
