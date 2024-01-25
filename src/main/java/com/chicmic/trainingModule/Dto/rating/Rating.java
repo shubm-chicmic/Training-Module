@@ -4,7 +4,6 @@ import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import org.springframework.http.HttpStatus;
 
-import java.util.List;
 import java.util.Set;
 
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
@@ -20,7 +19,7 @@ public interface Rating {
         return null;
     }
 
-    public Float computeOverallRating();
+    public double computeOverallRating();
 
     static Rating getRating(FeedbackRequestDto feedBackDto) {
         String feedBack_type = feedBackDto.getFeedbackType();

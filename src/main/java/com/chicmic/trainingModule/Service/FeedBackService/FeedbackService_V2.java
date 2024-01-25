@@ -28,6 +28,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import javax.print.Doc;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -140,11 +142,11 @@ public class FeedbackService_V2 {
         //checking traineeId is valid
         TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
 
-        if(!feedbackDto.getFeedbackType().equals(BEHAVIUOR_)) {
-            List<String> mentors = checkTaskAssignedOrNot(feedbackDto);
-            if (!role && !mentors.contains(reviewerId))
-                throw new ApiException(HttpStatus.BAD_REQUEST, "You can't give feedback to this trainee!!");
-        }
+//        if(!feedbackDto.getFeedbackType().equals(BEHAVIUOR_)) {
+//            List<String> mentors = checkTaskAssignedOrNot(feedbackDto);
+//            if (!role && !mentors.contains(reviewerId))
+//                throw new ApiException(HttpStatus.BAD_REQUEST, "You can't give feedback to this trainee!!");
+//        }
 
         Feedback_V2 feedback = buildFeedbackFromFeedbackRequestDto(feedbackDto,reviewerId);
 
@@ -348,6 +350,7 @@ public class FeedbackService_V2 {
 
         Criteria criteria = Criteria.where("traineeId").is(traineeId)
                 .and("isDeleted").is(false);
+
 //
 //        //searching!!!
         if(query==null || query.isBlank()) query = ".*";
@@ -377,7 +380,101 @@ public class FeedbackService_V2 {
                 context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
                 context -> new Document("$limit", pageSize)
         );
+//        Document document1 = new Document("matchedDocuments", asList(
+//                new Document("$match", new Document("traineeId",traineeId).append("isDeleted",false)),
+//                new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+//                new Document("$addFields", new Document("userData",
+//                        new Document("$filter",
+//                                new Document("input", "$userDatas")
+//                                        .append("as", "user")
+//                                        .append("cond", new Document("$eq", asList("$$user.id", "$createdBy")))
+//                        )
+//                )),
+//                new Document("$unwind",
+//                        new Document("path", "$userData")
+//                                .append("preserveNullAndEmptyArrays", true)
+//                ),
+//                new Document("$project", new Document("userDatas", 0)),
+//                new Document("$match", new Document("$or", asList(
+//                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+//                        new Document("userData.reviewerTeam", new Document("$regex", namePattern))
+//                ))),
+//                new Document("$sort", new Document(sortKey, sortDirection)),
+//                new Document("$skip", Integer.max(skipValue, 0)),
+//                new Document("$limit", pageSize)
+//        ));
+//        Document document = new Document("totalCount",asList(
+//                new Document("$match", new Document("traineeId",traineeId).append("isDeleted",false)),
+//                new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+//                new Document("$addFields", new Document("userData",
+//                        new Document("$filter",
+//                                new Document("input", "$userDatas")
+//                                        .append("as", "user")
+//                                        .append("cond", new Document("$eq", asList("$$user.id", "$createdBy")))
+//                        )
+//                )),
+//                new Document("$unwind",
+//                        new Document("path", "$userData")
+//                                .append("preserveNullAndEmptyArrays", true)
+//                ),
+//                new Document("$project", new Document("userDatas", 0)),
+//                new Document("$match", new Document("$or", asList(
+//                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+//                        new Document("userData.reviewerTeam", new Document("$regex", namePattern))
+//                ))),
+//                new Document("$count", "count")
+//        ));
+        Aggregation aggregation2 = newAggregation(
+                match(criteria),
+                context -> new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+                context -> new Document("$addFields", new Document("userData",
+                        new Document("$filter",
+                                new Document("input", "$userDatas")
+                                        .append("as", "user")
+                                        .append("cond", new Document("$eq", asList("$$user.id", "$createdBy")))
+                        )
+                )),
+                context -> new Document("$unwind",
+                        new Document("path", "$userData")
+                                .append("preserveNullAndEmptyArrays", true)
+                ),
+                context -> new Document("$project", new Document("userDatas", 0)),
+                context -> new Document("$match", new Document("$or", asList(
+                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+                        new Document("userData.reviewerTeam",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
+                ))),// Apply skip to paginate
+                context -> new Document("$count", "count")
+        );
 
+//        document1.append("totalCount",asList(
+//                new Document("$match", new Document("traineeId",traineeId).append("isDeleted",false)),
+//                new Document("$addFields", new Document("userDatas", userDatasDocuments)),
+//                new Document("$addFields", new Document("userData",
+//                        new Document("$filter",
+//                                new Document("input", "$userDatas")
+//                                        .append("as", "user")
+//                                        .append("cond", new Document("$eq", asList("$$user.id", "$createdBy")))
+//                        )
+//                )),
+//                new Document("$unwind",
+//                        new Document("path", "$userData")
+//                                .append("preserveNullAndEmptyArrays", true)
+//                ),
+//                new Document("$project", new Document("userDatas", 0)),
+//                new Document("$match", new Document("$or", asList(
+//                        new Document("userData.reviewerName", new Document("$regex", namePattern)),
+//                        new Document("userData.reviewerTeam", new Document("$regex", namePattern))
+//                ))),
+//                new Document("$count", "count")
+//        ));
+//
+//        Aggregation aggregation = newAggregation(
+//                context -> new Document("$facet", document1)
+//        );
+        Document results = mongoTemplate.aggregate(
+                aggregation2, "feedback_V2", Document.class
+        ).getUniqueMappedResult();
+        System.out.println((results==null)?0:(int) results.get("count"));
         // Execute the aggregation
         List<Feedback_V2> feedbackList = mongoTemplate.aggregate(aggregation, "feedback_V2", Feedback_V2.class).getMappedResults();
         List<FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
@@ -391,7 +488,7 @@ public class FeedbackService_V2 {
 
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
         long count = mongoTemplate.count(new Query(criteria),Feedback_V2.class);
-        Float overallRating = computeOverallRatingOfTrainee(traineeId);
+        Double overallRating = computeOverallRatingOfTrainee(traineeId);
         return new ApiResponse(200,"List of All feedbacks",feedbackResponse_v2List,count,overallRating);
     }
 
@@ -545,7 +642,7 @@ public class FeedbackService_V2 {
                         ._id(reviewerId)
                         .reviewerName(reviewer.getName())
                         .code(reviewer.getEmpCode())
-                        .overallRating(5.0f)
+                        .overallRating(5.00)
                         .records(new ArrayList<>())
                         .build();
 
@@ -753,16 +850,16 @@ public class FeedbackService_V2 {
 //        //return roundOff_Rating(totalRating/feedbackList.size());
 //    }
 
-    public static Float compute_rating(double totalRating,int count){
-        if(totalRating==0) return 0f;
-        int temp = (int)(totalRating/count * 100);
+    public static Double compute_rating(double totalRating,int count){
+        if(totalRating==0) return 0.00;
+        double temp = (int)(totalRating/count * 100);
 //        return roundOff_Rating(totalRating/count);
-        return ((float) temp) / 100;
+        return  temp/100;
     }
 
-    public Map<String,Float> computeOverallRating(String traineeId,String courseId,String planId,int type){
+    public Map<String,Double> computeOverallRating(String traineeId,String courseId,String planId,int type){
         if(courseId == null||planId == null) return null;
-        Map<String,Float> response = new HashMap<>();
+        Map<String,Double> response = new HashMap<>();
 //        response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,criteriaList));
         response.put("planRating",computeOverallRatingOfTraineeOnPlan(traineeId,planId));
         response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
@@ -770,7 +867,7 @@ public class FeedbackService_V2 {
         return response;
     }
 
-    public Map<String,Float> computeOverallRating(String traineeId,String courseId,int type){
+    public Map<String,Double> computeOverallRating(String traineeId,String courseId,int type){
         if(courseId == null) return null;
 
         Criteria criteria = Criteria.where("userId").is(traineeId);//.and("deleted").is(false);
@@ -811,7 +908,7 @@ public class FeedbackService_V2 {
             }
         });
 
-        Map<String,Float> response = new HashMap<>();
+        Map<String,Double> response = new HashMap<>();
         response.put("planRating",computeOverallRatingByTraineeIdAndTestIds(traineeId,criteriaList));
         response.put("overallRating",computeOverallRatingOfTrainee(traineeId));
         response.put("courseRating",computeRatingByTaskIdOfTrainee(traineeId,courseId, Integer.toString(type)));
@@ -844,7 +941,7 @@ public class FeedbackService_V2 {
 //        );
 //    }
 
-    Float computeOverallRatingOfTraineeOnPlan(String traineeId,String planId){
+    Double computeOverallRatingOfTraineeOnPlan(String traineeId,String planId){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("planId").is(planId);
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria),
@@ -854,15 +951,15 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         Document document = aggregationResults.getUniqueMappedResult();
-        if (document == null) return 0f;
+        if (document == null) return 0.00;
         int count = (int) document.get("count");
         double totalRating = (double) document.get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
     }
 
-    public Float computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
+    public Double computeOverallRatingByTraineeIdAndTestIds(String traineeId,Set<Criteria> taskIds){
         Criteria criteria = new Criteria().orOperator(taskIds);
-        if (taskIds.size() == 0) return 0f;
+        if (taskIds.size() == 0) return 0.00;
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria),
                 group("traineeId")
@@ -871,13 +968,13 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
-        if (document.isEmpty()) return 0f;
+        if (document.isEmpty()) return 0.00;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
     }
 
-    public Float computeOverallRatingOfTrainee(String traineeId){
+    public Double computeOverallRatingOfTrainee(String traineeId){
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
                 group("traineeId")
@@ -886,13 +983,13 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
-        if (document.isEmpty()) return 0f;
+        if (document.isEmpty()) return 0.00;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
     }
 
-    Float computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
+    Double computeRatingByTaskIdOfTrainee(String traineeId,String courseId,String type){
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type)
                 .and("isDeleted").is(false);
         if(type.equals(VIVA_)||type.equals(PPT_))
@@ -908,10 +1005,10 @@ public class FeedbackService_V2 {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
-        if (document.isEmpty()) return 0f;
+        if (document.isEmpty()) return 0.00;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return roundOff_Rating(totalRating/count);
+        return compute_rating(totalRating,count);
     }
 
     public boolean courseExist(String traineeId,int tmp,String taskId){
@@ -940,26 +1037,6 @@ public class FeedbackService_V2 {
     }
 
     public void computeOverallRatingOfEmployee(String traineeId,String planId,String taskId,String subTaskId,String type){
-        Criteria criteria = Criteria.where("_id").is(planId);
-        Plan plan = mongoTemplate.findOne(new Query(criteria),Plan.class);
-        if(plan == null)
-            throw new ApiException(HttpStatus.BAD_REQUEST,"Invalid Plan!!");
-
-        List<Object> milestoneObjectIds = new ArrayList<>();
-        if(type.equals(VIVA_)||type.equals(TEST_)) {
-            if(plan.getPhases()!=null) {
-                plan.getPhases().forEach(ph -> {
-                    ph.getTasks().forEach(ps -> {
-                        boolean flag = ps.getMilestones().contains(taskId);
-                        if (flag) milestoneObjectIds.addAll(ps.getMilestones());
-                    });
-                });
-            }
-        }
-
-        List<String> milestoneIds = new ArrayList<>();
-        milestoneObjectIds.forEach((mo)->milestoneIds.add((String) mo));
-
         Document document = new Document();
         document.append("traineeOverAllRating",Arrays.asList(
                 new Document("$match", new Document("traineeId", traineeId)).append("isDeleted",false),
@@ -974,24 +1051,28 @@ public class FeedbackService_V2 {
                         .append("count", new Document("$sum", 1)))
         ));
         //String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
-        if(type.equals(TEST_)) {
-            document.append("courseRating", Arrays.asList(
-                    new Document("$match", new Document("planId", planId).append("details.testId", taskId)).append("isDeleted", false).append("traineeId", traineeId),
-                    new Document("$group", new Document("_id", null)
-                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
-                            .append("count", new Document("$sum", 1)))
-            ));
-        }else if(type.equals(VIVA_)){
-            document.append("courseRating", Arrays.asList(
-                    new Document("$match", new Document("planId", planId).append("details.courseId", taskId)).append("isDeleted", false).append("traineeId", traineeId),
-                    new Document("$group", new Document("_id", null)
-                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
-                            .append("count", new Document("$sum", 1)))
-            ));
+        if(type.equals(TEST_)||type.equals(VIVA_)) {
+            Criteria criteria1 = Criteria.where("_id").is(subTaskId);
+            Query query = new Query(criteria1);
+            PlanTask planTask = mongoTemplate.findOne(query, PlanTask.class);
+            if(planTask == null) throw new ApiException(HttpStatus.BAD_REQUEST,"Invalid plan task Id!!");
+            List<Object> milestoneObjectIds = planTask.getMilestones();
+            if(milestoneObjectIds == null || milestoneObjectIds.isEmpty()) throw new ApiException(HttpStatus.BAD_REQUEST,"No tasks available in this milestone!!");
+            List<String> milestoneIds = new ArrayList<>();
+            milestoneObjectIds.forEach((mo)->milestoneIds.add((String) mo));
+            String taskName = type.equals(TEST_)?"details.testId":"details.courseId";
+            String subTaskName = type.equals(TEST_)?"milestoneIds":"phaseIds";
 
-        }else if(type.equals(PPT_)){
             document.append("courseRating", Arrays.asList(
-                    new Document("$match", new Document("planId", planId).append("details.courseId", taskId)).append("isDeleted", false).append("traineeId", traineeId),
+                    new Document("$match", new Document("planId", planId).append(taskName, taskId).append("isDeleted", false).append("traineeId", traineeId).append(subTaskName,new Document("$in",milestoneIds))),
+                    new Document("$group", new Document("_id", null)
+                            .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                            .append("count", new Document("$sum", 1)))
+            ));
+        }
+        else if(type.equals(PPT_)){
+            document.append("courseRating", Arrays.asList(
+                    new Document("$match", new Document("planId", planId).append("details.courseId", taskId).append("isDeleted", false).append("traineeId", traineeId)),
                     new Document("$group", new Document("_id", null)
                             .append("totalOverAllRating", new Document("$sum", "$overallRating"))
                             .append("count", new Document("$sum", 1)))
@@ -1036,5 +1117,36 @@ public class FeedbackService_V2 {
                 .set("updateAt",formatter.format(date));
         mongoTemplate.updateMulti(new Query(criteria),update,Feedback_V2.class);
     }
+    public void testAggregationQuery(String traineeId, String planId, String taskId, List<String> subtaskIds, String type, String userId){
+      //  Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type).and("planId").is(planId).and("isDeleted").is(false);
+        //Criteria criteria2 = Criteria.where("traineeId").is(traineeId).and("type").is(type).and("planId").is(planId).and("isDeleted").is(false).and("createdBy").is(userId);
+        Document matchCriteria1 = new Document("traineeId",traineeId).append("type",type).append("planId",planId).append("isDeleted",false);
+        Document matchCriteria2 = new Document("traineeId",traineeId).append("type",type).append("planId",planId).append("isDeleted",false);
+        if(type.equals(VIVA_)||type.equals(PPT_)){
+//            criteria.and("details.courseId").is(taskId);
+            matchCriteria1.append("details.courseId",taskId);
+            matchCriteria2.append("details.courseId",taskId);
+            if (type.equals(VIVA_)) {
+                matchCriteria1.append("phaseIds",new Document("$in",subtaskIds));
+            }
+        } else if (type.equals(TEST_)) {
+            matchCriteria1.append("details.testId",taskId);
+            matchCriteria1.append("milestoneIds",new Document("$in",subtaskIds));
+        }
+        Document document = new Document();
+        document.append("overallRating", Arrays.asList(new Document("$match",matchCriteria1),new Document("$group", new Document("_id", null)
+                .append("totalOverAllRating", new Document("$sum", "$overallRating"))
+                .append("count", new Document("$sum", 1)))));
+        //document.append("feedback",Arrays.asList(new Document("$match",new Document("$match",criteria2))));
 
+        Aggregation aggregation = newAggregation(
+                context -> new Document("$facet", document)
+        );
+
+        Document results = mongoTemplate.aggregate(
+                aggregation, "feedback_V2", Document.class
+        ).getUniqueMappedResult();
+
+        System.out.println(results + "///");
+    }
 }

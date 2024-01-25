@@ -12,18 +12,18 @@ import java.util.List;
 @Getter @Setter @Builder
 public class PhaseResponse_V2 {
     private List<UserIdAndNameDto> subTask;
-    private Float overallRating;
-    private Float communicationRating;
+    private Double overallRating;
+    private Double communicationRating;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Float codingRating;
+    private Double codingRating;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Float theoreticalRating;
-    private Float technicalRating;
+    private Double theoreticalRating;
+    private Double technicalRating;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Float presentationRating;
+    private Double presentationRating;
     private String comment;
     private String createdAt;
 }

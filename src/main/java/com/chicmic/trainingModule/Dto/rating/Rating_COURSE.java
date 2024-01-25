@@ -1,6 +1,5 @@
 package com.chicmic.trainingModule.Dto.rating;
 
-import com.chicmic.trainingModule.Util.FeedbackUtil;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,11 +8,11 @@ import lombok.Setter;
 @Setter
 public class Rating_COURSE implements Rating{
     private String courseId;
-    private Float theoreticalRating;
-    private Float technicalRating;
-    private Float communicationRating;
-    public Float computeOverallRating(){
-        float total = theoreticalRating + technicalRating + communicationRating;
+    private double theoreticalRating;
+    private double technicalRating;
+    private double communicationRating;
+    public double computeOverallRating(){
+        double total = theoreticalRating + technicalRating + communicationRating;
         return total/3;
     }
 }

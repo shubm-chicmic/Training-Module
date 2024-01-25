@@ -54,6 +54,11 @@ public class TraineePlanService_V2 {
                         userDatasDocuments
                 )),
                 context -> new Document("$unwind", new Document("path", "$userDatas").append("preserveNullAndEmptyArrays", true)),
+                context -> new Document("$lookup", new Document("from", "AssignedPlan")
+                        .append("localField", "userDatas._id")
+                        .append("foreignField", "userId")
+                        .append("as", "assignedPlans")
+                ),
                 context -> new Document("$group", new Document("_id", "$userDatas._id")
                         .append("name", new Document("$first", "$userDatas.name"))
                         .append("team", new Document("$first", "$userDatas.team"))
@@ -66,6 +71,13 @@ public class TraineePlanService_V2 {
                                         "$$REMOVE"
                                 ))
                         ))
+//                        .append("startDate", new Document("$first", "$assignedPlans.date"))
+                ),
+                context -> new Document("$merge",
+                        new Document("into", "mergedResults")
+                                .append("whenMatched", Arrays.asList(
+                                        new Document("$set", new Document("startDate", "$assignedPlans.date"))
+                                ))
                 ),
                 context -> new Document("$match", new Document("$or", Arrays.asList(
                         new Document("name", new Document("$regex", namePattern)),

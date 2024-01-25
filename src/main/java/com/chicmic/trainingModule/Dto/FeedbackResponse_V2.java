@@ -27,14 +27,14 @@ public class FeedbackResponse_V2 {
     private List<UserIdAndNameDto> phase;
     private UserIdAndNameDto test;
     private List<UserIdAndNameDto> milestone;
-    private float communicationRating;
+    private double communicationRating;
     private UserIdAndNameDto plan;
-    private float presentationRating;
-    private float technicalRating;
-    private float theoreticalRating;
-    private float codingRating;
-    private float attitudeRating;
-    private float teamSpiritRating;
+    private double presentationRating;
+    private double technicalRating;
+    private double theoreticalRating;
+    private double codingRating;
+    private double attitudeRating;
+    private double teamSpiritRating;
     private String comment;
     public static FeedbackResponse_V2 buildResponse(Feedback_V2 feedback){
         //Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();

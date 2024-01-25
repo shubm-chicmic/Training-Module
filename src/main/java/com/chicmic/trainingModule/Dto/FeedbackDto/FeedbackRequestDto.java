@@ -38,48 +38,50 @@ public class FeedbackRequestDto {
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float communicationRating;
+    private Double communicationRating;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float presentationRating;
+    private Double presentationRating;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float technicalRating;
+    private Double technicalRating;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float theoreticalRating;
+    private Double theoreticalRating;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float codingRating;
+    private Double codingRating;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float attitudeRating;
+    private Double attitudeRating;
 
     @DecimalMin(value="0.5",message = "Rating should be greater than or equal to 0.5")
     @Max(value = 5,message = "Rating should be less than or equal to 5")
-    private Float teamSpiritRating;
+    private Double teamSpiritRating;
 
     @NotBlank(message = "Comment field is required.")
     private String comment;
 
     private String planId;
-    public Float computeRating(){
+
+    private String taskId;
+    public Double computeRating(){
         if (feedbackType.equals(VIVA_)) {
-            float total = theoreticalRating + technicalRating + communicationRating;
+            double total = theoreticalRating + technicalRating + communicationRating;
             return total / 3;
         }else if(feedbackType.equals(TEST_)){
-            float total = communicationRating + theoreticalRating + codingRating;
+            double total = communicationRating + theoreticalRating + codingRating;
             return total/3;
         } else if (feedbackType.equals(PPT_)) {
-            float total = communicationRating + technicalRating + presentationRating;
+            double total = communicationRating + technicalRating + presentationRating;
             return total/3;
         }
-        float total = teamSpiritRating + attitudeRating;
+        double total = teamSpiritRating + attitudeRating;
         return total/2;
     }
 }

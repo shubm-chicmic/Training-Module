@@ -28,7 +28,7 @@ public class Feedback_V2 {
     private String _id;
     private String traineeId;
     private String type;
-    private Float overallRating;
+    private Double overallRating;
     private Rating details;
     private Set<String> phaseIds;//phaseids,milestoneids,courseids
     private Set<String> milestoneIds;
