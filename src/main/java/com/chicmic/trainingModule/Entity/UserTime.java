@@ -4,6 +4,8 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+
 @Document
 @Getter
 @Setter
@@ -15,9 +17,10 @@ public class UserTime {
     private String _id;
     private String traineeId;
     private String planId;
-    private String phaseId;
     private String planTaskId;
     private String subTaskId;
     private Integer consumedTime;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Boolean isDeleted;
 }

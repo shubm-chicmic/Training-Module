@@ -25,6 +25,7 @@ public class UserTimeCreate {
             HttpServletResponse response,
             Principal principal
    ){
+       if(principal.getName().equals(userTimeDto))
        if(userTimeDto != null){
            try {
                UserTime userTime = userTimeService.createUserTime(userTimeDto, principal.getName());
