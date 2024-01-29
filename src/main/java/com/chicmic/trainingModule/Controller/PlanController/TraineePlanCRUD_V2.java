@@ -39,8 +39,8 @@ public class TraineePlanCRUD_V2 {
         System.out.println("request reaches here!!");
         sortDirection = (sortDirection!=1)?-1:1;
         sortKey = (sortKey.equals("startDate"))?"date":sortKey;
-        List<Document> documentList = traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
-        long count  = mongoTemplate.count(new Query(),AssignedPlan.class);
-        return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
+        return traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey);
+        //long count  = mongoTemplate.count(new Query(),AssignedPlan.class);
+        //return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
     }
 }

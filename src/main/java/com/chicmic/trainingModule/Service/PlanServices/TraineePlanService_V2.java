@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
@@ -44,7 +45,7 @@ public class TraineePlanService_V2 {
         this.assignTaskService = assignTaskService;
     }
 
-    public List<Document> fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey){
+    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey){
         System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
         if(query==null || query.isBlank()) query = ".*";
@@ -84,39 +85,25 @@ public class TraineePlanService_V2 {
                         .append("status", new Document("$first", "$$ROOT.trainingStatus"))
                         .append("startDate",new Document("$first","$$ROOT.date"))// Include the "deleted" field
                 ),
+                context -> new Document("$facet",new Document("data",Arrays.asList(
+                        new Document("$match", new Document("$or", Arrays.asList(
+                                new Document("name", new Document("$regex", namePattern)),
+                                new Document("team", new Document("$regex", namePattern)) // Search by 'team' field, without case-insensitive regex
+                        ))),
+                        new Document("$sort", new Document(sortKey, sortDirection)),
+                        new Document("$skip", Integer.max(skipValue, 0)), // Apply skip to paginate
+                        new Document("$limit", pageSize)
+                ))
+                        .append("total",Arrays.asList(
+                                new Document("$match", new Document("$or", Arrays.asList(
+                                        new Document("name", new Document("$regex", namePattern)),
+                                        new Document("team", new Document("$regex", namePattern)) // Search by 'team' field, without case-insensitive regex
+                                ))),
+                                new Document("$count", "total")
+                        ))
+                )
+//
 //                context -> new Document("$project", new Document().append("status",1).append("date",1)),
-                context -> new Document("$match", new Document("$or", Arrays.asList(
-                        new Document("name", new Document("$regex", namePattern)),
-                        new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
-                ))),
-                context -> new Document("$sort", new Document(sortKey, sortDirection)),
-                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
-                context -> new Document("$limit", pageSize)
-        );
-
-//        Aggregation aggregation = newAggregation(
-//                context -> new Document("$addFields", new Document("userDatas",
-//                        userDatasDocuments
-//                )),
-//                context -> new Document("$unwind", new Document("path", "$userDatas").append("preserveNullAndEmptyArrays", true)),
-//                context -> new Document("$lookup",new Document("from", "plan")
-//                        .append("localField", "plans.$id")
-//                        .append("foreignField", "_id")
-//                        .append("as", "planDetails")
-//                ),
-//                context -> new Document("$group", new Document("_id", "$userDatas._id")
-//                        .append("name", new Document("$first", "$userDatas.name"))
-//                        .append("team", new Document("$first", "$userDatas.team"))
-//                        .append("employeeCode", new Document("$first", "$userDatas.empCode"))
-//                        .append("plan", new Document("$addToSet",
-//                                new Document("$cond", Arrays.asList(
-//                                        new Document("$eq", Arrays.asList("$userId", "$userDatas._id")),
-//                                        new Document("name", new Document("$arrayElemAt", Arrays.asList("$planDetails.planName", 0)))
-//                                                .append("_id", new Document("$toString",new Document("$arrayElemAt", Arrays.asList("$planDetails._id", 0)))),
-//                                        "$$REMOVE"
-//                                ))
-//                        ))
-//                ),
 //                context -> new Document("$match", new Document("$or", Arrays.asList(
 //                        new Document("name", new Document("$regex", namePattern)),
 //                        new Document("team",new Document("$regex",namePattern))// Search by 'team' field, without case-insensitive regex
@@ -124,10 +111,14 @@ public class TraineePlanService_V2 {
 //                context -> new Document("$sort", new Document(sortKey, sortDirection)),
 //                context -> new Document("$skip", Integer.max(skipValue,0)), // Apply skip to paginate
 //                context -> new Document("$limit", pageSize)
-//        );
+        );
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        List<Document>  traineePlanResponseList = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getMappedResults();
-
+        Document  response = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getUniqueMappedResult();
+        System.out.println("\u001B[34m" + response.get("total") + "\u001B[0m");
+        List<Document>  traineePlanResponseList = (List<Document>) response.get("data");
+        List<Document> countList = (List<Document>) response.get("total");
+        int cnt = countList.isEmpty() ? 0 : (Integer) countList.get(0).get("total");
+        System.out.println(cnt + "--------------");
         for (Document tr : traineePlanResponseList){
             List<UserIdAndNameDto> planDetails = new ArrayList<>();
             HashSet<String> names = new HashSet<>();
@@ -164,13 +155,6 @@ public class TraineePlanService_V2 {
                 tr.put("status", TrainingStatus.PENDING);
                 tr.put("startDate",formatter.format(DateTimeUtil.convertLocalDateTimeToDate(LocalDateTime.now())));
             }
-//                if (tr.get("status") == null && assignedPlan == null)
-//                    tr.put("status", 1);
-//                if (tr.get("startDate") == null)
-//                    tr.put("startDate", formatter.format(new Date()));
-//                else
-//                    tr.put("startDate", formatter.format(tr.get("startDate")));
-
         };
 
         Set<String> userIds = new HashSet<>();
@@ -192,7 +176,8 @@ public class TraineePlanService_V2 {
             int index = userSummary.get(_id);
             traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count")));
         }
-        return traineePlanResponseList;
+        return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(count));
+//        return traineePlanResponseList;
     }
 
     public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto, String createdBy){
