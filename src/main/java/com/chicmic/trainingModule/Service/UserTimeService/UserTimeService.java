@@ -19,13 +19,12 @@ public class UserTimeService {
 
     public UserTime createUserTime(UserTimeDto userTimeDto, String traineeId) {
         UserTime userTime = UserTime.builder()
-//                .createdBy(traineeId)
-                .consumedTime(userTimeDto.getConsumedTime())
                 .traineeId(traineeId)
+                .consumedTime(userTimeDto.getConsumedTime())
                 .isDeleted(false)
                 .planId(userTimeDto.getPlanId())
-                .planTaskId(userTimeDto.getTaskId())
-                .phaseId(userTimeDto.getPhaseId())
+                .planTaskId(userTimeDto.getPlanTaskId())
+                .subTaskId(userTimeDto.getSubTaskId())
                 .build();
         return saveUserTime(userTime);
     }

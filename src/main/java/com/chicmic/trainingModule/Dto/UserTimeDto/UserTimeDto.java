@@ -9,10 +9,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UserTimeDto {
-    @NotNull
+//    @NotNull
 //    private String traineeId;
     @NotNull
     private String planId;
+    @NotNull
+    private Integer type;
     @NotNull
     private String planTaskId;
     @NotNull

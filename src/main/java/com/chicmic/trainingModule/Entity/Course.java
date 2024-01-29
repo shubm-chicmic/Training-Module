@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class Course {
     @Id
     private String _id;
-    @Indexed(unique = true)
+    @Indexed(unique = true, partialFilter = "{ 'isDeleted': false }")
     private String name;
     private String figmaLink;
     private String guidelines;

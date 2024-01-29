@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class Plan {
     @Id
     private String _id;
-    @Indexed(unique = true)
+    @Indexed(unique = true, partialFilter = "{ 'isDeleted': false }")
     private String planName;
     private String description;
     private Integer estimatedTime;

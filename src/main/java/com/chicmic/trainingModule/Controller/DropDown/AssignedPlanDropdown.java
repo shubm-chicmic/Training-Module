@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ public class AssignedPlanDropdown {
 
 
     @RequestMapping(value = {"/plan"}, method = RequestMethod.GET)
-    public ApiResponse getAll(
+    public ResponseEntity<ApiResponse> getAll(
             @RequestParam String traineeId,
             HttpServletResponse response,
             Principal principal
@@ -32,9 +33,11 @@ public class AssignedPlanDropdown {
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
         if(assignedPlan != null) {
             AssignedPlanResponse assignedPlanResponse = assignPlanResponseMapper.mapAssignedPlanForFeedback(assignedPlan);
-            return new ApiResponse(HttpStatus.OK.value(), "Success", assignedPlanResponse, response);
+            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Success", assignedPlanResponse));
         }
-        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "AssignedPlan not found", response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "AssignedPlan not found", null));
+
     }
 
     @RequestMapping(value = {"/assignedPlan"}, method = RequestMethod.GET)
