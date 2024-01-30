@@ -373,6 +373,7 @@ public class FeedbackService_V2 {
             criteria.and("details.testId").is(taskId);
             criteria.and("milestoneIds").all(subtaskIds);
         }
+        criteria.and("isDeleted").is(false);
         return mongoTemplate.exists(new Query(criteria),Feedback_V2.class);
     }
 

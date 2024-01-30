@@ -66,9 +66,12 @@ public class ExcelPerformOperations {
                 if (subTaskCell != null && hoursCell != null && referenceCell != null &&
                         !subTaskCell.getStringCellValue().isEmpty() && hoursCell.getCellType() == CellType.NUMERIC) {
                     SubTask courseSubTask = new SubTask();
-                    courseSubTask.setSubTask(subTaskCell.getStringCellValue());
-                    courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()));
-                    courseSubTask.setLink(referenceCell.getStringCellValue());
+                    courseSubTask.setSubTask(subTaskCell.getStringCellValue().trim());
+                    courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()).trim());
+
+                    String linkValue = referenceCell.getStringCellValue().trim();
+                    System.out.println("\u001B[45m linkValue = " + linkValue + "\u001B[0m");
+                    courseSubTask.setLink(linkValue);
                     if (phase != null && phase.getTasks().size() > 0) {
                         Task task = phase.getTasks().get(phase.getTasks().size() - 1);
                         List<SubTask> subTasks = task.getSubtasks();
