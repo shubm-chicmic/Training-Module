@@ -16,7 +16,7 @@ public class UserTimeDto {
     @NotNull
     private Integer type;
     @NotNull
-    private String planTaskId;
+    private String taskId;
     @NotNull
     private String subTaskId;
     @NotNull

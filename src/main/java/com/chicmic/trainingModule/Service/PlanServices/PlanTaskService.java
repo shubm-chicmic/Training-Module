@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import lombok.RequiredArgsConstructor;
@@ -17,5 +18,18 @@ public class PlanTaskService {
 
     public List<PlanTask> findByMilestoneId(String milestoneId) {
         return planTaskRepo.findByMilestoneId(milestoneId);
+    }
+    public PlanTask findByTypeAndPlanAndMilestoneIdForCourseAndTest(Integer type, String plan, String milestoneId) {
+        // Validate type (1, 2, 3, 4)
+        if (type < 1 || type > 4) {
+            throw new IllegalArgumentException("Invalid type. Type should be 1, 2, 3, or 4.");
+        }
+
+        // Check if the type is 1 or 2 to make the task unique
+        if (type == PlanType.COURSE || type == PlanType.TEST) {
+            List<PlanTask> planTasks = planTaskRepo.findByTypeAndPlanAndMilestoneId(type, plan, milestoneId);
+            return planTasks.isEmpty() ? null : planTasks.get(0);
+        }
+        return null;
     }
 }
