@@ -5,13 +5,17 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.boot.CommandLineRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,13 +24,20 @@ import java.util.Map;
 
 
 @SpringBootApplication
-public class TrainingModuleApplication {
-	private static final String excelFileName = "Unreal Learning schedule.xlsx";
+@EnableScheduling
+public class TrainingModuleApplication implements CommandLineRunner {
+	private static String apiGateWayUrl;
+
+	@Value("${apiGatewayUrl}")
+	private void setApiGateWayUrl(String apiGatewayUrl) {
+		TrainingModuleApplication.apiGateWayUrl = apiGatewayUrl;
+	}
 	public static final Map<String, UserDto> idUserMap = new HashMap<>();
 	public static final Map<String, String> teamIdAndNameMap = new HashMap<>();
 	public static HashMap<Integer, String> zoneCategoryMap = new HashMap<>();
 	private static void findUsersAndMap() throws JsonProcessingException {
-		String apiUrl = "https://timedragon.staging.chicmic.co.in/v1/dropdown/user";
+		String apiUrl = apiGateWayUrl + "/v1/dropdown/user";
+		System.out.println("api url " + apiUrl);
 		RestTemplate restTemplate = new RestTemplate();
 		String apiResponse = restTemplate.getForObject(apiUrl, String.class);
 		ObjectMapper mapper = new ObjectMapper();
@@ -53,7 +64,7 @@ public class TrainingModuleApplication {
 		}
 	}
 	private static void findTeamsAndMap() throws JsonProcessingException {
-		String apiUrl = "https://timedragon.staging.chicmic.co.in/v1/dropdown/team";
+		String apiUrl = apiGateWayUrl + "/v1/dropdown/team";
 		RestTemplate restTemplate = new RestTemplate();
 		String apiResponse = restTemplate.getForObject(apiUrl, String.class);
 		ObjectMapper mapper = new ObjectMapper();
@@ -69,7 +80,8 @@ public class TrainingModuleApplication {
 
 	//fetching trainee list
 	public static HashMap<String, UserDto> findTraineeAndMap(){
-		String apiUrl = "https://timedragon.staging.chicmic.co.in/v1/dropdown/user?designation=Trainee";
+		System.out.println("\u001B[31m fetching trainee list");
+		String apiUrl = apiGateWayUrl + "/v1/dropdown/user?designation=Trainee";
 		RestTemplate restTemplate = new RestTemplate();
 		String apiResponse = restTemplate.getForObject(apiUrl, String.class);
 		ObjectMapper mapper = new ObjectMapper();
@@ -124,6 +136,18 @@ public class TrainingModuleApplication {
 	}
 
 	public static void main(String[] args) throws JsonProcessingException {
+		SpringApplication.run(TrainingModuleApplication.class, args);
+//		ExcelPerformOperations.excelPerformOperations(excelFileName);
+	}
+	@Override
+	public void run(String... args) throws Exception {
+		runScheduledTasks();
+	}
+	@Scheduled(fixedDelay = 4 * 60 * 60 * 1000)
+	private void runScheduledTasks() throws Exception {
+		idUserMap.clear();
+		teamIdAndNameMap.clear();
+		zoneCategoryMap.clear();
 		findUsersAndMap();
 		findTeamsAndMap();
 		zoneCategoryMap.put(1, "1st Zone");
@@ -133,10 +157,8 @@ public class TrainingModuleApplication {
 		zoneCategoryMap.put(5, "3rd Side Zone");
 		zoneCategoryMap.put(6, "4th Zone");
 		System.out.println("\u001B[31m VAlue =================== " + zoneCategoryMap.get(4) + "\u001B[0m");
-		SpringApplication.run(TrainingModuleApplication.class, args);
-//		ExcelPerformOperations.excelPerformOperations(excelFileName);
-	}
 
+	}
 	@Bean
 	public static BCryptPasswordEncoder passwordEncoder() {
 		BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
