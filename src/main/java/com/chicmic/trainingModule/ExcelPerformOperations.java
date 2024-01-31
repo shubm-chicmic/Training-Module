@@ -28,7 +28,7 @@ public class ExcelPerformOperations {
             String mainTask = "";
 
             Phase<Task> phase = null;
-
+            Task courseTask = null;
             for (Row row : sheet) {
                 if (!firstRowSkipped) {
                     firstRowSkipped = true;
@@ -50,11 +50,11 @@ public class ExcelPerformOperations {
                 if (mainTaskCell != null && !mainTaskCell.getStringCellValue().isEmpty()) {
                     mainTask = mainTaskCell.getStringCellValue();
                     System.out.println("manTask" + mainTask);
-                     Task courseTask = new Task();
+                    courseTask = new Task();
 
                     courseTask.setMainTask(mainTask);
                     courseTask.setSubtasks(new ArrayList<>());
-                    System.out.println("\u001B[31m Task \u001B[0m" + courseTask);
+//                    System.out.println("\u001B[31m Task \u001B[0m" + courseTask);
                     if (phase != null) {
                         System.out.println("im in");
                         List<Task> tasks = phase.getTasks();
@@ -70,16 +70,15 @@ public class ExcelPerformOperations {
                     courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()).trim());
 
                     String linkValue = referenceCell.getStringCellValue().trim();
-                    System.out.println("\u001B[45m linkValue = " + linkValue + "\u001B[0m");
+//                    System.out.println("\u001B[45m linkValue = " + linkValue + "\u001B[0m");
                     courseSubTask.setLink(linkValue);
                     if (phase != null && phase.getTasks().size() > 0) {
-                        Task task = phase.getTasks().get(phase.getTasks().size() - 1);
-                        List<SubTask> subTasks = task.getSubtasks();
+                        List<SubTask> subTasks = courseTask.getSubtasks();
                         subTasks.add(courseSubTask);
-                        task.setSubtasks(subTasks);
-                        List<Task> tasks = phase.getTasks();
-                        tasks.add(task);
-                        phase.setTasks(tasks);
+                        courseTask.setSubtasks(subTasks);
+//                        List<Task> tasks = phase.getTasks();
+//                        tasks.add(task);
+//                        phase.setTasks(tasks);
                     }
                 }
 //                System.out.println("phase = " + phase);

@@ -1,10 +1,16 @@
 package com.chicmic.trainingModule;
 
 import com.chicmic.trainingModule.Dto.UserDto;
+import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.DbVersion;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
+import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.Service.DatabaseVersionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,6 +23,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.boot.CommandLineRunner;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +36,13 @@ import java.util.Map;
 
 @SpringBootApplication
 @EnableScheduling
+@Log4j2
 public class TrainingModuleApplication implements CommandLineRunner {
 	private static String apiGateWayUrl;
+	@Autowired
+	private DatabaseVersionService databaseVersionService;
+	@Autowired
+	private CourseService courseService;
 
 	@Value("${apiGatewayUrl}")
 	private void setApiGateWayUrl(String apiGatewayUrl) {
@@ -137,11 +153,53 @@ public class TrainingModuleApplication implements CommandLineRunner {
 
 	public static void main(String[] args) throws JsonProcessingException {
 		SpringApplication.run(TrainingModuleApplication.class, args);
-//		ExcelPerformOperations.excelPerformOperations(excelFileName);
 	}
 	@Override
 	public void run(String... args) throws Exception {
+		runMigrations();
 		runScheduledTasks();
+	}
+	private void runMigrations() {
+		// Use the databaseVersionService to save or update the database version
+		DbVersion dbVersion = databaseVersionService.getDatabaseVersion();
+		if(dbVersion != null){
+			if(dbVersion.getVersion() < 1) {
+				try {
+					String message = addCourseFromExcelToDatabase();
+					log.info(message);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}finally {
+					databaseVersionService.updateDatabaseVersion();
+				}
+			}
+			return;
+		}
+		dbVersion = databaseVersionService.saveDbVersion();
+		String message = addCourseFromExcelToDatabase();
+		log.info(message);
+
+	}
+	public String addCourseFromExcelToDatabase(){
+		try {
+			Path excelSearchPath = Paths.get("TrainingModuleExcelSearch");
+
+			final Integer[] count = {0};
+			Files.walk(excelSearchPath)
+					.filter(Files::isRegularFile)
+					.filter(path -> path.toString().toLowerCase().endsWith(".xlsx"))
+					.forEach(path -> {
+						System.out.println("Processing file: " + path);
+						Course course = ExcelPerformOperations.excelPerformOperations(path.toString());
+						System.out.println(course.getName());
+						courseService.createCourse(course);
+						count[0]++;
+					});
+			return count[0] +" courses created successfully";
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "failed because of " + e.getMessage();
+		}
 	}
 	@Scheduled(fixedDelay = 4 * 60 * 60 * 1000)
 	private void runScheduledTasks() throws Exception {
