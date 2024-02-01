@@ -14,4 +14,6 @@ public class DashboardResponse {
     private RatingReponseDto rating;
     private List<CourseDto> courses;
     private List<PlanDto> plan;
+    private Long totalSessions;
+    private Long attendedSessions;
 }

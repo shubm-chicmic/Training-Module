@@ -1,6 +1,8 @@
 package com.chicmic.trainingModule.Dto.SessionDto;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Constants.SessionAttendedStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import org.bson.types.ObjectId;
 
@@ -12,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SessionResponseDto {
     private String _id;
     private String title;
@@ -29,5 +32,7 @@ public class SessionResponseDto {
     private int status;
     private boolean isDeleted = false;
     private boolean isApproved = false;
+    private Integer attendanceStatus = SessionAttendedStatus.PENDING;
+    private String reason = null;
     private MomMessageResponseDto MOM;
 }

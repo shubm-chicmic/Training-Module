@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -45,8 +46,9 @@ public class GithubSampleService {
     public List<GithubSample> getAllGithubSamples(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Boolean isRolePermit = false;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        isRolePermit = authentication.getAuthorities().contains("PA")||authentication.getAuthorities().contains("PM");
-
+        isRolePermit = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("PA") || role.equals("PM") || role.equals("TL"));
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);

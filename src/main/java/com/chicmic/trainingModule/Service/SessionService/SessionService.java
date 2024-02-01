@@ -1,13 +1,13 @@
 package com.chicmic.trainingModule.Service.SessionService;
 
-import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
+import com.chicmic.trainingModule.Dto.SessionDto.SessionAttendDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionDto;
-import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
+import com.chicmic.trainingModule.Dto.SessionDto.UserIdAndSessionStatusDto;
+import com.chicmic.trainingModule.Entity.Constants.SessionAttendedStatus;
 import com.chicmic.trainingModule.Entity.MomMessage;
 import com.chicmic.trainingModule.Entity.Constants.StatusConstants;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.SessionRepo;
-import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import com.chicmic.trainingModule.Entity.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -25,12 +26,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import org.springframework.security.core.GrantedAuthority;
+
 
 @Service
 @RequiredArgsConstructor
@@ -41,16 +45,41 @@ public class SessionService {
 //    private void clearSession(){
 //        sessionRepo.deleteAll();
 //    }
-    public Session createSession(Session session){
-        session.setCreatedAt(LocalDateTime.now());
-        session.setUpdatedAt(LocalDateTime.now());
+    public Session createSession(SessionDto sessionDto){
+        Set<UserIdAndSessionStatusDto> trainees = new HashSet<>();
+        for (String userId : sessionDto.getTrainees()) {
+            UserIdAndSessionStatusDto userIdAndSessionStatusDto = new UserIdAndSessionStatusDto();
+            userIdAndSessionStatusDto.set_id(userId);
+            userIdAndSessionStatusDto.setAttendanceStatus(SessionAttendedStatus.PENDING);
+            trainees.add(userIdAndSessionStatusDto);
+        }
+        Session session = Session.builder()
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .dateTime(sessionDto.getDateTime())
+                .sessionBy(sessionDto.getSessionBy())
+                .title(sessionDto.getTitle())
+                .teams(sessionDto.getTeams())
+                .createdBy(sessionDto.getCreatedBy())
+                .trainees(trainees)
+                .status(sessionDto.getStatus())
+                .approver(sessionDto.getApprover())
+                .isDeleted(false)
+                .isApproved(false)
+                .location(sessionDto.getLocation())
+                .build();
         session = sessionRepo.save(session);
         return session;
     }
     public List<Session> getAllSessions(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Boolean isRolePermit;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        isRolePermit = authentication.getAuthorities().contains("PA")||authentication.getAuthorities().contains("PM");
+        isRolePermit = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("PA") || role.equals("PM") || role.equals("TL"));
+
+        System.out.println("getAllSessions role permission " + isRolePermit);
+        System.out.println("Authorities " + authentication.getAuthorities());
         System.out.println("pageNumber = " + pageNumber);
         System.out.println("pageSize = " + pageSize);
         System.out.println("query = " + query);
@@ -68,7 +97,7 @@ public class SessionService {
                         new Criteria().orOperator(
                                 Criteria.where("createdBy").is(userId),
                                 Criteria.where("approver").in(userId),
-                                Criteria.where("trainees").in(userId),
+                                Criteria.where("trainees._id").is(userId),
                                 Criteria.where("sessionBy").in(userId)
                         )
                 );
@@ -141,7 +170,13 @@ public class SessionService {
 
     public Boolean deleteSessionById(String sessionId,String name) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
-        if(!session.getSessionBy().contains(name) || !session.getApprover().contains(name) || !session.getCreatedBy().equals(name))
+        Boolean isRolePermit;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isRolePermit = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("PA") || role.equals("PM") || role.equals("TL"));
+        System.out.println("Role Permit : " + isRolePermit);
+        if((!session.getSessionBy().contains(name) || !session.getApprover().contains(name) || !session.getCreatedBy().equals(name)) && !isRolePermit)
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not Authorize to delete this session");
             //return new ApiResponse(HttpStatus.OK.value(), "Session deleted successfully", null);
         if (session != null) {
@@ -167,29 +202,65 @@ public class SessionService {
     public Session updateSession(SessionDto sessionDto, String sessionId) {
         Session session = sessionRepo.findById(sessionId).orElse(null);
         if (session != null) {
-            session = (Session) CustomObjectMapper.updateFields(sessionDto, session);
+            if(sessionDto.getTitle() != null){
+                session.setTitle(sessionDto.getTitle());
+            }
             if(sessionDto.getDateTime() != null){
                 session.setDateTime(sessionDto.getDateTime());
             }
-            Integer count = 0;
-            for (String reviewer : session.getApprover()){
-                if(session.getApprovedBy().contains(reviewer)){
-                    count++;
+            if(sessionDto.getLocation() != null){
+                session.setLocation(sessionDto.getLocation());
+            }
+            if(sessionDto.getTeams() != null){
+                session.setTeams(sessionDto.getTeams());
+            }
+            if(sessionDto.getTrainees() != null) {
+                List<String> newtrainees = sessionDto.getTrainees();
+                Set<UserIdAndSessionStatusDto> originalTraineeStatus = session.getTraineesDetailsWithStatus();
+                Set<String> originalTraineeIds = originalTraineeStatus.stream()
+                        .map(UserIdAndSessionStatusDto::get_id)
+                        .collect(Collectors.toSet());
+                Set<UserIdAndSessionStatusDto> newTraineesSet = new HashSet<>();
+                Map<String, UserIdAndSessionStatusDto> originalTraineeMap = originalTraineeStatus.stream()
+                        .collect(Collectors.toMap(UserIdAndSessionStatusDto::get_id, Function.identity()));
+
+                for (String newTrainee : newtrainees) {
+                    if(!originalTraineeIds.contains(newTrainee)){
+                        UserIdAndSessionStatusDto newTraineeWithStatus = new UserIdAndSessionStatusDto();
+                        newTraineeWithStatus.setAttendanceStatus(SessionAttendedStatus.PENDING);
+                        newTraineeWithStatus.set_id(newTrainee);
+                        newTraineesSet.add(newTraineeWithStatus);
+                    }else {
+                        newTraineesSet.add(originalTraineeMap.get(newTrainee));
+                    }
                 }
+                session.setTrainees(newTraineesSet);
             }
-            if(count > 0){
-                session.setApproved(true);
-            }else {
-                session.setApproved(false);
-                session.setStatus(StatusConstants.PENDING);
+            if(sessionDto.getSessionBy() != null){
+                session.setSessionBy(sessionDto.getSessionBy());
             }
-            Set<String> approvedBy = new HashSet<>();
-            for (String approver : session.getApprovedBy()){
-                if(session.getApprover().contains(approver)){
-                    approvedBy.add(approver);
+            if(sessionDto.getApprover() != null) {
+                session.setApprover(sessionDto.getApprover());
+                Integer count = 0;
+                for (String reviewer : session.getApprover()) {
+                    if (session.getApprovedBy().contains(reviewer)) {
+                        count++;
+                    }
                 }
+                if (count > 0) {
+                    session.setApproved(true);
+                } else {
+                    session.setApproved(false);
+                    session.setStatus(StatusConstants.PENDING);
+                }
+                Set<String> approvedBy = new HashSet<>();
+                for (String approver : session.getApprovedBy()) {
+                    if (session.getApprover().contains(approver)) {
+                        approvedBy.add(approver);
+                    }
+                }
+                session.setApprovedBy(approvedBy);
             }
-            session.setApprovedBy(approvedBy);
             session.setUpdatedAt(LocalDateTime.now());
             sessionRepo.save(session);
             return session;
@@ -198,6 +269,14 @@ public class SessionService {
         }
     }
     public long countNonDeletedSessions(String query, String userId) {
+        System.out.println("countNonDeletedSessions " + query + " " + userId);
+        Boolean isRolePermit;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isRolePermit = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("PA") || role.equals("PM") || role.equals("TL"));
+
+
         Criteria criteria = Criteria.where("title").regex(query, "i")
                 .and("isDeleted").is(false);
 
@@ -206,7 +285,9 @@ public class SessionService {
                         new Criteria().orOperator(
                                 Criteria.where("createdBy").is(userId),
                                 Criteria.where("approver").in(userId),
-                                Criteria.where("trainees").in(userId),
+                                Criteria.where("trainees").elemMatch(
+                                        Criteria.where("_id").is(userId)
+                                ),
                                 Criteria.where("sessionBy").in(userId)
 
                         )
@@ -215,16 +296,22 @@ public class SessionService {
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
-
+        if(isRolePermit){
+            approvedCriteria = Criteria.where("isApproved").is(true);
+        }
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
 
+        Query searchQuery = new Query(finalCriteria);
+        List<Session> sessions = mongoTemplate.find(searchQuery, Session.class);
+        System.out.println("Session size = " + sessions.size());
         MatchOperation matchStage = Aggregation.match(finalCriteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
         AggregationResults<Session> aggregationResults = mongoTemplate.aggregate(aggregation, "session", Session.class);
+        System.out.println("aggregationResults.getMappedResults().size() = " + aggregationResults.getMappedResults().size());
         return aggregationResults.getMappedResults().size();
     }
 
@@ -253,4 +340,59 @@ public class SessionService {
         session.setStatus(StatusConstants.UPCOMING);
         return sessionRepo.save(session);
     }
+
+    public Session attendedSession(Session session, String userId, SessionAttendDto sessionAttendDto) {
+        if(session == null)return null;
+        Integer attendanceStatus = sessionAttendDto.getAttendanceStatus();
+        Set<UserIdAndSessionStatusDto> attendedTrainees = session.getTraineesDetailsWithStatus();
+
+        Optional<UserIdAndSessionStatusDto> existingUser = attendedTrainees.stream()
+                .filter(user -> userId.equals(user.get_id()))
+                .findFirst();
+        if (existingUser.isPresent()) {
+            if(attendanceStatus == SessionAttendedStatus.NOT_ATTENDED){
+                existingUser.get().setReason(sessionAttendDto.getReason());
+            }
+            existingUser.get().setAttendanceStatus(attendanceStatus);
+        } else {
+            if(attendanceStatus == SessionAttendedStatus.NOT_ATTENDED){
+                attendedTrainees.add(new UserIdAndSessionStatusDto(userId, attendanceStatus, sessionAttendDto.getReason()));
+            }else {
+                attendedTrainees.add(new UserIdAndSessionStatusDto(userId, attendanceStatus));
+            }
+        }
+        System.out.println("Attended trainee = " + attendedTrainees);
+        session.setTrainees(attendedTrainees);
+        return sessionRepo.save(session);
+    }
+    public long countTotalAttendedSessionsByUser(String userId) {
+        System.out.println("\u001B[33m Trainee Id = " + userId + "\u001B[0m");
+
+        Criteria criteria = Criteria.where("isDeleted").is(false)
+                .and("trainees").elemMatch(
+                        Criteria.where("_id").is(userId)
+                                .and("attendanceStatus").is(SessionAttendedStatus.ATTENDED)
+                );
+
+        MatchOperation matchStage = Aggregation.match(criteria);
+
+        Aggregation aggregation = Aggregation.newAggregation(matchStage);
+        AggregationResults<Session> aggregationResults = mongoTemplate.aggregate(aggregation, "session", Session.class);
+        return aggregationResults.getMappedResults().size();
+    }
+
+    public long countTotalSessionsForUser(String userId) {
+        System.out.println("\u001B[33m Trainee Id = " + userId + "\u001B[0m");
+        Criteria criteria = Criteria.where("isDeleted").is(false)
+                .and("trainees").elemMatch(
+                        Criteria.where("_id").is(userId)
+                );
+
+        MatchOperation matchStage = Aggregation.match(criteria);
+
+        Aggregation aggregation = Aggregation.newAggregation(matchStage);
+        AggregationResults<Session> aggregationResults = mongoTemplate.aggregate(aggregation, "session", Session.class);
+        return aggregationResults.getMappedResults().size();
+    }
+
 }

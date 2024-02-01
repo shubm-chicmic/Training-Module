@@ -51,7 +51,7 @@ public class SessionCRUD {
             List<Session> sessionList = sessionService.getAllSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
             Long count = sessionService.countNonDeletedSessions(searchString, principal.getName());
 
-            List<SessionResponseDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToResponseDto(sessionList);
+            List<SessionResponseDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToResponseDto(sessionList, principal.getName());
 //            Collections.reverse(sessionResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList, response);
         }else {
@@ -59,28 +59,26 @@ public class SessionCRUD {
             if(session == null){
                 return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
             }
-            SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(session);
+            SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(session, principal.getName());
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response);
         }
     }
 
     @PostMapping
     public ApiResponse create(@RequestBody SessionDto sessionDto, Principal principal) {
-        if (checkRole("IND"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
+        if (checkRole("IND") || checkRole("TR"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to Create Session!!.");
         System.out.println("sessionDto = " + sessionDto);
         sessionDto.setCreatedBy(principal.getName());
         sessionDto.setStatus(StatusConstants.PENDING);
-        Session session = CustomObjectMapper.convert(sessionDto, Session.class);
-        session.setDateTime(sessionDto.getDateTime());
-        sessionDto = CustomObjectMapper.convert(sessionService.createSession(session), SessionDto.class);
+        Session session = sessionService.createSession(sessionDto);
         return new ApiResponse(HttpStatus.CREATED.value(), "Session created successfully", sessionDto);
     }
 
     @DeleteMapping("/{sessionId}")
     public ApiResponse delete(@PathVariable String sessionId,Principal principal) {
-        if (checkRole("TR"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
+        if (checkRole("IND") || checkRole("TR"))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to Delete Session!!.");
         System.out.println("sessionId = " + sessionId);
         Boolean deleted = sessionService.deleteSessionById(sessionId,principal.getName());
         if (deleted) {
@@ -92,13 +90,13 @@ public class SessionCRUD {
     @PutMapping
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
-        Integer originalStatus = session.getStatus();
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
         if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
         if (session != null) {
+            Integer originalStatus = session.getStatus();
 //            if(session.getStatus() == StatusConstants.COMPLETED){
 //                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session is Completed, You Can't Update the session !!", null, response);
 //            }
@@ -149,7 +147,7 @@ public class SessionCRUD {
             if(!session.getSessionBy().contains(principal.getName()) && !session.getApprover().contains(principal.getName()) && !session.getCreatedBy().equals(principal.getName()))
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to edit this session", null, response);
 
-            SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId));
+            SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId), principal.getName());
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
         }else {
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);

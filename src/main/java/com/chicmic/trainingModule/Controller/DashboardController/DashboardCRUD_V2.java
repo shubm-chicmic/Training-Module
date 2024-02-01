@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.DashboardDto.DashboardResponse;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.DashboardService.DashboardService_V2;
+import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,9 +21,11 @@ import java.security.Principal;
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
 public class DashboardCRUD_V2 {
     private final DashboardService_V2 dashboardService;
+    private final SessionService sessionService;
 
-    public DashboardCRUD_V2(DashboardService_V2 dashboardService) {
+    public DashboardCRUD_V2(DashboardService_V2 dashboardService, SessionService sessionService) {
         this.dashboardService = dashboardService;
+        this.sessionService = sessionService;
     }
     @GetMapping("/{traineeId}")
     public ApiResponse getTraineeRatingSummary(@PathVariable String traineeId, Principal principal){
@@ -32,7 +35,10 @@ public class DashboardCRUD_V2 {
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not allowed to view other dashboard!!");
 
         DashboardResponse dashboardResponse = dashboardService.getTraineeRatingSummary(traineeId);
-
+        Long totalAttendedSession = sessionService.countTotalAttendedSessionsByUser(traineeId);
+        System.out.println("totalAttendedSession = " + totalAttendedSession);
+        dashboardResponse.setAttendedSessions(totalAttendedSession);
+        dashboardResponse.setTotalSessions(sessionService.countTotalSessionsForUser(traineeId));
         return new ApiResponse(200,"Trainee Rating summary",dashboardResponse);
     }
 }
