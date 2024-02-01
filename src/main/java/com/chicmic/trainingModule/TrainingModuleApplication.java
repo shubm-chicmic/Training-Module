@@ -49,6 +49,8 @@ public class TrainingModuleApplication implements CommandLineRunner {
 		TrainingModuleApplication.apiGateWayUrl = apiGatewayUrl;
 	}
 	public static final Map<String, UserDto> idUserMap = new HashMap<>();
+	public static final Map<String, UserDto> empCodeUserMap = new HashMap<>();
+
 	public static final Map<String, String> teamIdAndNameMap = new HashMap<>();
 	public static HashMap<Integer, String> zoneCategoryMap = new HashMap<>();
 	private static void findUsersAndMap() throws JsonProcessingException {
@@ -77,6 +79,7 @@ public class TrainingModuleApplication implements CommandLineRunner {
 					.teamName((node.get("teamNames").asText()))
 					.build();
 			idUserMap.put(userDto.get_id(), userDto);
+			empCodeUserMap.put(userDto.getEmpCode(), userDto);
 		}
 	}
 	private static void findTeamsAndMap() throws JsonProcessingException {
@@ -156,8 +159,8 @@ public class TrainingModuleApplication implements CommandLineRunner {
 	}
 	@Override
 	public void run(String... args) throws Exception {
-		runMigrations();
 		runScheduledTasks();
+		runMigrations();
 	}
 	private void runMigrations() {
 		// Use the databaseVersionService to save or update the database version
@@ -191,6 +194,23 @@ public class TrainingModuleApplication implements CommandLineRunner {
 					.forEach(path -> {
 						System.out.println("Processing file: " + path);
 						Course course = ExcelPerformOperations.excelPerformOperations(path.toString());
+
+						String folderName = path.getParent().getFileName().toString();
+						String[] parts = folderName.split("[()]");
+						if (parts.length == 2) {
+							String empCode = parts[1].replace(".", "/").trim();
+							UserDto user = empCodeUserMap.get(empCode);
+
+							if (user != null) {
+								// Set the created by field with the user ID
+								course.setCreatedBy(user.get_id());
+							} else {
+								System.out.println("User not found for empCode: " + empCode);
+							}
+						} else {
+							System.out.println("Invalid folder name format: " + folderName);
+						}
+
 						System.out.println(course.getName());
 						courseService.createCourse(course);
 						count[0]++;
@@ -204,6 +224,7 @@ public class TrainingModuleApplication implements CommandLineRunner {
 	@Scheduled(fixedDelay = 4 * 60 * 60 * 1000)
 	private void runScheduledTasks() throws Exception {
 		idUserMap.clear();
+		empCodeUserMap.clear();
 		teamIdAndNameMap.clear();
 		zoneCategoryMap.clear();
 		findUsersAndMap();

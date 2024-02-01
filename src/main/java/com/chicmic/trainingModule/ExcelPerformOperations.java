@@ -69,9 +69,15 @@ public class ExcelPerformOperations {
                     courseSubTask.setSubTask(subTaskCell.getStringCellValue().trim());
                     courseSubTask.setEstimatedTime(convertToTimeFormat(hoursCell.getNumericCellValue()).trim());
 
-                    String linkValue = referenceCell.getStringCellValue().trim();
-//                    System.out.println("\u001B[45m linkValue = " + linkValue + "\u001B[0m");
-                    courseSubTask.setLink(linkValue);
+                    if (referenceCell.getHyperlink() != null) {
+                        // Extract the hyperlink address
+                        String linkValue = referenceCell.getHyperlink().getAddress().trim();
+                        courseSubTask.setLink(linkValue);
+                    } else {
+                        // If no hyperlink, use the text value
+                        String linkValue = referenceCell.getStringCellValue().trim();
+                        courseSubTask.setLink(linkValue);
+                    }
                     if (phase != null && phase.getTasks().size() > 0) {
                         List<SubTask> subTasks = courseTask.getSubtasks();
                         subTasks.add(courseSubTask);
@@ -91,14 +97,15 @@ public class ExcelPerformOperations {
             throw new RuntimeException(e);
         }
 
+
         String fileNameWithoutExtension = Paths.get(excelFilePath).getFileName().toString().replaceFirst("[.][^.]+$", "");
         System.out.println("file name = " + fileNameWithoutExtension);
         Course course = new Course();
         course.setName(fileNameWithoutExtension);
-        course.setFigmaLink("https://www.figma.com/file/");
+        course.setFigmaLink("");
         course.setGuidelines("");
         course.setIsDeleted(false);
-        course.setIsApproved(false);
+        course.setIsApproved(true);
         course.setPhases(phaseList);
         course.setApprover(new HashSet<>(Set.of(
                 "61fba5d5f4f70d6c0b3eff40",
@@ -106,7 +113,10 @@ public class ExcelPerformOperations {
         )));
         course.setCreatedBy("61fba5d5f4f70d6c0b3eff40");
 //        course.setn("Priti Mittal");
-        course.setApprovedBy(new HashSet<>());
+        course.setApprovedBy(new HashSet<>(Set.of(
+                "61fba5d5f4f70d6c0b3eff40",
+                "5e33ce4411f3a90cf90a0f23"
+        )));
 
         return course;
     }
