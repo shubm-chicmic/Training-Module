@@ -303,10 +303,6 @@ public class SessionService {
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
-
-        Query searchQuery = new Query(finalCriteria);
-        List<Session> sessions = mongoTemplate.find(searchQuery, Session.class);
-        System.out.println("Session size = " + sessions.size());
         MatchOperation matchStage = Aggregation.match(finalCriteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);

@@ -37,7 +37,7 @@ public class PlanTask {
     private List<String> mentor;
     private Integer totalTasks;
     private LocalDateTime date;
-    public void setDate(LocalDateTime date) {
+    public void setDatePlusHours(LocalDateTime date) {
         if(date != null)
         this.date = date.plusHours(5).plusMinutes(30);
     }
