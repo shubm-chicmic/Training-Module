@@ -214,6 +214,7 @@ public class PlanService {
             }
             if (planDto.getApprover() != null) {
                 System.out.println("IM approving");
+                plan.setApprover(planDto.getApprover());
                 Integer count = 0;
                 for (String reviewer : plan.getApprover()) {
                     if (plan.getApprovedBy().contains(reviewer)) {
@@ -232,7 +233,6 @@ public class PlanService {
                     }
                 }
                 plan.setApprovedBy(approvedBy);
-                plan.setApprover(planDto.getApprover());
             }
             if (planDto.getDescription() != null) {
                 plan.setDescription(planDto.getDescription());
@@ -243,6 +243,7 @@ public class PlanService {
             }
             plan.setUpdatedAt(LocalDateTime.now());
             try {
+                System.out.println(plan);
                 plan = planRepo.save(plan);
             } catch (org.springframework.dao.DuplicateKeyException ex) {
                 // Catch DuplicateKeyException and throw ApiException with 400 status

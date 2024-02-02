@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class Test {
     @Id
     private String _id;
-    @Indexed(unique = true, partialFilter = "{ 'isDeleted': false }")
+    @Indexed(unique = true, partialFilter = "{ 'deleted': false }")
     private String testName;
     private List<String> teams;
     @DBRef

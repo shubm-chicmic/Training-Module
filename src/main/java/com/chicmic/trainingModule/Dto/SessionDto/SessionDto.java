@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -23,7 +24,7 @@ public class SessionDto {
     private String createdBy;
     private String location;
     private Set<String> approver;
-    private LocalDateTime dateTime;
+    private Instant dateTime;
     private Boolean approved;
     private Integer status;
     @Trim

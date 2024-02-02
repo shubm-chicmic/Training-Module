@@ -9,6 +9,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,12 +35,12 @@ public class Session {
     private Set<String> approver = new HashSet<>();
     private Set<String> approvedBy = new HashSet<>();
     private String createdBy;
-    private LocalDateTime dateTime;
+    private Instant dateTime;
 
-    public void setDateTime(LocalDateTime dateTime) {
-        if(dateTime != null)
-            this.dateTime = dateTime.plusHours(5).plusMinutes(30);
-    }
+//    public void setDateTime(LocalDateTime dateTime) {
+//        if(dateTime != null)
+//            this.dateTime = dateTime.plusHours(5).plusMinutes(30);
+//    }
     private int status = StatusConstants.PENDING;
     private boolean isDeleted = false;
     private boolean isApproved = false;

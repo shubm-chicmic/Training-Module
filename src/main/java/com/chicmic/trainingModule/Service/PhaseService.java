@@ -263,11 +263,7 @@ public class PhaseService {
                 newPlanTask.setMilestones(planTask.getMilestones());
                 newPlanTask.setPlanType(planTask.getPlanType());
                 newPlanTask.setPlan(planTask.getPlan());
-                if(newPlanTask.getDate() != null){
-                    newPlanTask.setDate(planTask.getDate());
-                }else {
-                    newPlanTask.setDatePlusHours(planTask.getDate());
-                }
+                newPlanTask.setDate(planTask.getDate());
                 newPlanTask.setEstimatedTime(planTask.getEstimatedTime());
                 newPlanTask.setPhase(phase);
                 createdPlanTasks.add(planTaskRepo.save(newPlanTask));

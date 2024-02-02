@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import org.bson.types.ObjectId;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class SessionResponseDto {
     private String title;
     private String time;
     private String date;
-    private LocalDateTime dateTime;
+    private Instant dateTime;
     private List<UserIdAndNameDto> teams;
     private List<UserIdAndNameDto> trainees;
     private List<UserIdAndNameDto> sessionBy;

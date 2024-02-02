@@ -161,6 +161,11 @@ public class GithubSampleService {
 
     public long countNonDeletedGithubSamples(String query, String userId) {
         UserDto userDto = TrainingModuleApplication.searchUserById(userId);
+        Boolean isRolePermit = false;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isRolePermit = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("PA") || role.equals("PM") || role.equals("TL"));
         List<String> teams = userDto.getTeams();
         System.out.println("userDto = " + userDto);
         System.out.println("teamId = " + teams);
@@ -179,7 +184,9 @@ public class GithubSampleService {
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
-
+        if(isRolePermit){
+            approvedCriteria = Criteria.where("isApproved").is(true);
+        }
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)

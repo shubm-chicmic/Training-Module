@@ -5,13 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder @Getter @Setter
 public class PlanDto implements Comparable<PlanDto>{
     private String name;
-    private LocalDateTime date;
+    private Instant date;
     private String taskName;
     private Integer type;
     private List<Object> subtasks;
