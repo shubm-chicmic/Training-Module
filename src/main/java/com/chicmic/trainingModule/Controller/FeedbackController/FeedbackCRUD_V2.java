@@ -5,8 +5,11 @@ import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
 import com.chicmic.trainingModule.Dto.FeedbackResponse_V2;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.FeedbackUtil;
@@ -28,9 +31,11 @@ import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class FeedbackCRUD_V2 {
     private FeedbackService_V2 feedbackService;
+    private AssignTaskService assignTaskService;
 
-    public FeedbackCRUD_V2(FeedbackService_V2 feedbackService) {
+    public FeedbackCRUD_V2(FeedbackService_V2 feedbackService, AssignTaskService assignTaskService) {
         this.feedbackService = feedbackService;
+        this.assignTaskService = assignTaskService;
     }
     @GetMapping
     public ApiResponse getFeedbacks(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -138,6 +143,15 @@ public class FeedbackCRUD_V2 {
     @PostMapping("/user")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse giveFeedbackToUser(@Valid @RequestBody FeedbackRequestDto feedbackRequestDto, Principal principal,@RequestParam(defaultValue = "0",required = false)Integer q){
+        String traineeId = feedbackRequestDto.getTrainee();
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+        if(assignedPlan == null){
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Plan Not Found!");
+        }
+        if(assignedPlan.getTrainingStatus() == TrainingStatus.COMPLETED)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Training Completed Cannot Give the Feedback!");
+        if(assignedPlan.getTrainingStatus() == TrainingStatus.CANCELLED)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Training Cancelled Cannot Give the Feedback!");
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());

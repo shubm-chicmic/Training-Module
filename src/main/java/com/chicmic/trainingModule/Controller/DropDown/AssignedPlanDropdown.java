@@ -41,7 +41,7 @@ public class AssignedPlanDropdown {
     }
 
     @RequestMapping(value = {"/assignedPlan"}, method = RequestMethod.GET)
-    public ApiResponse getAssignedPlans(
+    public ResponseEntity<ApiResponse>  getAssignedPlans(
             @RequestParam(required = false) String projectId,
             @RequestParam(required = false) Integer type,
             @RequestParam(required = false) String milestoneId,
@@ -50,9 +50,11 @@ public class AssignedPlanDropdown {
             HttpServletResponse response
     )  {
         String traineeId = principal.getName();
+        System.out.println("Trainee id : " + traineeId);
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
         if(assignedPlan == null){
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "No Plan not found", response);
+            return ResponseEntity.badRequest().body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "No Plan not found", null));
+
         }
         AssignedPlanDto assignedPlanDto = null;
         if(traineeId != null && projectId == null &&  milestoneId == null && taskId == null){
@@ -69,7 +71,9 @@ public class AssignedPlanDropdown {
             System.out.println("Im in//////////////////////////////");
             assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(assignedPlan, projectId, milestoneId, type, taskId);
         }
-        return new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto, response);
+//        return new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto, response);
+        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto));
+
     }
 
 }

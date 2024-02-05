@@ -13,7 +13,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PlanDto {
     private String _id;
-    private String planName;
+    private String name;
 //    private String description;
 //    private Integer estimatedTime;
 //    private Integer totalTasks;

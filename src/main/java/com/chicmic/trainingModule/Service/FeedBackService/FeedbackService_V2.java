@@ -378,10 +378,21 @@ public class FeedbackService_V2 {
     }
 
     public ApiResponse findTraineeFeedbacks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String traineeId) {
-        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
-                        new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
-                                .append("id",userDto.get_id()))
-                .toList();
+//        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+//                        new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
+//                                .append("id",userDto.get_id()))
+//                .toList();
+        List<Document> userDatasDocuments = new ArrayList<>();
+
+        for (UserDto userDto : idUserMap.values()) {
+            Document document = new Document();
+            document.append("reviewerName", userDto.getName())
+                    .append("reviewerTeam", userDto.getTeamName())
+                    .append("reviewerCode", userDto.getEmpCode())
+                    .append("id", userDto.get_id());
+
+            userDatasDocuments.add(document);
+        }
 
         Criteria criteria = Criteria.where("traineeId").is(traineeId)
                 .and("isDeleted").is(false);

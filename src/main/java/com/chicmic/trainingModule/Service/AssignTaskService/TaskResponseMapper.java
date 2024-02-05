@@ -5,11 +5,14 @@ import com.chicmic.trainingModule.Dto.CourseDto.CourseResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Course;
+import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.SubTask;
 import com.chicmic.trainingModule.Entity.Task;
 import com.chicmic.trainingModule.Repository.SubTaskRepo;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
+import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.FormatTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -22,8 +25,10 @@ import java.util.List;
 public class TaskResponseMapper {
     private final UserProgressService userProgressService;
     private final SubTaskRepo subTaskRepo;
+    private final UserTimeService userTimeService;
 
-    public  List<TaskDto> mapTaskToResponseDto(List<Task> taskList,String planId, String courseId, String traineeId) {
+
+    public  List<TaskDto> mapTaskToResponseDto(List<Task> taskList,String planId, String courseId, String traineeId, PlanTask planTask) {
         List<TaskDto> result = new ArrayList<TaskDto>();
         for (Task task : taskList) {
             for (SubTask subTask : task.getSubtasks()){
@@ -45,13 +50,10 @@ public class TaskResponseMapper {
                 }else {
                     reference = subTask.getLink();
                 }
-                String consumedTime = "00:00";
-                if(subTask.get_id().equals("65af4c8a7f06e83de89540c8") && traineeId.equals("65a64e767c145c756bf2bebe")){
-                    consumedTime = "01:01";
-                }
+                Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, planId, planTask.get_id(), subTask.get_id());
                 TaskDto taskDto = TaskDto.builder()
                         .mainTask(mainTask)
-                        .consumedTime(consumedTime)
+                        .consumedTime(FormatTime.formatTimeIntoHHMM(consumedTime))
                         .estimatedTime(subTask.getEstimatedTime())
                         .reference(reference)
                         .subTask(subTaskIdAndName)

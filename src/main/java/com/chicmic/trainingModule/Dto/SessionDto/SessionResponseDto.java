@@ -30,9 +30,9 @@ public class SessionResponseDto {
     private String createdBy;
     private String location;
     private String locationName;
-    private int status;
-    private boolean isDeleted = false;
-    private boolean isApproved = false;
+    private Integer status;
+    private Boolean isDeleted = false;
+    private Boolean isApproved = false;
     private Integer attendanceStatus = SessionAttendedStatus.PENDING;
     private String reason = null;
     private MomMessageResponseDto MOM;

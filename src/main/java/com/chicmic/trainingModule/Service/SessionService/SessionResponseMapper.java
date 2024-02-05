@@ -67,4 +67,21 @@ public class SessionResponseMapper {
                 .reason(reason)
                 .build();
     }
+    public static List<SessionResponseDto> mapSessionToDropdownResponseDto(List<Session> sessions) {
+        List<SessionResponseDto> sessionResponseDtoList = new ArrayList<>();
+        for (Session session : sessions) {
+            sessionResponseDtoList.add(mapSessionToDropdownResponseDto(session));
+        }
+        return sessionResponseDtoList;
+    }
+
+    public static SessionResponseDto mapSessionToDropdownResponseDto(Session session) {
+        return SessionResponseDto.builder()
+                ._id(session.get_id())
+                .title(session.getTitle())
+                .status(null)
+                .isDeleted(null)
+                .isApproved(null)
+                .build();
+    }
 }

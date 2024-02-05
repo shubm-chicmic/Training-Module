@@ -236,7 +236,7 @@ public class AssignTaskCRUD {
                 if (!phase.getIsDeleted())
                     taskList.addAll(phase.getTasks());
             }
-            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList, planId, courseId, traineeId);
+            taskDtoList = taskResponseMapper.mapTaskToResponseDto(taskList, planId, courseId, traineeId, planTask);
             int totalTaskList = taskDtoList.size();
             taskDtoList = Pagenation.paginate(taskDtoList, pageNumber, pageSize);
             return new ApiResponseWithCount(totalTaskList, HttpStatus.OK.value(), "Plan Task Retrieved", taskDtoList, response);

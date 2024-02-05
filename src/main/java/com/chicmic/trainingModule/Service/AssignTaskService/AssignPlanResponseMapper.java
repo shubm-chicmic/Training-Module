@@ -22,6 +22,8 @@ import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
+import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
+import com.chicmic.trainingModule.Util.FormatTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class AssignPlanResponseMapper {
     private final FeedbackProgressService feedbackProgressService;
     private final PlanService planService;
     private final PlanTaskService planTaskService;
+    private final UserTimeService userTimeService;
 
     public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId, String userId) {
         System.out.println("planTasks: " + planTasks.size());
@@ -170,16 +173,15 @@ public class AssignPlanResponseMapper {
             isPlanCompleted =(totalTask == completedTasks);
         }
         Phase<PlanTask> phase = planTask.getPhase();
-        String consumedTime = "00:00";
+        Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id());
         System.out.println("\u001B[43m Phase = " + phase + "\u001B[0m");
-        //TODO plantask estimated time is pending 51 hours
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .phaseName(phase != null ? phase.getName() : "")
                 .plan(planIdAndNameDto)
                 .planType(planTask.getPlanType())
                 .phases(milestonesIdAndName)
-                .consumedTime(consumedTime)
+                .consumedTime(FormatTime.formatTimeIntoHHMM(consumedTime))
                 .completedTasks(completedTasks)
                 .totalTasks(totalTask)
                 .date(planTask.getDate())
@@ -279,7 +281,7 @@ public class AssignPlanResponseMapper {
         for (Plan plan : assignedPlan.getPlans()) {
             PlanDto planDto = PlanDto.builder()
                     ._id(plan.get_id())
-                    .planName(plan.getPlanName())
+                    .name(plan.getPlanName())
                     .build();
             plans.add(planDto);
         }
@@ -301,7 +303,9 @@ public class AssignPlanResponseMapper {
         for (Phase<PlanTask> phase : phases){
             List<PlanTask> planTasks = phase.getTasks();
             for (PlanTask planTask : planTasks){ // size is 1 for now
-                if(planIdsInPlanTask.contains(planTask.getPlan()))continue;
+                System.out.println("PlanType " + planType);
+                System.out.println("Condition is = " + (planType != PlanType.VIVA && planType != PlanType.PPT));
+                if(planIdsInPlanTask.contains(planTask.getPlan()) && (planType != PlanType.VIVA && planType != PlanType.PPT))continue;
                 if(planType != planTask.getPlanType())continue;
                 String planName = null;
                 if (planTask.getPlanType() == PlanType.TEST) {
@@ -316,8 +320,10 @@ public class AssignPlanResponseMapper {
 
                 PlanTaskDto planTaskDto = PlanTaskDto.builder()
                         ._id(planTask.getPlan())
+                        .planTaskId(planTask.get_id())
                         .name(planName)
                         .planType(planTask.getPlanType())
+                        .date(planTask.getDate())
                         .build();
                 planIdsInPlanTask.add(planTask.getPlan());
                 planTaskDtoList.add(planTaskDto);
@@ -325,7 +331,7 @@ public class AssignPlanResponseMapper {
         }
         PlanDto planDto = PlanDto.builder()
                 ._id(plan.get_id())
-                .planName(plan.getPlanName())
+                .name(plan.getPlanName())
                 .milestones(planTaskDtoList)
                 .build();
         return AssignedPlanDto.builder()
@@ -374,7 +380,7 @@ public class AssignPlanResponseMapper {
 
         PlanDto planDto = PlanDto.builder()
                 ._id(plan.get_id())
-                .planName(plan.getPlanName())
+                .name(plan.getPlanName())
                 .milestone(planTaskDto)
                 .build();
 
@@ -420,7 +426,7 @@ public class AssignPlanResponseMapper {
                 .build();
         PlanDto planDto = PlanDto.builder()
                 ._id(plan.get_id())
-                .planName(plan.getPlanName())
+                .name(plan.getPlanName())
                 .milestone(planTaskDto)
                 .build();
         return AssignedPlanDto.builder()

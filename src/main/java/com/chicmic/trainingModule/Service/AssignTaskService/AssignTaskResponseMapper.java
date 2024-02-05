@@ -13,8 +13,10 @@ import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
+import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.DateTimeUtil;
+import com.chicmic.trainingModule.Util.FormatTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class AssignTaskResponseMapper {
     private final UserProgressService userProgressService;
     private final PhaseService phaseService;
     private final CourseService courseService;
+    private final UserTimeService userTimeService;
 //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
 //        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
 //        for (AssignedPlan assignTask : assignTasks) {
@@ -104,13 +107,14 @@ public class AssignTaskResponseMapper {
                 for (String mentorDetail : mentors) {
                     mentorDetails.add(new UserIdAndNameDto(mentorDetail, TrainingModuleApplication.searchNameById(mentorDetail)));
                 }
+                Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanId(traineeId, plan.get_id());
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())
                         .isApproved(plan.getApproved())
                         .isDeleted(plan.getDeleted())
                         ._id(plan.get_id())
-                        .consumedTime("00:00")
+                        .consumedTime(FormatTime.formatTimeIntoHHMM(consumedTime))
                         .estimatedTime(DateTimeUtil.convertSecondsToString(estimatedTime))
                         .totalTasks(totalTask)
                         .completedTasks(completedTasks)

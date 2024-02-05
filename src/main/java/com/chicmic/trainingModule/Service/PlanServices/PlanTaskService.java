@@ -12,8 +12,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PlanTaskService {
     private final PlanTaskRepo planTaskRepo;
-    public PlanTask getPlanTaskById(String planTaskId) {
-        return planTaskRepo.findById(planTaskId).orElse(null);
+    public PlanTask getPlanTaskById(String taskId) {
+        PlanTask task = planTaskRepo.findById(taskId).orElse(null);
+        return task.getIsDeleted() ? null : task;
     }
 
     public List<PlanTask> findByMilestoneId(String milestoneId) {
