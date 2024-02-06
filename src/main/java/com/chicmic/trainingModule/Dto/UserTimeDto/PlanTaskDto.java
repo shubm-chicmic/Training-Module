@@ -16,7 +16,6 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PlanTaskDto {
     private String _id;
-    private String planTaskId;
 //    private String phaseId;
 //    private String phaseName;
     private String name;

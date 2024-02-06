@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2;
+package com.chicmic.trainingModule.Dto.FeedbackResponseDto;
 
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;

@@ -317,10 +317,9 @@ public class AssignPlanResponseMapper {
                     if(course == null)continue;
                     planName = course.getName();
                 }
-
+                String _id = (planType == PlanType.VIVA || planType == PlanType.PPT) ? planTask.get_id() : planTask.getPlan();
                 PlanTaskDto planTaskDto = PlanTaskDto.builder()
-                        ._id(planTask.getPlan())
-                        .planTaskId(planTask.get_id())
+                        ._id(_id)
                         .name(planName)
                         .planType(planTask.getPlanType())
                         .date(planTask.getDate())

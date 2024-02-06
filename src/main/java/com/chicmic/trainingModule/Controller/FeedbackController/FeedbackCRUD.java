@@ -1,39 +1,33 @@
 package com.chicmic.trainingModule.Controller.FeedbackController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
-import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
+import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
-import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
-import com.chicmic.trainingModule.Dto.FeedbackResponse_V2;
+import com.chicmic.trainingModule.Dto.FeedbackResponse;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
-import com.chicmic.trainingModule.TrainingModuleApplication;
-import com.chicmic.trainingModule.Util.FeedbackUtil;
 import com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
 
-import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 @RestController
 @RequestMapping("/v1/training/feedback")
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
-public class FeedbackCRUD_V2 {
+public class FeedbackCRUD {
     private FeedbackService_V2 feedbackService;
     private AssignTaskService assignTaskService;
 
-    public FeedbackCRUD_V2(FeedbackService_V2 feedbackService, AssignTaskService assignTaskService) {
+    public FeedbackCRUD(FeedbackService_V2 feedbackService, AssignTaskService assignTaskService) {
         this.feedbackService = feedbackService;
         this.assignTaskService = assignTaskService;
     }
@@ -62,7 +56,7 @@ public class FeedbackCRUD_V2 {
                 sortKey = String.format("userData.%s", sortKey);
             return feedbackService.findFeedbacksGivenByUser(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         }
-        List<CourseResponse_V2> courseResponseV2List;
+        List<CourseResponse> courseResponseV2List;
         courseResponseV2List = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,traineeId,feedbackType);
             //feedbackList = feedbackService.findFeedbacksByPptIdAndTraineeId(traineeId,"3");
 
@@ -87,7 +81,7 @@ public class FeedbackCRUD_V2 {
     }
     @GetMapping("/user/{traineeId}/task/{taskId}")
     public ApiResponse getFeedbackByCourse(@PathVariable String traineeId, @PathVariable String taskId,@RequestParam String planId,@RequestParam Integer feedbackType) {
-        List<CourseResponse_V2> courseResponseList = feedbackService.findFeedbacksByTaskIdAndTraineeId(taskId,planId,traineeId,feedbackType);
+        List<CourseResponse> courseResponseList = feedbackService.findFeedbacksByTaskIdAndTraineeId(taskId,planId,traineeId,feedbackType);
         return new ApiResponse(200,"Feedback fetched successfully for trainee",courseResponseList);
     }
 
@@ -117,7 +111,7 @@ public class FeedbackCRUD_V2 {
         if(type == 3)
             throw new ApiException(HttpStatus.BAD_REQUEST,"Please enter valid feedbackType.");
 
-        List<CourseResponse_V2>
+        List<CourseResponse>
             feedbackList = feedbackService.findFeedbacksByTaskIdAndTraineeIdAndType(_id,userId, type);
         //List<CourseResponse> responseList = null;//feedbackService.buildFeedbackResponseForCourseAndTest(feedbackList,_id,type);
 
@@ -133,7 +127,7 @@ public class FeedbackCRUD_V2 {
         boolean flag = checkRole("TL")||checkRole("PM")||checkRole("PA");
         System.out.println(flag + "}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
 //        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName());
-        FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName(),flag);
+        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse = feedbackService.saveFeedbackInDb(feedbackRequestDto, principal.getName(),flag);
         feedbackResponse.setOverallRating(feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee()));
         ApiResponse apiResponse =  new ApiResponse(201,"Feedback saved successfully",feedbackResponse);
        // apiResponse.setOverallRating(feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee()));
@@ -177,7 +171,7 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
+        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
         double overallRating = feedbackService.computeOverallRatingOfTrainee(feedbackRequestDto.getTrainee());
         feedbackResponse.setOverallRating(overallRating);
         //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
@@ -190,7 +184,7 @@ public class FeedbackCRUD_V2 {
         if (checkRole("TR"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update feedback.");
 
-        FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
+        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse = feedbackService.updateFeedback(feedbackRequestDto,principal.getName());
 //        return new ApiResponse(200,"Feedback updated successfully",buildFeedbackResponse(feedbackV2));
 
         int type = feedbackRequestDto.getFeedbackType().charAt(0) - '0';
@@ -219,7 +213,7 @@ public class FeedbackCRUD_V2 {
 
     @GetMapping("/{id}")
     public  ApiResponse getFeedbackById(@PathVariable String id){
-        FeedbackResponse_V2 feedback = feedbackService.getFeedbackById(id);
+        FeedbackResponse feedback = feedbackService.getFeedbackById(id);
         return new ApiResponse(200,"Feedback fetched successfully",feedback);
     }
 

@@ -2,12 +2,11 @@ package com.chicmic.trainingModule.Service.FeedBackService;
 
 import com.chicmic.trainingModule.Dto.*;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
-import com.chicmic.trainingModule.Dto.CourseResponse_V2.CourseResponse_V2;
+import com.chicmic.trainingModule.Dto.CourseResponse.CourseResponse;
 import com.chicmic.trainingModule.Dto.DashboardDto.*;
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.FeedbackDto.RatingAndCountDto;
-import com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse;
-import com.chicmic.trainingModule.Dto.PhaseResponse_V2.PhaseResponse_V2;
+import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
 import com.chicmic.trainingModule.Dto.rating.Rating;
 import com.chicmic.trainingModule.Dto.rating.Rating_COURSE;
 import com.chicmic.trainingModule.Dto.rating.Rating_PPT;
@@ -28,18 +27,15 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
-import static com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2.FeedbackResponse.buildFeedbackResponse;
+import static com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse.buildFeedbackResponse;
 import static com.chicmic.trainingModule.Entity.Feedback_V2.buildFeedbackFromFeedbackRequestDto;
 import static com.chicmic.trainingModule.TrainingModuleApplication.idUserMap;
 import static com.chicmic.trainingModule.Util.FeedbackUtil.getFeedbackMessageBasedOnOverallRating;
-import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 import static com.mongodb.client.model.Aggregates.facet;
 import static java.util.Arrays.asList;
@@ -142,7 +138,7 @@ public class FeedbackService_V2 {
         return mongoTemplate.exists(new Query(criteria), Feedback_V2.class);
     }
 
-    public FeedbackResponse saveFeedbackInDb(FeedbackRequestDto feedbackDto, String reviewerId,boolean role){
+    public com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse saveFeedbackInDb(FeedbackRequestDto feedbackDto, String reviewerId, boolean role){
         //checking traineeId is valid
         TrainingModuleApplication.searchUserById(feedbackDto.getTrainee());
 
@@ -166,7 +162,7 @@ public class FeedbackService_V2 {
         if (flag) throw new ApiException(HttpStatus.BAD_REQUEST,"Feedback submitted previously!!");
 
         Feedback_V2 feedbackV2 =  mongoTemplate.insert(feedback,"feedback_V2");
-        FeedbackResponse feedbackResponse = buildFeedbackResponse(feedbackV2);
+        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse = buildFeedbackResponse(feedbackV2);
         if (!feedbackV2.getType().equals(BEHAVIUOR_))
             feedbackResponse.setPlan(new UserIdAndNameDto(feedback.getPlanId(), plan.getPlanName()));
         addTaskNameAndSubTaskName(asList(feedbackResponse));
@@ -199,7 +195,7 @@ public class FeedbackService_V2 {
         return feedbackV2;
     }
 
-    public FeedbackResponse updateFeedback(FeedbackRequestDto feedbackRequestDto,String reviewerId){
+    public com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse updateFeedback(FeedbackRequestDto feedbackRequestDto, String reviewerId){
         //getting feedback type!!!
         //String type = FEEDBACK_TYPE_CATEGORY_V2[feedbackRequestDto.getFeedbackType().charAt(0) - '1'];
 
@@ -231,7 +227,7 @@ public class FeedbackService_V2 {
        FindAndModifyOptions options = FindAndModifyOptions.options().returnNew(true);
 
         Feedback_V2 feedback_v2 = mongoTemplate.findAndModify(new Query(criteria),update,options,Feedback_V2.class);
-        FeedbackResponse feedbackResponse = buildFeedbackResponse(feedback_v2);
+        com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse = buildFeedbackResponse(feedback_v2);
         if (!feedbackV2.getType().equals(BEHAVIUOR_))
             feedbackResponse.setPlan(new UserIdAndNameDto(feedback_v2.getPlanId(), plan.getPlanName()));
         addTaskNameAndSubTaskName(asList(feedbackResponse));
@@ -247,7 +243,7 @@ public class FeedbackService_V2 {
 
         return feedback;
     }
-    public FeedbackResponse_V2 getFeedbackById(String _id){
+    public FeedbackResponse getFeedbackById(String _id){
 //        Feedback_V2 feedbackV2 =  mongoTemplate.findOne(new Query(criteria), Feedback_V2.class);
         Feedback_V2 feedbackV2 =  mongoTemplate.findById(_id, Feedback_V2.class);
         if (feedbackV2 == null)
@@ -259,7 +255,7 @@ public class FeedbackService_V2 {
         Plan plan = mongoTemplate.findOne(query,Plan.class);
         if(plan == null && !feedbackV2.getType().equals(BEHAVIUOR_)) throw new ApiException(HttpStatus.BAD_REQUEST,"Invalid planId!!");
 
-        FeedbackResponse_V2 feedbackResponseV2 = FeedbackResponse_V2.buildResponse(feedbackV2);
+        FeedbackResponse feedbackResponseV2 = FeedbackResponse.buildResponse(feedbackV2);
 
         if (!feedbackV2.getType().equals(BEHAVIUOR_))
             feedbackResponseV2.setPlan(new UserIdAndNameDto(feedbackV2.getPlanId(), plan.getPlanName()));
@@ -309,7 +305,7 @@ public class FeedbackService_V2 {
 
         // Execute the aggregation
         List<Feedback_V2> feedbackList = mongoTemplate.aggregate(aggregation, "feedback_V2", Feedback_V2.class).getMappedResults();
-        List<FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
+        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
         for (Feedback_V2 feedbackV2 : feedbackList)
             feedbackResponse_v2List.add(buildFeedbackResponse(feedbackV2));
 
@@ -427,9 +423,9 @@ public class FeedbackService_V2 {
 
         // Execute the aggregation
         List<Feedback_V2> feedbackList = mongoTemplate.aggregate(aggregation, "feedback_V2", Feedback_V2.class).getMappedResults();
-        List<FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
+        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
         for (Feedback_V2 feedbackV2 : feedbackList) {
-            FeedbackResponse feedbackResponse = buildFeedbackResponse(feedbackV2);
+            com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse feedbackResponse = buildFeedbackResponse(feedbackV2);
             if (!feedbackV2.getType().equals(BEHAVIUOR_))
                 feedbackResponse.setPlan(new UserIdAndNameDto(feedbackV2.getPlanId(),feedbackV2.getPlanId()));
             feedbackResponse_v2List.add(feedbackResponse);
@@ -511,7 +507,7 @@ public class FeedbackService_V2 {
         // Execute the aggregation
         List<Feedback_V2> feedbackList = mongoTemplate.aggregate(aggregation, "feedback_V2", Feedback_V2.class).getMappedResults();
 
-        List<FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
+        List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponse_v2List = new ArrayList<>();
         for (Feedback_V2 feedbackV2 : feedbackList)
             feedbackResponse_v2List.add(buildFeedbackResponse(feedbackV2));
         addTaskNameAndSubTaskName(feedbackResponse_v2List);
@@ -546,7 +542,7 @@ public class FeedbackService_V2 {
     }
 
 
-    public void addTaskNameAndSubTaskName(List<FeedbackResponse> feedbackResponseList){
+    public void addTaskNameAndSubTaskName(List<com.chicmic.trainingModule.Dto.FeedbackResponseDto.FeedbackResponse> feedbackResponseList){
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
         List<String> planIds = new ArrayList<>();
@@ -582,7 +578,7 @@ public class FeedbackService_V2 {
             }
         });
     }
-    public void addTaskNameAndSubTaskName(FeedbackResponse_V2 f){
+    public void addTaskNameAndSubTaskName(FeedbackResponse f){
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
 
@@ -603,7 +599,7 @@ public class FeedbackService_V2 {
             f.getMilestone().forEach(m -> m.setName(testDetails.get(1).get(m.get_id())));
         }
     }
-    public List<CourseResponse_V2> findFeedbacksByTaskIdAndTraineeIdAndType(String _id,String traineeId,Integer type){
+    public List<CourseResponse> findFeedbacksByTaskIdAndTraineeIdAndType(String _id, String traineeId, Integer type){
         Criteria criteria = Criteria.where("type").is(type.toString()).and("traineeId").is(traineeId);
         if (type.equals(VIVA) || type.equals(PPT))
             criteria.and("details.courseId").is(_id);
@@ -611,11 +607,11 @@ public class FeedbackService_V2 {
             criteria.and("details.testId").is(_id);
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackV2List =  mongoTemplate.find(query,Feedback_V2.class);
-        List<CourseResponse_V2> courseResponseV2List = buildFeedbackResponseForCourseAndTest(feedbackV2List);
+        List<CourseResponse> courseResponseV2List = buildFeedbackResponseForCourseAndTest(feedbackV2List);
         return courseResponseV2List;
     }
 
-    public List<CourseResponse_V2> buildFeedbackResponseForCourseAndTest(List<Feedback_V2> feedbackList){
+    public List<CourseResponse> buildFeedbackResponseForCourseAndTest(List<Feedback_V2> feedbackList){
 //        if(feedbackList == null || feedbackList.isEmpty())
 //            return null;
         List<String> courseIds = new ArrayList<>();
@@ -629,7 +625,7 @@ public class FeedbackService_V2 {
 
         var testDetails = testService.findTestsByIds(testIds);
         var courseDetails = courseService.findCoursesByIds(courseIds);
-        List<CourseResponse_V2> courseResponseList = new ArrayList<>();
+        List<CourseResponse> courseResponseList = new ArrayList<>();
         Map<String, RatingAndCountDto> reviewerDetails = new HashMap<>();
         HashMap<String, TraineeRating> dp = new HashMap<>();
 //        List<Reviewer> courseResponseList = new ArrayList<>();
@@ -640,7 +636,7 @@ public class FeedbackService_V2 {
                 UserDto reviewer = TrainingModuleApplication.searchUserById(reviewerId);
 
                 //creating a new element for reviewer
-                CourseResponse_V2 courseResponse = CourseResponse_V2.builder()
+                CourseResponse courseResponse = CourseResponse.builder()
                         ._id(reviewerId)
                         .reviewerName(reviewer.getName())
                         .code(reviewer.getEmpCode())
@@ -648,7 +644,7 @@ public class FeedbackService_V2 {
                         .records(new ArrayList<>())
                         .build();
 
-                PhaseResponse_V2 phaseResponse = buildPhaseResponseForCourseOrTest(feedback,courseDetails.get(1),testDetails.get(1));
+                PhaseResponse phaseResponse = buildPhaseResponseForCourseOrTest(feedback,courseDetails.get(1),testDetails.get(1));
                 //adding the phase into it
                 courseResponse.getRecords().add(phaseResponse);
                 dp.put(reviewerId,new TraineeRating(courseResponseList.size(),phaseResponse.getOverallRating(),1));
@@ -657,7 +653,7 @@ public class FeedbackService_V2 {
             }else{
                 //int idx = dp.get(reviewerId).getIndex();
                 TraineeRating traineeRating = dp.get(reviewerId);
-                PhaseResponse_V2 phaseResponse = buildPhaseResponseForCourseOrTest(feedback,courseDetails.get(1),testDetails.get(1));
+                PhaseResponse phaseResponse = buildPhaseResponseForCourseOrTest(feedback,courseDetails.get(1),testDetails.get(1));
                 //updating the count
                 traineeRating.incrRating(phaseResponse.getOverallRating());
                 traineeRating.incrCount();
@@ -676,9 +672,9 @@ public class FeedbackService_V2 {
         return courseResponseList;
     }
 
-    public PhaseResponse_V2 buildPhaseResponseForCourseOrTest(Feedback_V2 feedback_v2,Map<String,String> phaseDetails,Map<String,String> milestoneDetails){
+    public PhaseResponse buildPhaseResponseForCourseOrTest(Feedback_V2 feedback_v2, Map<String,String> phaseDetails, Map<String,String> milestoneDetails){
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");    
-    PhaseResponse_V2 phaseResponse = PhaseResponse_V2.builder()
+    PhaseResponse phaseResponse = PhaseResponse.builder()
                 .comment(feedback_v2.getComment())
                 .overallRating(compute_rating(feedback_v2.getDetails().computeOverallRating(),1))
                 .createdAt(formatter.format(feedback_v2.getCreatedAt()))
@@ -723,7 +719,7 @@ public class FeedbackService_V2 {
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         return aggregationResults.getMappedResults();
     }
-    public List<CourseResponse_V2> findFeedbacksByTaskIdAndTraineeId(String taskId,String planId,String traineeId,int feedbackType){
+    public List<CourseResponse> findFeedbacksByTaskIdAndTraineeId(String taskId, String planId, String traineeId, int feedbackType){
         PlanTask planTask = findMilestonesFromPlanTask(taskId);
         //planTask.getMilestones().forEach(System.out::println);
         if(planTask == null)
@@ -750,10 +746,10 @@ public class FeedbackService_V2 {
         }
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
-        List<CourseResponse_V2> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return courseResponseList;
     }
-    public List<CourseResponse_V2> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String planTaskId,String planId,String traineeId){
+    public List<CourseResponse> findFeedbacksByCourseIdAndPhaseIdAndTraineeId(String planTaskId, String planId, String traineeId){
         PlanTask planTask = findMilestonesFromPlanTask(planTaskId);
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(VIVA_)
                 .and("isDeleted").is(false)
@@ -764,11 +760,11 @@ public class FeedbackService_V2 {
         List<Feedback_V2> feedbackList = mongoTemplate.find(query, Feedback_V2.class);
 
        // List<CourseResponse_V2> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
-       List<CourseResponse_V2> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+       List<CourseResponse> courseResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return courseResponseList;
     }
 
-    public List<CourseResponse_V2> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId,String planId,String traineeId){
+    public List<CourseResponse> findFeedbacksByTestIdAndPMilestoneIdAndTraineeId(String testId, String planId, String traineeId){
         PlanTask planTask = findMilestonesFromPlanTask(testId);
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(TEST_)
                 .and("isDeleted").is(false)
@@ -778,7 +774,7 @@ public class FeedbackService_V2 {
 //        criteria.elemMatch(new Criteria().and("milestoneIds").in(milestoneIds));
         Query query = new Query(criteria);
         List<Feedback_V2> feedbackList = mongoTemplate.find(query,Feedback_V2.class);
-        List<CourseResponse_V2> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
+        List<CourseResponse> testResponseList = buildFeedbackResponseForCourseAndTest(feedbackList);
         return testResponseList;
     }
 

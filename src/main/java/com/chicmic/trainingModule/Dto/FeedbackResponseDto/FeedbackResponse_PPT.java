@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.Dto.FeedbackResponseDto_V2;
+package com.chicmic.trainingModule.Dto.FeedbackResponseDto;
 
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;

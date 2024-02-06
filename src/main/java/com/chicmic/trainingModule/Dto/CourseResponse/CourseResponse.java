@@ -1,6 +1,6 @@
-package com.chicmic.trainingModule.Dto.CourseResponse_V2;
+package com.chicmic.trainingModule.Dto.CourseResponse;
 
-import com.chicmic.trainingModule.Dto.PhaseResponse_V2.PhaseResponse_V2;
+import com.chicmic.trainingModule.Dto.PhaseResponse.PhaseResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,10 +9,10 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class CourseResponse_V2 {
+public class CourseResponse {
     private String _id;
     private String reviewerName;
     private String code;
     private Double overallRating;
-    private List<PhaseResponse_V2> records;
+    private List<PhaseResponse> records;
 }

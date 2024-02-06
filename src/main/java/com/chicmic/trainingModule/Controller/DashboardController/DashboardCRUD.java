@@ -19,11 +19,11 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/v1/training/dashboard")
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
-public class DashboardCRUD_V2 {
+public class DashboardCRUD {
     private final DashboardService_V2 dashboardService;
     private final SessionService sessionService;
 
-    public DashboardCRUD_V2(DashboardService_V2 dashboardService, SessionService sessionService) {
+    public DashboardCRUD(DashboardService_V2 dashboardService, SessionService sessionService) {
         this.dashboardService = dashboardService;
         this.sessionService = sessionService;
     }

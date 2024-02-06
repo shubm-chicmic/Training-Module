@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Dto.UserTimeDto.AssignedPlanDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.TrainingModuleApplication;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -43,14 +44,23 @@ public class AssignedPlanDropdown {
     @RequestMapping(value = {"/assignedPlan"}, method = RequestMethod.GET)
     public ResponseEntity<ApiResponse>  getAssignedPlans(
             @RequestParam(required = false) String projectId,
-            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer planType,
             @RequestParam(required = false) String milestoneId,
             @RequestParam(required = false) String taskId,
             Principal principal,
             HttpServletResponse response
     )  {
+
         String traineeId = principal.getName();
-        System.out.println("Trainee id : " + traineeId);
+//        System.out.println("Trainee id : " + traineeId);
+//        System.out.println("trainee name : " + TrainingModuleApplication.idUserMap.get(traineeId).getName());
+//        System.out.println("Project : " + projectId);
+//        System.out.println("trainee name : " + planType);
+//        System.out.println("trainee name : " + milestoneId);
+//        System.out.println("trainee name : " + taskId);
+
+
+
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
         if(assignedPlan == null){
             return ResponseEntity.badRequest().body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "No Plan not found", null));
@@ -60,16 +70,16 @@ public class AssignedPlanDropdown {
         if(traineeId != null && projectId == null &&  milestoneId == null && taskId == null){
             // give all plans
             assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanForTimeSheet(assignedPlan);
-        }else if (traineeId != null && (projectId != null && type != null) && milestoneId == null && taskId == null){
+        }else if (traineeId != null && (projectId != null && planType != null) && milestoneId == null && taskId == null){
             // give all phases of plan
-            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhasesForTimeSheet(assignedPlan, projectId, type);
-        }else if(traineeId != null && (projectId != null && type != null) && milestoneId != null && taskId == null){
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhasesForTimeSheet(assignedPlan, projectId, planType);
+        }else if(traineeId != null && (projectId != null && planType != null) && milestoneId != null && taskId == null){
             // give all plan and perticular phase having all tasks
-            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(assignedPlan, projectId, milestoneId, type);
-        }else if (traineeId != null && (projectId != null && type != null) && milestoneId != null && taskId != null){
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(assignedPlan, projectId, milestoneId, planType);
+        }else if (traineeId != null && (projectId != null && planType != null) && milestoneId != null && taskId != null){
             // give all plan with perticualr phase perticualr task
             System.out.println("Im in//////////////////////////////");
-            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(assignedPlan, projectId, milestoneId, type, taskId);
+            assignedPlanDto = assignPlanResponseMapper.mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(assignedPlan, projectId, milestoneId, planType, taskId);
         }
 //        return new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto, response);
         return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", assignedPlanDto));

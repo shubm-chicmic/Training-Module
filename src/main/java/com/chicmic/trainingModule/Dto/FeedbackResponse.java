@@ -19,7 +19,7 @@ import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 @Getter
 @Setter
 @Builder
-public class FeedbackResponse_V2 {
+public class FeedbackResponse {
     private Trainee trainee;
     private Trainee reviewer;
     private int feedbackType;
@@ -37,13 +37,13 @@ public class FeedbackResponse_V2 {
     private Double teamSpiritRating;
     private String createdOn;
     private String comment;
-    public static FeedbackResponse_V2 buildResponse(Feedback_V2 feedback){
+    public static FeedbackResponse buildResponse(Feedback_V2 feedback){
         //Rating_PPT rating_ppt = (Rating_PPT) feedback.getRating();
         UserDto userDto = searchUserById(feedback.getTraineeId());
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         //int feedbackTypeId = feedback.getType().charAt(0) - '1';
 
-        FeedbackResponse_V2  feedbackResponse1 = FeedbackResponse_V2.builder()
+        FeedbackResponse feedbackResponse1 = FeedbackResponse.builder()
                  //.feedbackType((feedback.getType().charAt(0) - '0'))
                          .trainee(new Trainee(feedback.getTraineeId(),userDto.getName()))
                  .reviewer(new Trainee(feedback.getCreatedBy(), TrainingModuleApplication.searchNameById(feedback.getCreatedBy())))
