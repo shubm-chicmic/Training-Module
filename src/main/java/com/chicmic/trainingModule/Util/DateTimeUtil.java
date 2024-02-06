@@ -44,7 +44,7 @@ public class DateTimeUtil {
             return "Invalid Instant";
         }
         ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of("UTC"));
-        return zonedDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return zonedDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yy"));
     }
 
     public static String convertSecondsToString(Integer estimatedTime) {

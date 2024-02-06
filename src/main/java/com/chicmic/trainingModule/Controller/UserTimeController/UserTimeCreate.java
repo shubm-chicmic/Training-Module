@@ -7,10 +7,7 @@ import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -21,18 +18,18 @@ public class UserTimeCreate {
     private final UserTimeService userTimeService;
    @PostMapping
     public ApiResponse createUserTime(
-            UserTimeDto userTimeDto,
+            @RequestBody UserTimeDto userTimeDto,
             HttpServletResponse response,
             Principal principal
    ){
        if(userTimeDto != null){
-           try {
+//           try {
                UserTime userTime = userTimeService.createUserTime(userTimeDto, principal.getName());
                return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Task", userTime, response);
 
-           }catch (Exception ex){
-               return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Exception Occur While Saving Time!", null, response);
-           }
+//           }catch (Exception ex){
+//               return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Exception Occur While Saving Time!", ex.getMessage(), response);
+//           }
 
        }
        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Request Body is Empty", null, response);

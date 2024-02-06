@@ -10,12 +10,26 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserTimeService {
     private final UserTimeRepo userTimeRepo;
     private final PhaseService phaseService;
     private final PlanTaskService planTaskService;
+    public UserTime getUserTimeByDto(UserTimeDto userTimeDto) {
+        if (userTimeDto == null) {
+            // Handle the case where the DTO is null
+            return null;
+        }
+
+        // Retrieve user time based on the provided parameters
+        return userTimeRepo.findByPlanIdAndPlanTaskIdAndSubTaskId(
+                userTimeDto.getPlanId(),
+                userTimeDto.getPlanTaskId(),
+                userTimeDto.getSubTaskId()
+        ).orElse(null);
+    }
     public Integer getTotalTimeByTraineeId(String traineeId) {
         List<UserTime> userTimes = userTimeRepo.findByTraineeId(traineeId);
         return calculateTotalTime(userTimes);
@@ -56,6 +70,7 @@ public class UserTimeService {
     }
 
     public UserTime createUserTime(UserTimeDto userTimeDto, String traineeId) {
+
         SubTask subTask = null;
         PlanTask planTask = null;
         if(userTimeDto.getType() != PlanType.PPT && userTimeDto.getType() != PlanType.VIVA){
@@ -65,7 +80,8 @@ public class UserTimeService {
             planTask = planTaskService.getPlanTaskById(planTaskId);
         }
         if(subTask != null) {
-            Phase<Task> phase = subTask.getPhase();
+            Task task = subTask.getTask();
+            Phase<Task> phase = task.getPhase();
             String moduleId = null;
             if(phase.getEntityType() == PlanType.COURSE){
                 Course course = ((Course)phase.getEntity());
@@ -80,8 +96,20 @@ public class UserTimeService {
             }
             planTask = planTaskService.findByTypeAndPlanAndMilestoneIdForCourseAndTest(userTimeDto.getType(),moduleId , phase.get_id());
         }
+        userTimeDto.setPlanTaskId(planTask.get_id());
+        UserTime existingUserTime = getUserTimeByDto(userTimeDto);
+        if (existingUserTime != null) {
+            // Update the existing user time
+            Integer finalEstimateTime = existingUserTime.getConsumedTime() + userTimeDto.getConsumedTime();
+            if(finalEstimateTime < 0)finalEstimateTime = 0;
+            existingUserTime.setConsumedTime(finalEstimateTime);
+            existingUserTime.setUpdatedAt(LocalDateTime.now());
+            // You may need to update other fields as well if necessary
+            return saveUserTime(existingUserTime); // Save the updated user time
+        }
         UserTime userTime = UserTime.builder()
                 .traineeId(traineeId)
+                .type(userTimeDto.getType())
                 .consumedTime(userTimeDto.getConsumedTime())
                 .isDeleted(false)
                 .planId(userTimeDto.getPlanId())

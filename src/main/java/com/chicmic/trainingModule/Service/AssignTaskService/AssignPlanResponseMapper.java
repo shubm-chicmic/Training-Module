@@ -23,6 +23,7 @@ import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
+import com.chicmic.trainingModule.Util.DateTimeUtil;
 import com.chicmic.trainingModule.Util.FormatTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -318,9 +319,11 @@ public class AssignPlanResponseMapper {
                     planName = course.getName();
                 }
                 String _id = (planType == PlanType.VIVA || planType == PlanType.PPT) ? planTask.get_id() : planTask.getPlan();
+                String date = (planType == PlanType.VIVA || planType == PlanType.PPT) ? " ("+DateTimeUtil.getDateFromInstant(planTask.getDate())+")" : "";
+
                 PlanTaskDto planTaskDto = PlanTaskDto.builder()
                         ._id(_id)
-                        .name(planName)
+                        .name(planName + date)
                         .planType(planTask.getPlanType())
                         .date(planTask.getDate())
                         .build();
