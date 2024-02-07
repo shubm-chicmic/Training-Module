@@ -20,7 +20,7 @@ public class PlanTaskService {
     public List<PlanTask> findByMilestoneId(String milestoneId) {
         return planTaskRepo.findByMilestoneId(milestoneId);
     }
-    public PlanTask findByTypeAndPlanAndMilestoneIdForCourseAndTest(Integer type, String plan, String milestoneId) {
+    public PlanTask findByTypeAndPlanAndMilestoneIdForCourseAndTest(Integer type, String plan, String milestoneId, String planId) {
         // Validate type (1, 2, 3, 4)
         if (type < 1 || type > 4) {
             throw new IllegalArgumentException("Invalid type. Type should be 1, 2, 3, or 4.");
@@ -29,6 +29,8 @@ public class PlanTaskService {
         // Check if the type is 1 or 2 to make the task unique
         if (type == PlanType.COURSE || type == PlanType.TEST) {
             List<PlanTask> planTasks = planTaskRepo.findByTypeAndPlanAndMilestoneId(type, plan, milestoneId);
+            System.out.println("Plantask size  " + planTasks.size());
+            System.out.println("PlanTask  " + planTasks);
             return planTasks.isEmpty() ? null : planTasks.get(0);
         }
         return null;

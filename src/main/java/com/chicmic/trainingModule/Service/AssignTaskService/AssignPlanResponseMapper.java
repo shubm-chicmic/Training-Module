@@ -14,6 +14,7 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
+import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackProgressService;
@@ -168,14 +169,14 @@ public class AssignPlanResponseMapper {
             if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed){
                 completedTasks++;
             }
-            System.out.println("userProgress = " + userProgress);
+//            System.out.println("userProgress = " + userProgress);
             if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed)completedTasks = 1;
             totalTask = 1;
             isPlanCompleted =(totalTask == completedTasks);
         }
         Phase<PlanTask> phase = planTask.getPhase();
         Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id());
-        System.out.println("\u001B[43m Phase = " + phase + "\u001B[0m");
+//        System.out.println("\u001B[43m Phase = " + phase + "\u001B[0m");
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())
                 .phaseName(phase != null ? phase.getName() : "")
@@ -366,15 +367,22 @@ public class AssignPlanResponseMapper {
             }
         }
         String planName = "";
-        if (planType == PlanType.TEST) {
+        if (planType == TimeSheetType.TEST) {
             Test test = testService.getTestById(taskPlanId);
             if(test != null)
             planName = test.getTestName();
-        }else {
+        }else if(planType == TimeSheetType.COURSE){
             Course course = courseService.getCourseById(taskPlanId);
             if(course != null)
             planName = course.getName();
+        }else {
+            PlanTask planTask = planTaskService.getPlanTaskById(taskPlanId);
+            String date = (planType == PlanType.VIVA || planType == PlanType.PPT) ? " ("+DateTimeUtil.getDateFromInstant(planTask.getDate())+")" : "";
+
+            Course course = courseService.getCourseById(planTask.getPlan());
+            if(course != null) planName = course.getName() + date;
         }
+
         PlanTaskDto planTaskDto = PlanTaskDto.builder()
                 ._id(taskPlanId)
                 .name(planName)
@@ -383,12 +391,12 @@ public class AssignPlanResponseMapper {
         PlanDto planDto = PlanDto.builder()
                 ._id(plan.get_id())
                 .name(plan.getPlanName())
-                .milestone(planTaskDto)
                 .build();
 
         AssignedPlanDto assignedPlanDto = AssignedPlanDto.builder()
                 .dateTime(assignedPlan.getDate())
                 ._id(assignedPlan.get_id())
+                .milestone(planTaskDto)
                 .project(planDto)
                 .build();
         if(planType != PlanType.VIVA && planType != PlanType.PPT){
@@ -416,10 +424,18 @@ public class AssignPlanResponseMapper {
             Test test = testService.getTestById(taskPlanId);
             if(test != null)
                 planName = test.getTestName();
-        }else {
+        }else if(planType == TimeSheetType.COURSE){
             Course course = courseService.getCourseById(taskPlanId);
             if(course != null)
                 planName = course.getName();
+        }else {
+            PlanTask planTask = planTaskService.getPlanTaskById(taskPlanId);
+            if(planTask != null){
+                System.out.println("Co");
+                Course course = courseService.getCourseById(planTask.getPlan());
+                if(course != null)
+                    planName = course.getName();
+            }
         }
         PlanTaskDto planTaskDto = PlanTaskDto.builder()
                 ._id(taskPlanId)
@@ -429,12 +445,12 @@ public class AssignPlanResponseMapper {
         PlanDto planDto = PlanDto.builder()
                 ._id(plan.get_id())
                 .name(plan.getPlanName())
-                .milestone(planTaskDto)
                 .build();
         return AssignedPlanDto.builder()
                 .dateTime(assignedPlan.getDate())
                 ._id(assignedPlan.get_id())
                 .task(subTask)
+                .milestone(planTaskDto)
                 .project(planDto)
                 .build();
     }

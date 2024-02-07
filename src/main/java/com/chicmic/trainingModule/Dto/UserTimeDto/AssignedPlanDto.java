@@ -19,5 +19,6 @@ public class AssignedPlanDto {
     private List<PlanDto> projects;
     private PlanDto project;
     private List<SubTask> tasks;
+    private PlanTaskDto milestone;
     private SubTask task;
 }

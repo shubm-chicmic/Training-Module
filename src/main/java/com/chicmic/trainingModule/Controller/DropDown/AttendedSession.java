@@ -3,7 +3,11 @@ package com.chicmic.trainingModule.Controller.DropDown;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.AssignedPlanResponse;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
+import com.chicmic.trainingModule.Dto.SessionIdNameAndTypeDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
+import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Service.SessionService.SessionResponseMapper;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
@@ -41,8 +45,12 @@ public class AttendedSession {
         pageSize = null;
 
         List<Session> sessionList = sessionService.getAttendedSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-        List<SessionResponseDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToDropdownResponseDto(sessionList);
-        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Success", sessionResponseDtoList));
+        List<UserIdAndNameDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToDropdownResponseDto(sessionList);
+        SessionIdNameAndTypeDto sessionIdNameAndTypeDto = SessionIdNameAndTypeDto.builder()
+                .planType(TimeSheetType.SESSION)
+                .sessions(sessionResponseDtoList)
+                .build();
+        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Success", sessionIdNameAndTypeDto));
 
     }
 

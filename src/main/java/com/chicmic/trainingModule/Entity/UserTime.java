@@ -17,6 +17,7 @@ public class UserTime {
     private String _id;
     private String traineeId;
     private String planId;
+    private String sessionId;
     private Integer type;
     private String planTaskId;
     private String subTaskId;

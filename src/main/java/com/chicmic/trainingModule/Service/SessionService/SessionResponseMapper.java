@@ -3,7 +3,10 @@ package com.chicmic.trainingModule.Service.SessionService;
 import com.chicmic.trainingModule.Dto.SessionDto.MomMessageResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
 import com.chicmic.trainingModule.Dto.SessionDto.UserIdAndSessionStatusDto;
+import com.chicmic.trainingModule.Dto.SessionIdNameAndTypeDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.Constants.SessionAttendedStatus;
+import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.DateTimeUtil;
@@ -67,21 +70,18 @@ public class SessionResponseMapper {
                 .reason(reason)
                 .build();
     }
-    public static List<SessionResponseDto> mapSessionToDropdownResponseDto(List<Session> sessions) {
-        List<SessionResponseDto> sessionResponseDtoList = new ArrayList<>();
+    public static List<UserIdAndNameDto> mapSessionToDropdownResponseDto(List<Session> sessions) {
+        List<UserIdAndNameDto> sessionResponseDtoList = new ArrayList<>();
         for (Session session : sessions) {
             sessionResponseDtoList.add(mapSessionToDropdownResponseDto(session));
         }
         return sessionResponseDtoList;
     }
 
-    public static SessionResponseDto mapSessionToDropdownResponseDto(Session session) {
-        return SessionResponseDto.builder()
+    public static UserIdAndNameDto mapSessionToDropdownResponseDto(Session session) {
+        return UserIdAndNameDto.builder()
                 ._id(session.get_id())
-                .title(session.getTitle())
-                .status(null)
-                .isDeleted(null)
-                .isApproved(null)
+                .name(session.getTitle())
                 .build();
     }
 }

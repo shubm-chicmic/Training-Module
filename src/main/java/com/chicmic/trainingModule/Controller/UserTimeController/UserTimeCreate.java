@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Controller.UserTimeController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.UserTimeDto.UserTimeDto;
+import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Entity.UserTime;
 import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,9 +25,13 @@ public class UserTimeCreate {
    ){
        if(userTimeDto != null){
 //           try {
+           if(userTimeDto.getType() == TimeSheetType.SESSION){
+               UserTime userTime = userTimeService.createSessionTimeForUser(userTimeDto, principal.getName());
+               return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Session", userTime, response);
+           }else {
                UserTime userTime = userTimeService.createUserTime(userTimeDto, principal.getName());
                return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Task", userTime, response);
-
+           }
 //           }catch (Exception ex){
 //               return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Exception Occur While Saving Time!", ex.getMessage(), response);
 //           }

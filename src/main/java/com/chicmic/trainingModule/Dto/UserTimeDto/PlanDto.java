@@ -18,7 +18,7 @@ public class PlanDto {
 //    private Integer estimatedTime;
 //    private Integer totalTasks;
     private List<PlanTaskDto> milestones;
-    private PlanTaskDto milestone;
+
 //    private String createdBy;
 //    private Boolean deleted = false;
 //    private LocalDateTime createdAt;

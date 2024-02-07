@@ -1,11 +1,20 @@
 package com.chicmic.trainingModule.Controller.DropDown;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignedPlanFeedbackResponseDto.AssignedPlanResponse;
+import com.chicmic.trainingModule.Dto.SessionDto.SessionResponseDto;
+import com.chicmic.trainingModule.Dto.SessionIdNameAndTypeDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Dto.UserTimeDto.AssignedPlanDto;
+import com.chicmic.trainingModule.Dto.UserTimeDto.PlanTaskDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
+import com.chicmic.trainingModule.Entity.Session;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignPlanResponseMapper;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.SessionService.SessionResponseMapper;
+import com.chicmic.trainingModule.Service.SessionService.SessionService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -15,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/training/dropdown")
@@ -23,7 +33,8 @@ import java.security.Principal;
 public class AssignedPlanDropdown {
     private final AssignTaskService assignTaskService;
     private final AssignPlanResponseMapper assignPlanResponseMapper;
-
+    private final SessionService sessionService;
+    private final SessionResponseMapper sessionResponseMapper;
 
     @RequestMapping(value = {"/plan"}, method = RequestMethod.GET)
     public ResponseEntity<ApiResponse> getAll(
@@ -59,12 +70,40 @@ public class AssignedPlanDropdown {
 //        System.out.println("trainee name : " + milestoneId);
 //        System.out.println("trainee name : " + taskId);
 
+        if(planType != null && planType == 5){
+            if(milestoneId == null) {
+                Integer sortDirection = 1;
+                String sortKey = "title";
+                Integer pageNumber = 0;
+                Integer pageSize = 10;
+                String searchString = "";
+                List<Session> sessionList = sessionService.getAttendedSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+                List<UserIdAndNameDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToDropdownResponseDto(sessionList);
+                SessionIdNameAndTypeDto sessionIdNameAndTypeDto = SessionIdNameAndTypeDto.builder()
+                        .planType(TimeSheetType.SESSION)
+                        .sessions(sessionResponseDtoList)
+                        .build();
+                return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Success", sessionIdNameAndTypeDto));
+            }else {
+                Session session = sessionService.getSessionById(milestoneId);
+                if(session == null){
+                    return ResponseEntity.ok(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response));
+                }
+                PlanTaskDto sessionIdNameAndName = PlanTaskDto.builder()
+                        ._id(session.get_id())
+                        .name(session.getTitle())
+                        .build();
+                AssignedPlanDto sessionResponseDto = AssignedPlanDto.builder()
+                        .milestone(sessionIdNameAndName)
+                        .build();
+                return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response));
 
+            }
+        }
 
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
         if(assignedPlan == null){
             return ResponseEntity.badRequest().body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "No Plan not found", null));
-
         }
         AssignedPlanDto assignedPlanDto = null;
         if(traineeId != null && projectId == null &&  milestoneId == null && taskId == null){

@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 //import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
@@ -71,6 +72,7 @@ public class AssignTaskResponseMapper {
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
+                        if(planTask.getPlanType() != PlanType.VIVA && planTask.getPlanType() != PlanType.PPT)
                         estimatedTime += planTask.getEstimatedTimeInSeconds();
                         if (planTask == null)continue;
                         mentors.addAll(planTask.getMentorIds());

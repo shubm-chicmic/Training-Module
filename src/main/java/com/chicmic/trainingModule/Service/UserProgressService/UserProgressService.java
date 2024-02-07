@@ -33,7 +33,7 @@ public class UserProgressService {
         List<UserProgress> allUserProgress = mongoTemplate.findAll(UserProgress.class);
         System.out.println("allUserProgress: size " + allUserProgress.size());
 
-        System.out.println("allUserProgress: " + allUserProgress);
+//        System.out.println("allUserProgress: " + allUserProgress);
         for (UserProgress userProgress : allUserProgress) {
 
             if(userProgress.getPlanId() != null && userProgress.getCourseId() != null
@@ -116,7 +116,7 @@ public class UserProgressService {
                 subTaskId,
                 traineeId
         );
-        System.out.println("Userprogress dfedf" + userProgress);
+//        System.out.println("Userprogress dfedf" + userProgress);
 //        if(val > 0)return true;
 //        return false;
 //        UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndIdAndProgressType(
