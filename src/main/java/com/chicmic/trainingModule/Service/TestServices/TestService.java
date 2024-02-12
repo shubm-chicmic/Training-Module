@@ -44,7 +44,7 @@ public class TestService {
         test.setUpdatedAt(LocalDateTime.now());
         test.set_id(String.valueOf(new ObjectId()));
 
-        List<Phase<Task>> milestones = phaseService.createPhases(test.getMilestones(), test, EntityType.TEST);
+        List<Phase<Task>> milestones = phaseService.createPhases(test.getMilestones(), test, EntityType.TEST, false);
         test.setMilestones(milestones);
         try{
             test = testRepo.save(test);
@@ -218,7 +218,7 @@ public class TestService {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
             if (testDto.getMilestones() != null) {
-                List<Phase<Task>> milestones = phaseService.createPhases(testDto.getMilestones(), test, EntityType.TEST);
+                List<Phase<Task>> milestones = phaseService.createPhases(testDto.getMilestones(), test, EntityType.TEST, false);
                 test.setMilestones(milestones);
             }
             // Only update properties from the DTO if they are not null

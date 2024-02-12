@@ -37,7 +37,7 @@ public class PhaseService {
     private final PlanRepo planRepo;
     private final UserProgressService userProgressService;
 //    @Transactional(rollbackFor = Exception.class)
-    public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType) {
+    public List<Phase<Task>> createPhases(List<Phase<Task>> phases, Object entity, Integer entityType, Boolean isCourseIsAddingFromScript) {
         try {
             Boolean error = false;
             Set<String> errorPhasesName = new HashSet<>();
@@ -126,9 +126,9 @@ public class PhaseService {
             int count = 0;
             String phaseNameInitial = "";
             if (entityType == EntityType.TEST) {
-                phaseNameInitial = "Milestone ";
+                phaseNameInitial = "MILESTONE ";
             } else {
-                phaseNameInitial = "Phase ";
+                phaseNameInitial = "PHASE ";
             }
             System.out.println("\u001B[35m " + phases);
             List<Phase<Task>> createdPhases = new ArrayList<>();
@@ -146,8 +146,11 @@ public class PhaseService {
 
     //            System.out.println("\u001B[32m" + task + "\u001B[0m");
                 List<Task> tasks = createTasks(phase.getTasks(), newPhase, entityType);
-
-                newPhase.setName(phaseNameInitial + count);
+                if(isCourseIsAddingFromScript) {
+                    newPhase.setName(phaseNameInitial + count);
+                }else {
+                    newPhase.setName(phase.getName());
+                }
                 newPhase.setEntityType(entityType);
                 newPhase.setTasks(tasks);
                 newPhase.setEntity(entity);
@@ -255,9 +258,7 @@ public class PhaseService {
                         totalTask += coursePhase.getTotalTasks();
                     }
                 }
-                List<Plan> plans = newPlanTask.getPlans();
-                plans.add(plan);
-                newPlanTask.setPlans(plans);
+                newPlanTask.setPlans(plan);
                 newPlanTask.setTotalTasks(totalTask);
                 newPlanTask.setMentor(planTask.getMentorIds());
                 newPlanTask.setMilestones(planTask.getMilestones());
@@ -427,8 +428,17 @@ public class PhaseService {
     }
 
 
-    public List<Phase> getPhaseByIds(List<String> phaseId) {
-        return phaseRepo.findAllById(phaseId);
+    public List<Phase> getPhaseByIds(List<String> phaseIds) {
+        List<Phase> phases = phaseRepo.findAllById(phaseIds);
+        Map<String, Phase> phaseMap = phases.stream()
+                .collect(Collectors.toMap(Phase::get_id, phase -> phase));
+
+        // Create a list to hold the phases in the order of phaseIds
+        List<Phase> sortedPhases = phaseIds.stream()
+                .map(phaseMap::get)
+                .collect(Collectors.toList());
+
+        return sortedPhases;
     }
 
     public Task getTaskById(String taskId) {

@@ -103,7 +103,7 @@ public class CourseCRUD {
                 .isApproved(false)
                 .build();
         System.out.println("course in controller  " + course);
-        course = courseService.createCourse(course);
+        course = courseService.createCourse(course, false);
         return new ApiResponse(HttpStatus.CREATED.value(), "Course created successfully", course);
     }
 

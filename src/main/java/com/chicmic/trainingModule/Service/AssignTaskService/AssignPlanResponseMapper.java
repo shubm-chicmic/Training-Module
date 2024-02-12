@@ -86,6 +86,7 @@ public class AssignPlanResponseMapper {
         List<UserIdAndNameDto> milestonesIdAndName = new ArrayList<>();
         Integer totalTask = 0;
         Integer completedTasks = 0;
+        Integer consumedTime = 0;
         if(planTask.getMilestones() == null){
             System.out.println("Milstones is null not available");
             planTask.setMilestones(new ArrayList<>());
@@ -102,6 +103,7 @@ public class AssignPlanResponseMapper {
                 if (userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(), traineeId)) {
                     completedTasks++;
                 }
+                consumedTime += userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, planId, planTask.get_id(), subTask.get_id());
                 totalTask++;
             }
             UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
@@ -175,7 +177,7 @@ public class AssignPlanResponseMapper {
             isPlanCompleted =(totalTask == completedTasks);
         }
         Phase<PlanTask> phase = planTask.getPhase();
-        Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id());
+//        Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id());
 //        System.out.println("\u001B[43m Phase = " + phase + "\u001B[0m");
         return PlanTaskResponseDto.builder()
                 ._id(planTask.get_id())

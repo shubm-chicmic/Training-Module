@@ -31,7 +31,11 @@ public class PlanTaskService {
             List<PlanTask> planTasks = planTaskRepo.findByTypeAndPlanAndMilestoneId(type, plan, milestoneId);
             System.out.println("Plantask size  " + planTasks.size());
             System.out.println("PlanTask  " + planTasks);
-            return planTasks.isEmpty() ? null : planTasks.get(0);
+            for (PlanTask planTask : planTasks) {
+                if(planTask.getPlans() != null && !planTask.getIsDeleted() && planTask.getPlans().get_id().equals(planId)){
+                    return planTask;
+                }
+            }
         }
         return null;
     }

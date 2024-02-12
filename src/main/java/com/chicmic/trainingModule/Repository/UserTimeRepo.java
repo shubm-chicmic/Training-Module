@@ -30,6 +30,8 @@ public interface UserTimeRepo  extends MongoRepository<UserTime, String> {
     // Find all UserTime records for a specific trainee, plan, and plan task excluding VIVA and PPT types
     @Query("{'traineeId' : ?0, 'planId' : ?1, 'planTaskId' : ?2, 'type' : { $nin: [ ?3, ?4 ] } }")
     List<UserTime> findByTraineeIdAndPlanIdAndPlanTaskId(String traineeId, String planId, String planTaskId, Integer vivaType, Integer pptType);
+    @Query("{'traineeId' : ?0, 'planId' : ?1, 'planTaskId' : ?2, 'type' : { $in: [ ?3, ?4 ] } }")
+    UserTime findByTraineeIdAndPlanIdAndPlanTaskIdForVivaAndPPT(String traineeId, String planId, String planTaskId, Integer vivaType, Integer pptType);
 
     // Find all UserTime records for a specific trainee, plan, plan task, and subtask excluding VIVA and PPT types
     @Query("{'traineeId' : ?0, 'planId' : ?1, 'planTaskId' : ?2, 'subTaskId' : ?3, 'type' : { $nin: [ ?4, ?5 ] } }")

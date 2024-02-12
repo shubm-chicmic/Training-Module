@@ -138,11 +138,19 @@ public class TraineePlanService_V2 {
                             }
                     );
             });
-            HashSet<UserIdAndNameDto> mentorNames = new HashSet<>();
-            //HashSet<String> mentorNames = new HashSet<>();
-            //names.forEach(nm-> mentorNames.add(searchNameById(nm)));//mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
-            names.forEach(nm->mentorNames.add(new UserIdAndNameDto(nm,searchNameById(nm))));
-            tr.put("mentor",mentorNames);
+            List<UserIdAndNameDto> mentorNames = new ArrayList<>();
+
+// Add mentors to the List
+            names.forEach(nm -> mentorNames.add(new UserIdAndNameDto(nm, searchNameById(nm))));
+
+// Sort the mentorNames List by user names
+            mentorNames.sort(Comparator.comparing(UserIdAndNameDto::getName));
+
+            System.out.println("\u001B[35m Mentor names");
+            System.out.println(mentorNames);
+            System.out.println("\u001B[0m");
+
+            tr.put("mentor", mentorNames);
             tr.put("plan",planDetails);
             System.out.println(tr.get("status") + "}}}}}}}}}}}}}}");
             System.out.println(tr.get("startDate") + "}}}}}}}}}}}}}}");

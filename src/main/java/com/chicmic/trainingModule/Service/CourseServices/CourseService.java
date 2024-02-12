@@ -45,12 +45,12 @@ public class CourseService {
     private final PhaseService phaseService;
 
 
-    public Course createCourse(Course course) {
+    public Course createCourse(Course course, Boolean isCourseIsAddingFromScript) {
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
         course.set_id(String.valueOf(new ObjectId()));
 
-        List<Phase<Task>> phases = phaseService.createPhases(course.getPhases(), course, EntityType.COURSE);
+        List<Phase<Task>> phases = phaseService.createPhases(course.getPhases(), course, EntityType.COURSE, isCourseIsAddingFromScript);
         course.setPhases(phases);
 
         System.out.println("course in service " + course);
@@ -247,7 +247,7 @@ public class CourseService {
                 if (courseDto.getPhases() != null) {
                     System.out.println("Course Dto ");
                     System.out.println(courseDto.getPhases());
-                    List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE);
+                    List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE, false);
                     course.setPhases(phases);
                 }
                 if (courseDto.getName() != null) {

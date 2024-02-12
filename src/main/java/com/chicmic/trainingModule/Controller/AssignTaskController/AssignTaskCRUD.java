@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Controller.AssignTaskController;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.*;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
@@ -24,12 +25,16 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -158,6 +163,11 @@ public class AssignTaskCRUD {
             HttpServletResponse response,
             Principal principal
     ) {
+        Boolean isIndividualRole;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
 
         if (traineeId != null || !traineeId.isEmpty()) {
             System.out.println("im in");
@@ -179,6 +189,23 @@ public class AssignTaskCRUD {
             Integer planSize = 0;
             if (assignTaskResponseDto.getPlans() != null) {
                 planSize = assignTaskResponseDto.getPlans().size();
+            }
+            if(assignTaskResponseDto != null && isIndividualRole){
+                Boolean isRolePermitted = false;
+                for (PlanDto planDto : assignTaskResponseDto.getPlans()){
+                     Set<UserIdAndNameDto> mentors = planDto.getMentors();
+                    if (mentors != null) {
+                        for (UserIdAndNameDto mentor : mentors) {
+                            if (mentor.get_id().equals(principal.getName())) {
+                                isRolePermitted = true;
+                                break;
+                            }
+                        }
+                        if(!isRolePermitted){
+                            throw new ApiException(HttpStatus.BAD_REQUEST, "You are not Authorize to access this Plan!");
+                        }
+                    }
+                }
             }
             return new ApiResponseWithCount(totalPlans, HttpStatus.OK.value(), planSize + " Plans retrieved", assignTaskResponseDto, response);
         }
@@ -228,11 +255,13 @@ public class AssignTaskCRUD {
             List<TaskDto> taskDtoList = new ArrayList<>();
             List<String> phasesListOfString = new ArrayList<>();
             for (Object obj : phasesList) {
+                System.out.println("obj : " + obj.toString());
                 phasesListOfString.add(obj.toString());
             }
             List<Phase> phases = phaseService.getPhaseByIds(phasesListOfString);
             List<Task> taskList = new ArrayList<>();
             for (Phase phase : phases) {
+                System.out.println("Phase Name : " + phase.getName());
                 if (!phase.getIsDeleted())
                     taskList.addAll(phase.getTasks());
             }

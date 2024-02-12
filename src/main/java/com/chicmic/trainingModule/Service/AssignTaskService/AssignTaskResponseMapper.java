@@ -66,14 +66,16 @@ public class AssignTaskResponseMapper {
         Integer countOfCompletedPlan = 0;
         for (Plan plan : assignTask.getPlans()) {
             Integer estimatedTime = 0;
-
+            Integer consumedTime = 0;
             if(plan != null && !plan.getDeleted()) {
                 Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
-                        if(planTask.getPlanType() != PlanType.VIVA && planTask.getPlanType() != PlanType.PPT)
-                        estimatedTime += planTask.getEstimatedTimeInSeconds();
+                        if(planTask.getPlanType() != PlanType.VIVA && planTask.getPlanType() != PlanType.PPT) {
+                            estimatedTime += planTask.getEstimatedTimeInSeconds();
+                            consumedTime += userTimeService.calculateConsumedTimeInPlanTask(traineeId, plan, planTask);
+                        }
                         if (planTask == null)continue;
                         mentors.addAll(planTask.getMentorIds());
                         if((planTask.getPlanType() != 3 && planTask.getPlanType() != 4)) {
@@ -109,7 +111,7 @@ public class AssignTaskResponseMapper {
                 for (String mentorDetail : mentors) {
                     mentorDetails.add(new UserIdAndNameDto(mentorDetail, TrainingModuleApplication.searchNameById(mentorDetail)));
                 }
-                Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanId(traineeId, plan.get_id());
+//                Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanId(traineeId, plan.get_id());
                 PlanDto planDto = PlanDto.builder()
                         .assignPlanId(assignTask.get_id())
                         .name(plan.getPlanName())

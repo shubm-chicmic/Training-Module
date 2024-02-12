@@ -22,4 +22,16 @@ public class UserTimeDto {
     private String subTaskId;
     @NotNull
     private Integer consumedTime;
+
+    @Override
+    public String toString() {
+        return "UserTimeDto{" +
+                "planId='" + planId + '\'' +
+                ", type=" + type +
+                ", taskId='" + taskId + '\'' +
+                ", PlanTaskId='" + PlanTaskId + '\'' +
+                ", subTaskId='" + subTaskId + '\'' +
+                ", consumedTime=" + consumedTime +
+                '}';
+    }
 }

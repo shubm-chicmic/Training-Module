@@ -466,10 +466,17 @@ public class FeedbackService_V2 {
     }
 
     public ApiResponse findFeedbacksGivenByUser(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey,String reviewer){
-        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
-                        new Document("traineeName",userDto.getName()).append("traineeTeam",userDto.getTeamName()).append("traineeCode",userDto.getEmpCode())
-                                .append("id",userDto.get_id()))
-                .toList();
+        List<Document> userDatasDocuments = new ArrayList<>();
+
+        for (UserDto userDto : idUserMap.values()) {
+            Document document = new Document();
+            document.append("traineeName", userDto.getName())
+                    .append("traineeTeam", userDto.getTeamName())
+                    .append("traineeCode", userDto.getEmpCode())
+                    .append("id", userDto.get_id());
+            userDatasDocuments.add(document);
+        }
+
 
         Criteria criteria = Criteria.where("createdBy").is(reviewer)
                 .and("isDeleted").is(false);

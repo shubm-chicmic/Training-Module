@@ -24,6 +24,8 @@ public class UserTimeCreate {
             Principal principal
    ){
        if(userTimeDto != null){
+           System.out.println("\u001B[35m Usertime Dto : ");
+           System.out.println(userTimeDto + "\u001B[0m");
 //           try {
            if(userTimeDto.getType() == TimeSheetType.SESSION){
                UserTime userTime = userTimeService.createSessionTimeForUser(userTimeDto, principal.getName());

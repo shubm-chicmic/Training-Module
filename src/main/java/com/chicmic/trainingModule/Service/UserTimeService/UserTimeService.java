@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Service.UserTimeService;
 import com.chicmic.trainingModule.Dto.UserTimeDto.UserTimeDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
+import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Repository.UserTimeRepo;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
@@ -10,25 +11,29 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserTimeService {
     private final UserTimeRepo userTimeRepo;
     private final PhaseService phaseService;
     private final PlanTaskService planTaskService;
-    public UserTime getUserTimeByDto(UserTimeDto userTimeDto) {
+    public UserTime getUserTimeByDto(UserTimeDto userTimeDto, String traineeId) {
         if (userTimeDto == null) {
-            // Handle the case where the DTO is null
             return null;
         }
-
-        // Retrieve user time based on the provided parameters
-        return userTimeRepo.findByPlanIdAndPlanTaskIdAndSubTaskId(
-                userTimeDto.getPlanId(),
-                userTimeDto.getPlanTaskId(),
-                userTimeDto.getSubTaskId()
-        ).orElse(null);
+        if(userTimeDto.getType() != TimeSheetType.VIVA && userTimeDto.getType() != TimeSheetType.PPT) {
+            // Retrieve user time based on the provided parameters
+            List<UserTime> userTimeList =  userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(
+                    traineeId,
+                    userTimeDto.getPlanId(),
+                    userTimeDto.getPlanTaskId(),
+                    userTimeDto.getSubTaskId(), TimeSheetType.VIVA, TimeSheetType.PPT
+            );
+            System.out.println("GEtting usertime size " + userTimeList.size());
+            return userTimeList != null && userTimeList.size() > 0 ? userTimeList.get(0) : null;
+        }else {
+            return userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdForVivaAndPPT(traineeId, userTimeDto.getPlanId(), userTimeDto.getPlanTaskId(), TimeSheetType.VIVA, TimeSheetType.PPT);
+        }
     }
     public UserTime getSessionByDto(UserTimeDto userTimeDto) {
         if (userTimeDto == null) {
@@ -90,31 +95,32 @@ public class UserTimeService {
         PlanTask planTask = null;
         if(userTimeDto.getType() != PlanType.PPT && userTimeDto.getType() != PlanType.VIVA){
             subTask = phaseService.getSubTaskById(userTimeDto.getSubTaskId());
+            if(subTask != null) {
+                Task task = subTask.getTask();
+                Phase<Task> phase = task.getPhase();
+                String moduleId = null;
+                if(phase.getEntityType() == PlanType.COURSE){
+                    Course course = ((Course)phase.getEntity());
+                    if(course != null){
+                        moduleId = course.get_id();
+                    }
+                }else if(phase.getEntityType() == PlanType.TEST){
+                    Test test = ((Test)phase.getEntity());
+                    if(test != null){
+                        moduleId = test.get_id();
+                    }
+                }
+                planTask = planTaskService.findByTypeAndPlanAndMilestoneIdForCourseAndTest(userTimeDto.getType(),moduleId , phase.get_id(), userTimeDto.getPlanId());
+            }
         }else {
             String planTaskId = userTimeDto.getTaskId();
             planTask = planTaskService.getPlanTaskById(planTaskId);
         }
-        if(subTask != null) {
-            Task task = subTask.getTask();
-            Phase<Task> phase = task.getPhase();
-            String moduleId = null;
-            if(phase.getEntityType() == PlanType.COURSE){
-                Course course = ((Course)phase.getEntity());
-                if(course != null){
-                    moduleId = course.get_id();
-                }
-            }else if(phase.getEntityType() == PlanType.TEST){
-                Test test = ((Test)phase.getEntity());
-                if(test != null){
-                    moduleId = test.get_id();
-                }
-            }
-            planTask = planTaskService. findByTypeAndPlanAndMilestoneIdForCourseAndTest(userTimeDto.getType(),moduleId , phase.get_id(), userTimeDto.getPlanId());
-        }
+        if(planTask != null)
         userTimeDto.setPlanTaskId(planTask.get_id());
-        UserTime existingUserTime = getUserTimeByDto(userTimeDto);
+        UserTime existingUserTime = getUserTimeByDto(userTimeDto, traineeId);
         if (existingUserTime != null) {
-            // Update the existing user time
+//            // Update the existing user time
             Integer finalEstimateTime = existingUserTime.getConsumedTime() + userTimeDto.getConsumedTime();
             if(finalEstimateTime < 0)finalEstimateTime = 0;
             existingUserTime.setConsumedTime(finalEstimateTime);
@@ -125,7 +131,7 @@ public class UserTimeService {
         UserTime userTime = UserTime.builder()
                 .traineeId(traineeId)
                 .type(userTimeDto.getType())
-                .consumedTime(userTimeDto.getConsumedTime())
+                .consumedTime(userTimeDto.getConsumedTime() < 0 ? 0 : userTimeDto.getConsumedTime())
                 .isDeleted(false)
                 .planId(userTimeDto.getPlanId())
                 .planTaskId(planTask != null ? planTask.get_id() : null)
@@ -151,10 +157,27 @@ public class UserTimeService {
                 .traineeId(userId)
                 .type(userTimeDto.getType())
                 .sessionId(userTimeDto.getTaskId())
-                .consumedTime(userTimeDto.getConsumedTime())
+                .consumedTime(userTimeDto.getConsumedTime() < 0 ? 0 : userTimeDto.getConsumedTime())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
         return saveUserTime(userTime);
+    }
+
+    public Integer calculateConsumedTimeInPlanTask(String traineeId, Plan plan, PlanTask planTask) {
+        List<Object> milestones = planTask.getMilestones();
+        Integer consumedTime = 0;
+        for (Object milestone : milestones) {
+            Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
+            for (Task task : phase.getTasks()) {
+                for (SubTask subTask : task.getSubtasks()) {
+                    List<UserTime> userTime = userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, plan.get_id(), planTask.get_id(), subTask.get_id(), TimeSheetType.VIVA, TimeSheetType.PPT);
+                    for(UserTime subtaskTime : userTime) {
+                        consumedTime += subtaskTime.getConsumedTime();
+                    }
+                }
+            }
+        }
+        return consumedTime;
     }
 }

@@ -49,7 +49,7 @@ public class PlanTask {
     private Phase<PlanTask> phase;
     @DBRef
     @JsonIgnore
-    private List<Plan> plans = new ArrayList<>();
+    private Plan plans;
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
 //        for (String milestone : milestones) {

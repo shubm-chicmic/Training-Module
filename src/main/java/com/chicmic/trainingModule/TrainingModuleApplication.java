@@ -212,7 +212,7 @@ public class TrainingModuleApplication implements CommandLineRunner {
 						}
 
 						System.out.println(course.getName());
-						courseService.createCourse(course);
+						courseService.createCourse(course, true);
 						count[0]++;
 					});
 			return count[0] +" courses created successfully";

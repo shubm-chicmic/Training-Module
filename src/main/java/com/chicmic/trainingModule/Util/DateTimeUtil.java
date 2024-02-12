@@ -43,7 +43,13 @@ public class DateTimeUtil {
         if (instant == null) {
             return "Invalid Instant";
         }
-        ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of("UTC"));
+        // Get the default time zone of the system
+        ZoneId systemZone = ZoneId.systemDefault();
+
+        // Convert the Instant to the default time zone
+        ZonedDateTime zonedDateTime = instant.atZone(systemZone);
+
+        // Format the date
         return zonedDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yy"));
     }
 
