@@ -1,53 +1,54 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
+import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.PlanTask;
-import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+import com.chicmic.trainingModule.Service.TraineeService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.DateTimeUtil;
 import com.mongodb.client.result.UpdateResult;
-import org.apache.catalina.User;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating;
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService.compute_rating;
 import static com.chicmic.trainingModule.TrainingModuleApplication.findTraineeAndMap;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchNameById;
-import static com.chicmic.trainingModule.Util.RatingUtil.roundOff_Rating;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newUpdate;
 
 @Service
 public class TraineePlanService_V2 {
     private final MongoTemplate mongoTemplate;
-    private final FeedbackService_V2 feedbackService;
+    private final FeedbackService feedbackService;
     private final AssignTaskService assignTaskService;
 
-    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService_V2 feedbackService, AssignTaskService assignTaskService) {
+    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService feedbackService, AssignTaskService assignTaskService) {
         this.mongoTemplate = mongoTemplate;
         this.feedbackService = feedbackService;
         this.assignTaskService = assignTaskService;
     }
 
-    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey){
+    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String currentUserId){
         System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
+
         if(query==null || query.isBlank()) query = ".*";
         int skipValue = pageNumber;//(pageNumber - 1) * pageSize;
 
@@ -59,11 +60,44 @@ public class TraineePlanService_V2 {
         }
 
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
-        //fetching trainee List
-        List<Document> userDatasDocuments = findTraineeAndMap().values().stream().map(userDto ->
-                        new Document("name",userDto.getName()).append("team",userDto.getTeamName()).append("empCode",userDto.getEmpCode())
-                                .append("_id",userDto.get_id()))
-                .toList();
+
+        // Fetching trainee List
+        List<Document> userDatasDocuments = new ArrayList<>();
+        Map<String, UserDto> traineeMap = findTraineeAndMap();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Boolean isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
+        for (UserDto userDto : traineeMap.values()) {
+            if(userDto.get_id().equals(currentUserId)){
+                Document document = new Document();
+                document.append("name", userDto.getName())
+                        .append("team", userDto.getTeamName())
+                        .append("empCode", userDto.getEmpCode())
+                        .append("_id", userDto.get_id());
+                userDatasDocuments.add(document);
+            }
+            else if(isIndividualRole) {
+                if ((assignTaskService.isUserMentorOfTrainee(userDto.get_id(),currentUserId) || TraineeService.isUserInSameTeam(userDto, TrainingModuleApplication.idUserMap.get(currentUserId)))){
+                    Document document = new Document();
+                    document.append("name", userDto.getName())
+                            .append("team", userDto.getTeamName())
+                            .append("empCode", userDto.getEmpCode())
+                            .append("_id", userDto.get_id());
+                    userDatasDocuments.add(document);
+                }
+            }
+            else{
+                Document document = new Document();
+                document.append("name", userDto.getName())
+                        .append("team", userDto.getTeamName())
+                        .append("empCode", userDto.getEmpCode())
+                        .append("_id", userDto.get_id());
+                userDatasDocuments.add(document);
+            }
+
+        }
+
 
         Aggregation aggregation = newAggregation(
                 context -> new Document("$addFields", new Document("userDatas",

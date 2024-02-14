@@ -3,14 +3,13 @@ package com.chicmic.trainingModule.Controller.UserProgressController;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.UserProgressDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
-import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.UserProgress;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
@@ -35,7 +34,7 @@ public class UserProgressCRUD {
     private final UserProgressService userProgressService;
     private final PlanTaskService planTaskService;
     private final AssignTaskService assignTaskService;
-    private final FeedbackService_V2 feedbackServiceV2;
+    private final FeedbackService feedbackServiceV2;
 
     @PostMapping
     public ApiResponse createUserProgress(@RequestBody UserProgressDto userProgressDto, Principal principal, HttpServletResponse response) {

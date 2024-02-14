@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.compute_rating;
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService.compute_rating;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 

@@ -29,7 +29,7 @@ public class UserTimeService {
                     userTimeDto.getPlanTaskId(),
                     userTimeDto.getSubTaskId(), TimeSheetType.VIVA, TimeSheetType.PPT
             );
-            System.out.println("GEtting usertime size " + userTimeList.size());
+            System.out.println("Getting userTime size " + userTimeList.size());
             return userTimeList != null && userTimeList.size() > 0 ? userTimeList.get(0) : null;
         }else {
             return userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdForVivaAndPPT(traineeId, userTimeDto.getPlanId(), userTimeDto.getPlanTaskId(), TimeSheetType.VIVA, TimeSheetType.PPT);

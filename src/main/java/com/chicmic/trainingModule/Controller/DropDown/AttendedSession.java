@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -38,14 +41,29 @@ public class AttendedSession {
             @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
             @RequestParam(value = "sortDirection", defaultValue = "1", required = false) Integer sortDirection,
             @RequestParam(value = "sortKey", defaultValue = "title", required = false) String sortKey,
+            @RequestParam(value = "entryDate", required = false) String entryDate,
             HttpServletResponse response,
             Principal principal
     )  {
         pageNumber = null;
         pageSize = null;
 
+        System.out.println("Entry date : " + entryDate);
         List<Session> sessionList = sessionService.getAttendedSessions(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-        List<UserIdAndNameDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToDropdownResponseDto(sessionList);
+        List<Session> sessionOfTodayDate = new ArrayList<>();
+        if (entryDate != null) {
+            entryDate = entryDate.trim();
+            LocalDate requestedDate = LocalDate.parse(entryDate); // Parse the entryDate parameter to LocalDate
+            for (Session session : sessionList) {
+                LocalDate sessionDate = session.getDateTime().atZone(ZoneId.systemDefault()).toLocalDate();
+                if (sessionDate.equals(requestedDate)) {
+                    sessionOfTodayDate.add(session);
+                }
+            }
+        }else {
+            sessionOfTodayDate = sessionList;
+        }
+        List<UserIdAndNameDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToDropdownResponseDto(sessionOfTodayDate);
         SessionIdNameAndTypeDto sessionIdNameAndTypeDto = SessionIdNameAndTypeDto.builder()
                 .planType(TimeSheetType.SESSION)
                 .sessions(sessionResponseDtoList)

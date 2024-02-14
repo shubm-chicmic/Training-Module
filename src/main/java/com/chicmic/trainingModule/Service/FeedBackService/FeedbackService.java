@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Dto.rating.Rating_PPT;
 import com.chicmic.trainingModule.Dto.rating.Rating_TEST;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
+import com.chicmic.trainingModule.Service.AttendenceService.AttendanceService;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
@@ -25,6 +26,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -42,17 +45,19 @@ import static java.util.Arrays.asList;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import org.springframework.data.domain.Sort;
 @Service
-public class FeedbackService_V2 {
+public class FeedbackService {
     private final MongoTemplate mongoTemplate;
     private final TestService testService;
     private final CourseService courseService;
     private final PlanService planService;
+    private final AttendanceService attendanceService;
 
-    public FeedbackService_V2(MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PlanService planService) {
+    public FeedbackService(MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PlanService planService, AttendanceService attendanceService) {
         this.mongoTemplate = mongoTemplate;
         this.testService = testService;
         this.courseService = courseService;
         this.planService = planService;
+        this.attendanceService = attendanceService;
     }
 
     public List<String> checkTaskAssignedOrNot(FeedbackRequestDto feedbackRequestDto){
@@ -267,10 +272,21 @@ public class FeedbackService_V2 {
 
     public ApiResponse findFeedbacksOnUserPlan(String traineeId,String planId,Integer pageNumber, Integer pageSize,String query,Integer sortDirection,String sortKey){
 //        List<Criteria> criteriaList = getAllTaskIdsInPlan(traineeId,planId);
-        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
-                        new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
-                                .append("id",userDto.get_id()))
-                .toList();
+//        List<Document> userDatasDocuments = idUserMap.values().stream().map(userDto ->
+//                        new Document("reviewerName",userDto.getName()).append("reviewerTeam",userDto.getTeamName()).append("reviewerCode",userDto.getEmpCode())
+//                                .append("id",userDto.get_id()))
+//                .toList();
+
+        List<Document> userDatasDocuments = new ArrayList<>();
+
+        for (UserDto userDto : idUserMap.values()) {
+            Document document = new Document();
+            document.append("reviewerName", userDto.getName())
+                    .append("reviewerTeam", userDto.getTeamName())
+                    .append("reviewerCode", userDto.getEmpCode())
+                    .append("id", userDto.get_id());
+            userDatasDocuments.add(document);
+        }
 
 //        Criteria criteria = Criteria.where("traineeId").is(traineeId)
 //                .and("isDeleted").is(false);
@@ -808,6 +824,10 @@ public class FeedbackService_V2 {
                 ratingReponseDto.setBehaviour(compute_rating((Double) d.get("rating"),(Integer) d.get("count")));
         };
         //float total = ratingReponseDto.getTest() + ratingReponseDto.getCourse() + ratingReponseDto.getPresentation() + ratingReponseDto.getBehaviour();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticationToken = (String)authentication.getCredentials();
+        double attendanceRating = attendanceService.getAttendanceRating(traineeId, authenticationToken);
+//        ratingReponseDto.setAttendance(attendanceRating);
         ratingReponseDto.setOverall(computeOverallRatingOfTrainee(traineeId));
         ratingReponseDto.setComment(getFeedbackMessageBasedOnOverallRating(ratingReponseDto.getOverall()));
         return ratingReponseDto;
@@ -997,8 +1017,7 @@ public class FeedbackService_V2 {
         return compute_rating(totalRating,count);
 //        return roundOff_Rating(totalRating/count);
     }
-
-    public Double computeOverallRatingOfTrainee(String traineeId){
+    public Double computeOverallRatingOfTrainee(String traineeId) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
                 group("traineeId")
@@ -1010,7 +1029,28 @@ public class FeedbackService_V2 {
         if (document.isEmpty()) return 0.00;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return compute_rating(totalRating,count);
+        return compute_rating(totalRating, count);
+    }
+
+    public Double computeOverallRatingOfTrainee(String traineeId, double attendanceRating){
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
+                group("traineeId")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        List<Document> document = aggregationResults.getMappedResults();
+        if (document.isEmpty()) return attendanceRating;
+        int count = (int) document.get(0).get("count");
+        double totalRating = (double) document.get(0).get("overallRating");
+        System.out.println("total rating is " + totalRating);
+        System.out.println("Attendance rating is " + attendanceRating);
+        System.out.println("Count is " + count);
+        double overallRating = (totalRating + attendanceRating) ;
+        System.out.println("overall rating is " + overallRating);
+        return compute_rating(overallRating,count + 1);
 //        return roundOff_Rating(totalRating/count);
     }
 

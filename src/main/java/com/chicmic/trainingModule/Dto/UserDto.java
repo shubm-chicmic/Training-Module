@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,6 +20,8 @@ public class UserDto {
     private String teamName;
     private String empCode;
     private String employeeFullName;
+    private Instant joiningDate;
+    private String workingAt;
 
     @Override
     public String toString() {

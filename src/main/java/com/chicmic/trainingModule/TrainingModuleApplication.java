@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +71,11 @@ public class TrainingModuleApplication implements CommandLineRunner {
 					teams.add(team.asText());
 				}
 			}
+			Instant joiningDate = null;
+			JsonNode joiningDateNode = node.get("joiningDate");
+			if (joiningDateNode != null && !joiningDateNode.isNull()) {
+				joiningDate = Instant.parse(joiningDateNode.asText());
+			}
 			UserDto userDto = UserDto.builder()
 					.token(null)
 					._id(node.get("_id").asText())
@@ -77,6 +83,8 @@ public class TrainingModuleApplication implements CommandLineRunner {
 					.empCode(node.get("employeeId").asText())
 					.teams(teams)
 					.teamName((node.get("teamNames").asText()))
+					.joiningDate(joiningDate)
+					.workingAt(node.get("workingAt").asText())
 					.build();
 			idUserMap.put(userDto.get_id(), userDto);
 			empCodeUserMap.put(userDto.getEmpCode(), userDto);
@@ -101,6 +109,7 @@ public class TrainingModuleApplication implements CommandLineRunner {
 	public static HashMap<String, UserDto> findTraineeAndMap(){
 		System.out.println("\u001B[31m fetching trainee list");
 		String apiUrl = apiGateWayUrl + "/v1/dropdown/user?designation=Trainee";
+		System.out.println("Api Url = " + apiUrl);
 		RestTemplate restTemplate = new RestTemplate();
 		String apiResponse = restTemplate.getForObject(apiUrl, String.class);
 		ObjectMapper mapper = new ObjectMapper();
@@ -114,11 +123,18 @@ public class TrainingModuleApplication implements CommandLineRunner {
 
 		HashMap<String,UserDto> idTraineeMap = new HashMap<>();
 		for (JsonNode node : dataArray) {
+//			List<String> teams = new ArrayList<>();
+//			JsonNode teamsNode = node.get("teams");
+//			if (teamsNode.isArray()) {
+//				for (JsonNode team : teamsNode) {
+//					teams.add(team.asText());
+//				}
+//			}
 			List<String> teams = new ArrayList<>();
 			JsonNode teamsNode = node.get("teams");
 			if (teamsNode.isArray()) {
 				for (JsonNode team : teamsNode) {
-					teams.add(team.asText());
+					teams.add(team.get("_id").asText());
 				}
 			}
 			UserDto userDto = UserDto.builder()
@@ -128,6 +144,7 @@ public class TrainingModuleApplication implements CommandLineRunner {
 					.empCode(node.get("employeeId").asText())
 					.teams(teams)
 					.teamName((node.get("teams").get(0).get("name").asText()))
+					.employeeFullName(node.get("employeeFullName").asText())
 					.build();
 			idTraineeMap.put(userDto.get_id(), userDto);
 		}

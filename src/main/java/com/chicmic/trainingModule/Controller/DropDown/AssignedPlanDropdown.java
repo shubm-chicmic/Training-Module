@@ -103,7 +103,8 @@ public class AssignedPlanDropdown {
 
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
         if(assignedPlan == null){
-            return ResponseEntity.badRequest().body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not found", null));
+            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "Plan Data Fetched Successfully", null));
+//            return ResponseEntity.badRequest().body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not found", null));
         }
         AssignedPlanDto assignedPlanDto = null;
         if(traineeId != null && projectId == null &&  milestoneId == null && taskId == null){

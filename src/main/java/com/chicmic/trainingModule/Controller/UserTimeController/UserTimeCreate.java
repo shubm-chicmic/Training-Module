@@ -26,6 +26,9 @@ public class UserTimeCreate {
        if(userTimeDto != null){
            System.out.println("\u001B[35m Usertime Dto : ");
            System.out.println(userTimeDto + "\u001B[0m");
+           if(userTimeDto.getType() < TimeSheetType.COURSE || userTimeDto.getType() > TimeSheetType.SESSION){
+               return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid TimeSheet Type", null, response);
+           }
 //           try {
            if(userTimeDto.getType() == TimeSheetType.SESSION){
                UserTime userTime = userTimeService.createSessionTimeForUser(userTimeDto, principal.getName());

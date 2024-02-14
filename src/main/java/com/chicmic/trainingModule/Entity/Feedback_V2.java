@@ -2,23 +2,17 @@ package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.FeedbackDto.FeedbackRequestDto;
 import com.chicmic.trainingModule.Dto.rating.Rating;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 
 import static com.chicmic.trainingModule.Dto.rating.Rating.getRating;
-import static com.chicmic.trainingModule.Dto.rating.Rating.getSubTaskIds;
-import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2.*;
-import static com.chicmic.trainingModule.Util.FeedbackUtil.FEEDBACK_TYPE_CATEGORY_V2;
+import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService.*;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.TEST;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA;
 

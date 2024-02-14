@@ -3,15 +3,13 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskResponseDto;
 import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
-import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanTaskResponseDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
-import com.chicmic.trainingModule.Entity.Constants.EntityType;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.ProgessConstants;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 //import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.UserProgressService.UserProgressService;
 import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
@@ -19,17 +17,15 @@ import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.DateTimeUtil;
 import com.chicmic.trainingModule.Util.FormatTime;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AssignTaskResponseMapper {
-    private final FeedbackService_V2 feedbackServiceV2;
+    private final FeedbackService feedbackServiceV2;
     private final UserProgressService userProgressService;
     private final PhaseService phaseService;
     private final CourseService courseService;

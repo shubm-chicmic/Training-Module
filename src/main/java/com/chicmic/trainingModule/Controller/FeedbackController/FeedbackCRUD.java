@@ -9,7 +9,7 @@ import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.Feedback_V2;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService_V2;
+import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,10 +24,10 @@ import static com.chicmic.trainingModule.Util.FeedbackUtil.checkRole;
 @RequestMapping("/v1/training/feedback")
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class FeedbackCRUD {
-    private FeedbackService_V2 feedbackService;
+    private FeedbackService feedbackService;
     private AssignTaskService assignTaskService;
 
-    public FeedbackCRUD(FeedbackService_V2 feedbackService, AssignTaskService assignTaskService) {
+    public FeedbackCRUD(FeedbackService feedbackService, AssignTaskService assignTaskService) {
         this.feedbackService = feedbackService;
         this.assignTaskService = assignTaskService;
     }

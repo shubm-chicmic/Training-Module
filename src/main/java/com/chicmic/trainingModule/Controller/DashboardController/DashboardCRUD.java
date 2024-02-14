@@ -8,18 +8,14 @@ import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
-import com.chicmic.trainingModule.Service.DashboardService.DashboardService_V2;
+import com.chicmic.trainingModule.Service.DashboardService.DashboardService;
 import com.chicmic.trainingModule.Service.SessionService.SessionService;
-import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -28,17 +24,17 @@ import java.util.List;
 @RequestMapping("/v1/training/dashboard")
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
 public class DashboardCRUD {
-    private final DashboardService_V2 dashboardService;
+    private final DashboardService dashboardService;
     private final SessionService sessionService;
     private final AssignTaskService assignTaskService;
 
-    public DashboardCRUD(DashboardService_V2 dashboardService, SessionService sessionService, AssignTaskService assignTaskService) {
+    public DashboardCRUD(DashboardService dashboardService, SessionService sessionService, AssignTaskService assignTaskService) {
         this.dashboardService = dashboardService;
         this.sessionService = sessionService;
         this.assignTaskService = assignTaskService;
     }
     @GetMapping("/{traineeId}")
-    public ApiResponse getTraineeRatingSummary(@PathVariable String traineeId, Principal principal){
+    public ApiResponse getTraineeRatingSummary(@PathVariable String traineeId, Principal principal, @RequestHeader("Authorization") String authorizationToken){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TR");
         if(flag && !traineeId.equals(principal.getName()))

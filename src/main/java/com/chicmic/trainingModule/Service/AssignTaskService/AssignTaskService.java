@@ -2,10 +2,14 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
+import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.AssignTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
@@ -18,6 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -242,6 +247,22 @@ public class AssignTaskService {
         if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         return assignTaskRepo.save(assignedPlan);
+    }
+
+    public boolean isUserMentorOfTrainee(String traineeId, String userId) {
+        AssignedPlan assignedPlan = getAllAssignTasksByTraineeId(traineeId);
+        if(assignedPlan == null)return false;
+        List<Plan> plans = assignedPlan.getPlans();
+        for (Plan plan : plans){
+            for (Phase<PlanTask> phase : plan.getPhases()){
+                for (PlanTask planTask : phase.getTasks()){
+                    if(planTask.getMentorIds().contains(userId)){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
 
