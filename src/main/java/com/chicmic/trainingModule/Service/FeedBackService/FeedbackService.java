@@ -824,9 +824,9 @@ public class FeedbackService {
                 ratingReponseDto.setBehaviour(compute_rating((Double) d.get("rating"),(Integer) d.get("count")));
         };
         //float total = ratingReponseDto.getTest() + ratingReponseDto.getCourse() + ratingReponseDto.getPresentation() + ratingReponseDto.getBehaviour();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String authenticationToken = (String)authentication.getCredentials();
-        double attendanceRating = attendanceService.getAttendanceRating(traineeId, authenticationToken);
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String authenticationToken = (String)authentication.getCredentials();
+//        double attendanceRating = attendanceService.getAttendanceRating(traineeId, authenticationToken);
 //        ratingReponseDto.setAttendance(attendanceRating);
         ratingReponseDto.setOverall(computeOverallRatingOfTrainee(traineeId));
         ratingReponseDto.setComment(getFeedbackMessageBasedOnOverallRating(ratingReponseDto.getOverall()));
@@ -1029,11 +1029,29 @@ public class FeedbackService {
         if (document.isEmpty()) return 0.00;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
+        return compute_rating(totalRating,count);
+    }
+    public Double computeOverallPlanRatingOfTrainee(String traineeId) {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(
+                        Criteria.where("traineeId")
+                                .is(traineeId)
+                                .and("isDeleted").is(false)
+                                .and("type").ne("5") // Exclude rating of behaviours
+                ),
+                group("traineeId")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        List<Document> document = aggregationResults.getMappedResults();
+        if (document.isEmpty()) return 0.00;
+        int count = (int) document.get(0).get("count");
+        double totalRating = (double) document.get(0).get("overallRating");
         return compute_rating(totalRating, count);
     }
 
-    public Double computeOverallRatingOfTrainee(String traineeId, double attendanceRating){
-
+    private Double computeOverallRatingOfTrainee(String traineeId, double attendanceRating){
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
                 group("traineeId")
@@ -1173,11 +1191,17 @@ public class FeedbackService {
         ).getUniqueMappedResult();
         Map<String, Object> response = new HashMap<String, Object>();
         List<Document> traineeOverAllRating = (List<Document>) results.get("overallRating");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticationToken = (String)authentication.getCredentials();
+        double attendanceRating = attendanceService.getAttendanceRating(traineeId, authenticationToken);
         if(traineeOverAllRating == null || traineeOverAllRating.isEmpty()) {
-            response.put("overallRating", 0f);
+//            response.put("overallRating", 0f);
+            response.put("overallRating", attendanceRating);
         }else{
             Double totalOverAllRating = (Double) traineeOverAllRating.get(0).get("totalOverAllRating");
             Integer count = (Integer) traineeOverAllRating.get(0).get("count");
+            count += 1;
+            totalOverAllRating += attendanceRating;
             response.put("overallRating", compute_rating(totalOverAllRating,count));
         }
         List<Document> planRating = (List<Document>) results.get("planRating");

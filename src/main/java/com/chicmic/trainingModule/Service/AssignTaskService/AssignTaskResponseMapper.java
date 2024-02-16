@@ -38,8 +38,7 @@ public class AssignTaskResponseMapper {
 //        return assignTaskResponseDtoList;
 //    }
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
-        Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId));
-
+        Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId), feedbackServiceV2.computeOverallPlanRatingOfTrainee(traineeId) );
         if (assignTask == null) {
             return AssignTaskResponseDto.builder().trainee(trainee).build();
         }

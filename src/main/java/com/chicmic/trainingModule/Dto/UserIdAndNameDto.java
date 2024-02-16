@@ -19,6 +19,8 @@ public class UserIdAndNameDto implements Comparable<UserIdAndNameDto>{
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double overallRating;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Double overallPlanRating;
 
     @Override
     public int compareTo(UserIdAndNameDto o) {

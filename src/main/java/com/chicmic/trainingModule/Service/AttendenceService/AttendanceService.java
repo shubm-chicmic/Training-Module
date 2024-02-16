@@ -62,7 +62,7 @@ public class AttendanceService {
             // Extract the leave count from the response
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 Map<String, Object> response = responseEntity.getBody();
-                System.out.println("Leave response: " + response);
+//                System.out.println("Leave response: " + response);
                 if (response != null && response.containsKey("data")) {
                     Map<String, Object> data = (Map<String, Object>) response.get("data");
                     if (data != null && data.containsKey("yearlyLeavesTaken")) {
@@ -112,13 +112,12 @@ public class AttendanceService {
         String apiUrl = apiGatewayUrl + "/v1/holiday?year=" + year + "&company=" + workingAt;
         System.out.println("API URL : " + apiUrl);
         HttpHeaders headers = new HttpHeaders();
-        System.out.println("Token Value : " + token + "Working At : " + workingAt);
+//        System.out.println("Token Value : " + token + "Working At : " + workingAt);
         headers.set("Authorization", token);
         try {
             ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), String.class);
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 try {
-                    System.out.println(responseEntity.getBody());
                     JsonNode responseNode = new ObjectMapper().readTree(responseEntity.getBody());
                     JsonNode dataArray = responseNode.get("data");
 

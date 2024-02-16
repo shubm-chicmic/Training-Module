@@ -163,6 +163,8 @@ public class FeedbackCRUD {
         var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,feedbackRequestDto.getTaskId(),Integer.toString(type));
         //var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),taskId,feedbackRequestDto.getTaskId(),Integer.toString(type));
         response.put("_id", feedback.get_id());
+        double overallPlanRating = feedbackService.computeOverallPlanRatingOfTrainee(feedbackRequestDto.getTrainee());
+        response.put("overallPlanRating", overallPlanRating);
         return new ApiResponse(201,"Feedback saved successfully",response);
     }
 
@@ -192,6 +194,8 @@ public class FeedbackCRUD {
         var response = feedbackService.computeOverallRatingOfEmployee(feedbackRequestDto.getTrainee(),feedbackRequestDto.getPlanId(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getTaskId(),Integer.toString(type));
 //        var response = feedbackService.computeOverallRating(feedbackRequestDto.getTrainee(),feedbackResponse.getTask().get_id(),feedbackRequestDto.getPlanId(),type);
         response.put("_id", feedbackResponse.get_id());
+        double overallPlanRating = feedbackService.computeOverallPlanRatingOfTrainee(feedbackRequestDto.getTrainee());
+        response.put("overallPlanRating", overallPlanRating);
 //        return new ApiResponse(200,"Feedback updated successfully",response);
         ApiResponse apiResponse = new ApiResponse(200,"Feedback updated successfully",response);
         return apiResponse;
