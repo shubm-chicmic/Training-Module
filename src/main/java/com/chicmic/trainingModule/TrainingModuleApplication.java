@@ -229,8 +229,10 @@ public class TrainingModuleApplication implements CommandLineRunner {
 						}
 
 						System.out.println(course.getName());
-						courseService.createCourse(course, true);
-						count[0]++;
+						if(courseService.getCourseByName(course.getName()) == null){
+							courseService.createCourse(course, true);
+							count[0]++;
+						}
 					});
 			return count[0] +" courses created successfully";
 		} catch (IOException e) {

@@ -362,7 +362,8 @@ public class SessionService {
                         Criteria.where("_id").is(userId)
                                 .and("attendanceStatus").is(SessionAttendedStatus.ATTENDED)
                 );
-
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        criteria = criteria.andOperator(approvedCriteria);
         MatchOperation matchStage = Aggregation.match(criteria);
 
         Aggregation aggregation = Aggregation.newAggregation(matchStage);
@@ -376,6 +377,8 @@ public class SessionService {
                 .and("trainees").elemMatch(
                         Criteria.where("_id").is(userId)
                 );
+        Criteria approvedCriteria = Criteria.where("isApproved").is(true);
+        criteria = criteria.andOperator(approvedCriteria);
 
         MatchOperation matchStage = Aggregation.match(criteria);
 

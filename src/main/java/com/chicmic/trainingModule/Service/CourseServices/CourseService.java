@@ -43,7 +43,11 @@ public class CourseService {
     private final CourseRepo courseRepo;
     private final MongoTemplate mongoTemplate;
     private final PhaseService phaseService;
-
+    public Course getCourseByName(String courseName) {
+        Query query = new Query(Criteria.where("name").is(courseName).and("isDeleted").is(false));
+        Course course = mongoTemplate.findOne(query, Course.class);
+        return course;
+    }
 
     public Course createCourse(Course course, Boolean isCourseIsAddingFromScript) {
         course.setCreatedAt(LocalDateTime.now());
