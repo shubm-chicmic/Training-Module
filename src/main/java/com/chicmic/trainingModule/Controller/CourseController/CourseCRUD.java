@@ -9,19 +9,33 @@ import com.chicmic.trainingModule.Entity.Course;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.Task;
+import com.chicmic.trainingModule.ExcelPerformOperations;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
+import com.chicmic.trainingModule.TrainingModuleApplication;
+import com.chicmic.trainingModule.Util.CourseExcelFileVerify;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.*;
-
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 //vector<int>1234
 @RestController
 @RequestMapping("/v1/training/course")
@@ -43,13 +57,13 @@ public class CourseCRUD {
             @RequestParam(required = false, defaultValue = "false") Boolean isPhaseRequired,
             @RequestParam(required = false, defaultValue = "false") Boolean isDropdown,
             HttpServletResponse response,
-            @RequestParam(required = false ) String traineeId,
+            @RequestParam(required = false) String traineeId,
             Principal principal
-    )  {
-        if(sortKey != null && sortKey.equals("createdAt")){
+    ) {
+        if (sortKey != null && sortKey.equals("createdAt")) {
             sortDirection = -1;
         }
-        if(sortKey != null && !sortKey.isEmpty() && sortKey.equals("courseName")){
+        if (sortKey != null && !sortKey.isEmpty() && sortKey.equals("courseName")) {
             sortKey = "name";
         }
         System.out.println("dropdown key = " + isDropdown);
@@ -61,7 +75,7 @@ public class CourseCRUD {
             List<CourseResponseDto> courseResponseDtoList = courseResponseMapper.mapCourseToResponseDto(courseList, isPhaseRequired);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         }
-        if(courseId == null || courseId.isEmpty()) {
+        if (courseId == null || courseId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
@@ -72,17 +86,17 @@ public class CourseCRUD {
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), courseResponseDtoList.size() + " Courses retrieved", courseResponseDtoList, response);
         } else {
             Course course = courseService.getCourseById(courseId);
-            if(course == null){
-                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "Course not found", null, response);
+            if (course == null) {
+                return new ApiResponseWithCount(0, HttpStatus.NOT_FOUND.value(), "Course not found", null, response);
             }
             CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(course, true);
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Course retrieved successfully", courseResponseDto, response);
+            return new ApiResponseWithCount(1, HttpStatus.OK.value(), "Course retrieved successfully", courseResponseDto, response);
         }
     }
 
 
     @PostMapping
-    public ApiResponse create(@RequestBody@Valid CourseDto courseDto, Principal principal) {
+    public ApiResponse create(@RequestBody @Valid CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase<Task>> phases = new ArrayList<>();
 //        for (List<Task> courseTasks : courseDto.getPhases()) {
@@ -107,11 +121,31 @@ public class CourseCRUD {
         return new ApiResponse(HttpStatus.CREATED.value(), "Course created successfully", course);
     }
 
+    @PostMapping("/upload")
+    public ApiResponse createCourseWithFile(@RequestParam("courseExcelFile") MultipartFile file, Principal principal, HttpServletResponse response) {
+        // Check if the file is empty
+        if (file.isEmpty()) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Please upload a file", null, response);
+        }
+        if (!CourseExcelFileVerify.isFormatVerified(file)) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Please upload a valid file", null, response);
+        }
+
+        try {
+            // Process the uploaded file (e.g., read Excel file, extract course details)
+            Course course = ExcelPerformOperations.excelPerformOperations(file.getInputStream(), file.getOriginalFilename());
+            course.setCreatedBy(principal.getName());
+            course = courseService.createCourse(course, true);
+            return new ApiResponse(HttpStatus.CREATED.value(), "Courses created successfully", course, response);
+        } catch (Exception e) {
+            return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), null, response);
+        }
+    }
     @DeleteMapping("/{courseId}")
     public ApiResponse delete(@PathVariable String courseId, HttpServletResponse response) {
         System.out.println("courseId = " + courseId);
         List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
-        if(planTasks.size() > 0){
+        if (planTasks.size() > 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course is already assigned to a plan", null, response
             );
         }
@@ -123,7 +157,7 @@ public class CourseCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateCourse(@RequestBody@Valid CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updateCourse(@RequestBody @Valid CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
         System.out.println("course Dto = " + courseDto);
         if (courseDto.getApprover() != null && courseDto.getApprover().size() == 0) {
@@ -142,7 +176,7 @@ public class CourseCRUD {
             courseDto.setApproved(course.getIsApproved());
             if (courseDto.getApprover() != null && !courseDto.getApprover().equals(course.getApprover())) {
                 List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
-                if(planTasks.size() > 0){
+                if (planTasks.size() > 0) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be edited since course is already assigned to a plan", null, response
                     );
                 }
@@ -150,7 +184,7 @@ public class CourseCRUD {
 //            courseDto.setApprover(course.getApprover());
             CourseResponseDto courseResponseDto = courseResponseMapper.mapCourseToResponseDto(courseService.updateCourse(courseDto, courseId), true);
             return new ApiResponse(HttpStatus.CREATED.value(), "Course updated successfully", courseResponseDto, response);
-        }else {
+        } else {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Course not found", null, response);
         }
     }

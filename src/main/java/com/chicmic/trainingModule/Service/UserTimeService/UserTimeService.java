@@ -7,16 +7,43 @@ import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Repository.UserTimeRepo;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class UserTimeService {
     private final UserTimeRepo userTimeRepo;
     private final PhaseService phaseService;
     private final PlanTaskService planTaskService;
+
+    public UserTimeService(UserTimeRepo userTimeRepo, PhaseService phaseService, PlanTaskService planTaskService) {
+        this.userTimeRepo = userTimeRepo;
+        this.phaseService = phaseService;
+        this.planTaskService = planTaskService;
+    }
+    public List<UserTime> getUserTimeByTraineeId(String traineeId) {
+        return userTimeRepo.findByTraineeId(traineeId, TimeSheetType.VIVA, TimeSheetType.PPT);
+    }
+    public List<String> getUniqueTraineeIds() {
+        List<UserTime> userTimes = userTimeRepo.findDistinctTraineeIds();
+        return userTimes.stream()
+                .map(UserTime::getTraineeId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
     public UserTime getUserTimeByDto(UserTimeDto userTimeDto, String traineeId) {
         if (userTimeDto == null) {
             return null;
@@ -78,11 +105,6 @@ public class UserTimeService {
         return userTimes.stream()
                 .map(UserTime::getConsumedTime)
                 .reduce(0, Integer::sum);
-    }
-    public UserTimeService(UserTimeRepo userTimeRepo, PhaseService phaseService, PlanTaskService planTaskService) {
-        this.userTimeRepo = userTimeRepo;
-        this.phaseService = phaseService;
-        this.planTaskService = planTaskService;
     }
 
     public UserTime saveUserTime(UserTime userTime) {

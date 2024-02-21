@@ -90,7 +90,7 @@ public class DashboardService {
 
         plans.forEach((p)->{
             if (!p.getDeleted()) {
-                Map<String, Integer> courseProgress = new HashMap<>();
+                Map<String, Integer> courseProgress = new LinkedHashMap<>();
                 p.getPhases().forEach(ps -> {
                     ps.getTasks().forEach(pt -> {
                         if (pt != null && pt instanceof PlanTask && pt.getPlanType() == COURSE) {
