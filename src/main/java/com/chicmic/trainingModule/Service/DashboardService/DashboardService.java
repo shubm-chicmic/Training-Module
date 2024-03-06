@@ -33,7 +33,7 @@ public class DashboardService {
     private final CourseService courseService;
     private final PhaseService phaseService;
 
-    public DashboardService(FeedbackService feedbackService, MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PhaseService phaseService ) {
+    public DashboardService(FeedbackService feedbackService, MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PhaseService phaseService) {
         this.feedbackService = feedbackService;
         this.mongoTemplate = mongoTemplate;
         this.testService = testService;
@@ -64,13 +64,13 @@ public class DashboardService {
         AssignedPlan assignedPlan = mongoTemplate.findOne(query, AssignedPlan.class);
         if (assignedPlan == null) return dashboardResponse;
 
-        var plans =  assignedPlan.getPlans();
+        var plans = assignedPlan.getPlans();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         //AtomicReference<String> planId = new AtomicReference<>("");
         List<CourseDto> courseDtoList = new ArrayList<>();
         List<PlanDto> planDtoList = new ArrayList<>();
         List<Criteria> criteriaList = new ArrayList<>();
-        Map<String,Map<String,Integer>> planCourseIds = new HashMap<>();
+        Map<String, Map<String, Integer>> planCourseIds = new HashMap<>();
         List<String> courseIds = new ArrayList<>();
         List<String> testIds = new ArrayList<>();
 
@@ -78,17 +78,17 @@ public class DashboardService {
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("status").is(3)),
                 Aggregation.group("planTaskId")
                         .count().as("count"),
-                Aggregation.project("count","planTaskId")
+                Aggregation.project("count", "planTaskId")
 //                        .and("_id.planId").as("planId").and("_id.phaseId").as("phaseId")
         );
         AggregationResults<Document> aggregationResults1 = mongoTemplate.aggregate(aggregation1, "userProgress", Document.class);
         List<Document> documentList1 = aggregationResults1.getMappedResults();//--->completed!!!
-        Map<String,Integer> planTaskProgress = new HashMap<>();
+        Map<String, Integer> planTaskProgress = new HashMap<>();
         documentList1.forEach(d ->
-            planTaskProgress.put((String) d.get("_id") ,(Integer) d.get("count"))
+                planTaskProgress.put((String) d.get("_id"), (Integer) d.get("count"))
         );
 
-        plans.forEach((p)->{
+        plans.forEach((p) -> {
             if (!p.getDeleted()) {
                 Map<String, Integer> courseProgress = new LinkedHashMap<>();
                 p.getPhases().forEach(ps -> {
@@ -99,25 +99,24 @@ public class DashboardService {
                             //courseDtoList.add(new CourseDto(pt.getPlan(), p.get_id(),pt.getTotalTasks()));
                             criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()).and("status").is(3));
                         }
-                        if(pt!= null && pt instanceof  PlanTask){
+                        if (pt != null && pt instanceof PlanTask) {
                             PlanDto planDto = PlanDto.builder().name(p.getPlanName()).taskName(pt.getPlan()).subtasks(pt.getMilestones()).isComplete(false).date(pt.getDate()).type(pt.getPlanType()).build();
                             planDtoList.add(planDto);
-                                if(pt.getPlanType().equals(TEST)){
+                            if (pt.getPlanType().equals(TEST)) {
+                                int totalTask = phaseService.countTotalSubtask(pt.getMilestones());
+                                int completedTask = planTaskProgress.getOrDefault(pt.get_id(), 0);
+                                planDto.setComplete(totalTask == completedTask);
+                                testIds.add(pt.getPlan());
+                            } else {
+                                if (pt.getPlanType().equals(COURSE)) {
                                     int totalTask = phaseService.countTotalSubtask(pt.getMilestones());
                                     int completedTask = planTaskProgress.getOrDefault(pt.get_id(), 0);
                                     planDto.setComplete(totalTask == completedTask);
-                                    testIds.add(pt.getPlan());
+                                } else {
+                                    planDto.setComplete(planTaskProgress.containsKey(pt.get_id()));
                                 }
-                                else{
-                                    if(pt.getPlanType().equals(COURSE)){
-                                        int totalTask = phaseService.countTotalSubtask(pt.getMilestones());
-                                        int completedTask = planTaskProgress.getOrDefault(pt.get_id(), 0);
-                                        planDto.setComplete(totalTask == completedTask);
-                                    }else{
-                                        planDto.setComplete(planTaskProgress.containsKey(pt.get_id()));
-                                    }
-                                    courseIds.add(pt.getPlan());
-                                }
+                                courseIds.add(pt.getPlan());
+                            }
                         }
                     });
 //                    planDtoList.add(PlanDto.builder().name(p.getPlanName()).phase(ps.getName())
@@ -130,13 +129,13 @@ public class DashboardService {
         });
 
         //aggregation query!!!
-        Criteria criteria2 = (!criteriaList.isEmpty())?new Criteria().orOperator(criteriaList):new Criteria();
-        List<UserProgress> userProgresses = mongoTemplate.find(new Query(criteria2),UserProgress.class);
+        Criteria criteria2 = (!criteriaList.isEmpty()) ? new Criteria().orOperator(criteriaList) : new Criteria();
+        List<UserProgress> userProgresses = mongoTemplate.find(new Query(criteria2), UserProgress.class);
 
         //compute overall rating of a trainee!!!
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(criteria2),
-                Aggregation.group("courseId","planId","phaseId")
+                Aggregation.group("courseId", "planId", "phaseId")
                         .count().as("count"),
                 Aggregation.project("count").andExclude("_id").and("_id.courseId").as("courseId")
                         .and("_id.planId").as("planId").and("_id.phaseId").as("phaseId")
@@ -144,9 +143,9 @@ public class DashboardService {
 
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "userProgress", Document.class);
         List<Document> documentList = aggregationResults.getMappedResults();//--->completed!!!
-        Map<String,Integer> progress = new HashMap<>();
-        for (Document document : documentList){
-            progress.put((String) document.get("courseId"),(Integer) document.get("count"));
+        Map<String, Integer> progress = new HashMap<>();
+        for (Document document : documentList) {
+            progress.put((String) document.get("courseId"), (Integer) document.get("count"));
         }
 
 //        List<String> courseIds = new ArrayList<>();
@@ -164,11 +163,11 @@ public class DashboardService {
             int total = c.getProgress();
             c.setProgress(0);
 
-            documentList.forEach(d ->{
-                if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId")) ){
-                    int completed = (d.get("count")==null)?0:(Integer) d.get("count");
-                    if(completed > total) completed = total;
-                    if (total!=0) c.setProgress(completed * 100 / total);
+            documentList.forEach(d -> {
+                if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId"))) {
+                    int completed = (d.get("count") == null) ? 0 : (Integer) d.get("count");
+                    if (completed > total) completed = total;
+                    if (total != 0) c.setProgress(completed * 100 / total);
                 }
             });
         });
@@ -176,22 +175,22 @@ public class DashboardService {
         courseDtoList.forEach(c -> c.setName(courseDetails.get(0).get(c.getName())));
         dashboardResponse.setCourses(courseDtoList);
         dashboardResponse.setPlan(planDtoList);
-        planDtoList.forEach(pd ->{
+        planDtoList.forEach(pd -> {
             String taskId = pd.getTaskName();
-            if(pd.getType() == 1 || pd.getType() == 3 || pd.getType() == 4){
+            if (pd.getType() == 1 || pd.getType() == 3 || pd.getType() == 4) {
                 pd.setTaskName(courseDetails.get(0).get(taskId));
                 List<Object> subTaskIds = new ArrayList<>();
-                if(pd.getSubtasks() != null) {
+                if (pd.getSubtasks() != null) {
                     pd.getSubtasks().forEach(st -> {
                         String subTaskId = (String) st;
                         subTaskIds.add(courseDetails.get(1).get(subTaskId));
                     });
                 }
                 pd.setSubtasks(subTaskIds);
-            }else if (pd.getType() == TEST){
+            } else if (pd.getType() == TEST) {
                 pd.setTaskName(testDetails.get(0).get(taskId));
                 List<Object> subTaskIds = new ArrayList<>();
-                pd.getSubtasks().forEach(st->{
+                pd.getSubtasks().forEach(st -> {
                     String subTaskId = (String) st;
                     subTaskIds.add(testDetails.get(1).get(subTaskId));
                 });

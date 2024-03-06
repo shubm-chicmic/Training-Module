@@ -30,7 +30,8 @@ public class AssignTaskResponseMapper {
     private final PhaseService phaseService;
     private final CourseService courseService;
     private final UserTimeService userTimeService;
-//    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
+
+    //    public List<AssignTaskResponseDto> mapAssignTaskToResponseDto(List<AssignedPlan> assignTasks, String traineeId, Principal principal) {
 //        List<AssignTaskResponseDto> assignTaskResponseDtoList = new ArrayList<>();
 //        for (AssignedPlan assignTask : assignTasks) {
 //            assignTaskResponseDtoList.add(mapAssignTaskToResponseDto(assignTask, traineeId, principal));
@@ -38,7 +39,7 @@ public class AssignTaskResponseMapper {
 //        return assignTaskResponseDtoList;
 //    }
     public AssignTaskResponseDto mapAssignTaskToResponseDto(AssignedPlan assignTask, String traineeId, Principal principal) {
-        Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId), feedbackServiceV2.computeOverallPlanRatingOfTrainee(traineeId) );
+        Object trainee = new UserIdAndNameDto(traineeId, TrainingModuleApplication.searchNameById(traineeId), feedbackServiceV2.computeOverallRatingOfTrainee(traineeId), feedbackServiceV2.computeOverallPlanRatingOfTrainee(traineeId));
         if (assignTask == null) {
             return AssignTaskResponseDto.builder().trainee(trainee).build();
         }
@@ -62,26 +63,26 @@ public class AssignTaskResponseMapper {
         for (Plan plan : assignTask.getPlans()) {
             Integer estimatedTime = 0;
             Integer consumedTime = 0;
-            if(plan != null && !plan.getDeleted()) {
-                Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId,plan.get_id(),5);
+            if (plan != null && !plan.getDeleted()) {
+                Integer completedTasks = userProgressService.getTotalSubTaskCompletedInPlan(traineeId, plan.get_id(), 5);
                 Integer totalTask = 0;
                 for (Phase<PlanTask> phase : plan.getPhases()) {
                     for (PlanTask planTask : phase.getTasks()) {
-                        if(planTask.getPlanType() != PlanType.VIVA && planTask.getPlanType() != PlanType.PPT) {
+                        if (planTask.getPlanType() != PlanType.VIVA && planTask.getPlanType() != PlanType.PPT) {
                             estimatedTime += planTask.getEstimatedTimeInSeconds();
                             consumedTime += userTimeService.calculateConsumedTimeInPlanTask(traineeId, plan, planTask);
                         }
-                        if (planTask == null)continue;
+                        if (planTask == null) continue;
                         mentors.addAll(planTask.getMentorIds());
-                        if((planTask.getPlanType() != 3 && planTask.getPlanType() != 4)) {
-                            if(planTask.getTotalTasks() == null) {
+                        if ((planTask.getPlanType() != 3 && planTask.getPlanType() != 4)) {
+                            if (planTask.getTotalTasks() == null) {
                                 totalTask += 0;
-                            }else {
+                            } else {
                                 totalTask += phaseService.countTotalSubtask(planTask.getMilestones());
                             }
-                        }else {
+                        } else {
                             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndPlanTaskId(traineeId, plan.get_id(), planTask.get_id(), planTask.getPlanType());
-                            if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed){
+                            if (userProgress != null && userProgress.getStatus() == ProgessConstants.Completed) {
                                 completedTasks++;
                             }
                             totalTask++;
@@ -89,7 +90,7 @@ public class AssignTaskResponseMapper {
                     }
                 }
                 Boolean isCompleted = false;
-                if(totalTask == completedTasks) {
+                if (totalTask == completedTasks) {
 //                    if(userProgressService.getUserProgressByTraineeIdAndPlanId(traineeId, plan.get_id(), EntityType.PLAN) == null) {
 //                        UserProgress userProgress = UserProgress.builder()
 //                                .planId(plan.get_id())

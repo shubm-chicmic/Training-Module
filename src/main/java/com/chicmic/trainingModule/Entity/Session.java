@@ -37,7 +37,7 @@ public class Session {
     private String createdBy;
     private Instant dateTime;
 
-//    public void setDateTime(LocalDateTime dateTime) {
+    //    public void setDateTime(LocalDateTime dateTime) {
 //        if(dateTime != null)
 //            this.dateTime = dateTime.plusHours(5).plusMinutes(30);
 //    }
@@ -47,6 +47,7 @@ public class Session {
     private MomMessage MOM;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     public List<UserIdAndNameDto> getTeamsDetails() {
         return ConversionUtility.convertToTeamIdAndName(this.teams);
     }
@@ -58,6 +59,7 @@ public class Session {
         }
         return ConversionUtility.convertToUserIdAndName(trainees);
     }
+
     public List<String> getTrainees() {
         List<String> trainees = new ArrayList<>();
         for (UserIdAndSessionStatusDto userIdAndSessionStatusDto : this.trainees) {
@@ -65,12 +67,15 @@ public class Session {
         }
         return trainees;
     }
-    public Set<UserIdAndSessionStatusDto> getTraineesDetailsWithStatus(){
+
+    public Set<UserIdAndSessionStatusDto> getTraineesDetailsWithStatus() {
         return this.trainees;
     }
+
     public List<UserIdAndNameDto> getSessionByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.sessionBy);
     }
+
     public List<UserIdAndNameDto> getApproverDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approver);
     }

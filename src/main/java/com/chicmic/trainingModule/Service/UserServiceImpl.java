@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        final String email=username;
+        final String email = username;
 //        final Collection<Authority> authorities=new ArrayList<>();
 //        if(usersRepo.findByEmail(email)==null ) {
 //            throw new UsernameNotFoundException("User with this email is not registered as SuperUser ");
@@ -50,23 +50,25 @@ public class UserServiceImpl implements UserDetailsService {
 //    }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies=request.getCookies();
-        if(cookies!=null){
-            for(Cookie cookie:cookies){
-                if("Authorization".equals(cookie.getName())){
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("Authorization".equals(cookie.getName())) {
                     cookie.setValue(null);
                     cookie.setMaxAge(0);
                     cookie.setPath("/");
-                    response.addCookie(cookie);break;
+                    response.addCookie(cookie);
+                    break;
                 }
             }
         }
     }
+
     public String getTokenByLink(String link) {
-        char ch='a';
-        int i=0;
-        while(ch!='/'){
-            ch=link.charAt(i++);
+        char ch = 'a';
+        int i = 0;
+        while (ch != '/') {
+            ch = link.charAt(i++);
         }
         return link.substring(i);
     }

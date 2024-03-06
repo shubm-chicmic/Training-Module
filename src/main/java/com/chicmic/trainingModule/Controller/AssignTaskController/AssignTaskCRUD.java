@@ -144,7 +144,7 @@ public class AssignTaskCRUD {
                     .build();
             assignedPlan = assignTaskService.saveAssignTask(assignedPlan);
             return new ApiResponse(HttpStatus.OK.value(), "Plan Created Successfully", assignedPlan, response);
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Plan Cannot be Created Error Occur");
         }
     }
@@ -190,10 +190,10 @@ public class AssignTaskCRUD {
             if (assignTaskResponseDto.getPlans() != null) {
                 planSize = assignTaskResponseDto.getPlans().size();
             }
-            if(assignTaskResponseDto != null && isIndividualRole){
+            if (assignTaskResponseDto != null && isIndividualRole) {
                 Boolean isRolePermitted = false;
-                for (PlanDto planDto : assignTaskResponseDto.getPlans()){
-                     Set<UserIdAndNameDto> mentors = planDto.getMentors();
+                for (PlanDto planDto : assignTaskResponseDto.getPlans()) {
+                    Set<UserIdAndNameDto> mentors = planDto.getMentors();
                     if (mentors != null) {
                         for (UserIdAndNameDto mentor : mentors) {
                             if (mentor.get_id().equals(principal.getName())) {
@@ -201,7 +201,7 @@ public class AssignTaskCRUD {
                                 break;
                             }
                         }
-                        if(!isRolePermitted){
+                        if (!isRolePermitted) {
                             throw new ApiException(HttpStatus.BAD_REQUEST, "You are not Authorize to access this Plan!");
                         }
                     }

@@ -44,22 +44,23 @@ public class AssignTaskService {
     private final MongoTemplate mongoTemplate;
 
     //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
-    public AssignedPlan saveAssignTask(AssignedPlan assignedPlan){
-        if(assignedPlan == null)return null;
-        if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
-        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0){
+    public AssignedPlan saveAssignTask(AssignedPlan assignedPlan) {
+        if (assignedPlan == null) return null;
+        if (assignedPlan.getPlans() == null) assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0) {
             assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         }
 
         return assignTaskRepo.save(assignedPlan);
     }
+
     public AssignedPlan createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
         AssignedPlan assignTask = getAllAssignTasksByTraineeId(userId);
-        if(assignTask != null) {
+        if (assignTask != null) {
             List<Plan> plans = assignTask.getPlans();
             for (String planId : assignTaskDto.getPlanIds()) {
                 Plan plan = planService.getPlanById(planId);
-                if(!plans.contains(plan)){
+                if (!plans.contains(plan)) {
                     plans.add(plan);
                 }
             }
@@ -80,6 +81,7 @@ public class AssignTaskService {
                 .build();
         return assignTaskRepo.save(assignTask);
     }
+
     public List<AssignedPlan> getAllAssignTasks(String query, Integer sortDirection, String sortKey) {
         Query searchQuery = new Query()
                 .addCriteria(Criteria.where("deleted").is(false));
@@ -111,6 +113,7 @@ public class AssignTaskService {
 
         return assignTasks;
     }
+
     public List<AssignedPlan> getAllAssignTasks(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey) {
         Pageable pageable;
         if (!sortKey.isEmpty()) {
@@ -222,15 +225,15 @@ public class AssignTaskService {
 //        return assignTaskRepo.save(assignTask);
 //    }
 
-//    public List<AssignTask> getAllAssignTasksByTraineeId(String traineeId) {
+    //    public List<AssignTask> getAllAssignTasksByTraineeId(String traineeId) {
 //        System.out.println(traineeId);
 //            Query query = new Query(Criteria.where("userId").in(traineeId));
 //            return mongoTemplate.find(query, AssignTask.class);
 //    }
-        public AssignedPlan getAllAssignTasksByTraineeId(String traineeId) {
-            Query query = new Query(Criteria.where("userId").in(traineeId));
-            return mongoTemplate.findOne(query, AssignedPlan.class);
-        }
+    public AssignedPlan getAllAssignTasksByTraineeId(String traineeId) {
+        Query query = new Query(Criteria.where("userId").in(traineeId));
+        return mongoTemplate.findOne(query, AssignedPlan.class);
+    }
 
     public List<AssignedPlan> getAssignedPlansByPlan(Plan plan) {
         List<AssignedPlan> allAssignedPlans = assignTaskRepo.findAll();
@@ -242,21 +245,23 @@ public class AssignTaskService {
                                 .anyMatch(p -> p != null && p.get_id().equals(plan.get_id()) && !p.getDeleted()))
                 .collect(Collectors.toList());
     }
+
     public AssignedPlan updateAssignTask(AssignedPlan assignedPlan) {
-        if(assignedPlan == null)return null;
-        if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
-        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        if (assignedPlan == null) return null;
+        if (assignedPlan.getPlans() == null) assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0)
+            assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         return assignTaskRepo.save(assignedPlan);
     }
 
     public boolean isUserMentorOfTrainee(String traineeId, String userId) {
         AssignedPlan assignedPlan = getAllAssignTasksByTraineeId(traineeId);
-        if(assignedPlan == null)return false;
+        if (assignedPlan == null) return false;
         List<Plan> plans = assignedPlan.getPlans();
-        for (Plan plan : plans){
-            for (Phase<PlanTask> phase : plan.getPhases()){
-                for (PlanTask planTask : phase.getTasks()){
-                    if(planTask.getMentorIds().contains(userId)){
+        for (Plan plan : plans) {
+            for (Phase<PlanTask> phase : plan.getPhases()) {
+                for (PlanTask planTask : phase.getTasks()) {
+                    if (planTask.getMentorIds().contains(userId)) {
                         return true;
                     }
                 }

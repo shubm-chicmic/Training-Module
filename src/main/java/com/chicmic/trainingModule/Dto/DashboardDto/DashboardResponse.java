@@ -7,7 +7,8 @@ import lombok.Setter;
 import java.util.List;
 
 @Builder
-@Getter @Setter
+@Getter
+@Setter
 public class DashboardResponse {
     private String name;
     private List<FeedbackResponseDto> feedbacks;

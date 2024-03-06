@@ -8,16 +8,16 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class Rating_BEHAVIOUR implements Rating{
+public class Rating_BEHAVIOUR implements Rating {
     private Double teamSpiritRating;
     private Double attitudeRating;
 
-//    @Override
+    //    @Override
 //    public String getTaskId() {
 //        return null;
 //    }
-    public Double computeOverallRating(){
+    public Double computeOverallRating() {
         double total = teamSpiritRating + attitudeRating;
-        return total/2;
+        return total / 2;
     }
 }

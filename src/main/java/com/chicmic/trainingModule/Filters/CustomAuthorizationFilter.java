@@ -42,23 +42,25 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private String homePage;
     private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
-    private static final String X= "You are not authorized to access this route !";
+    private static final String X = "You are not authorized to access this route !";
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String servletPath = request.getServletPath();
         log.info("visited url = " + servletPath);
 
-        if (servletPath.contains("/v1/training")||servletPath.contains("/v2/training")) {
+        if (servletPath.contains("/v1/training") || servletPath.contains("/v2/training")) {
             String authorizationHeader = request.getHeader("Authorization");
             String userMetadataHeader = request.getHeader("userMeta");
 
             if (authorizationHeader != null && userMetadataHeader != null) {
                 ObjectMapper objectMapper = new ObjectMapper();
-                Map<String, Object> userMetadataMap = objectMapper.readValue(userMetadataHeader, new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> userMetadataMap = objectMapper.readValue(userMetadataHeader, new TypeReference<Map<String, Object>>() {
+                });
                 Map<String, Object> userMetaData = (Map<String, Object>) userMetadataMap.get("user");
                 Map<String, Object> userData = (Map<String, Object>) userMetaData.get("data");
                 String userId = (String) userData.get("_id");
-                System.out.println("\u001B[33m userId = " + userId+ "\u001B[0m");
+                System.out.println("\u001B[33m userId = " + userId + "\u001B[0m");
                 String userRole = null;
                 List<Map<String, Object>> userRoleDataList = (List<Map<String, Object>>) userData.get("roleData");
                 if (userRoleDataList != null && !userRoleDataList.isEmpty()) {
@@ -74,7 +76,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     // Authentication is successful, proceed to set up authentication
                     Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
                     // Add user roles or authorities if available
-                    authorities.add(new SimpleGrantedAuthority( userRole.toUpperCase()));
+                    authorities.add(new SimpleGrantedAuthority(userRole.toUpperCase()));
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(userId, authorizationHeader, authorities);
 
@@ -100,8 +102,6 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     }
 
 
-
-
     private void handleForbiddenResponse(HttpServletResponse response, String message) throws IOException {
         handleException(response, HttpStatus.FORBIDDEN, message);
     }
@@ -110,7 +110,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private void handleException(HttpServletResponse response, HttpStatus status, String message) throws IOException {
         response.setStatus(status.value());
         response.setContentType("text/html");
-        response.getWriter().write("<html><body><h1>Error:</h1><p>"+message+"</p><br> <p> <a href='/api/v1/' >Login</a> here again</p></body></html>");
+        response.getWriter().write("<html><body><h1>Error:</h1><p>" + message + "</p><br> <p> <a href='/api/v1/' >Login</a> here again</p></body></html>");
         response.getWriter().flush();
     }
 }

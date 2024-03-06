@@ -9,8 +9,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Builder @Getter @Setter
-public class PlanDto implements Comparable<PlanDto>{
+@Builder
+@Getter
+@Setter
+public class PlanDto implements Comparable<PlanDto> {
     private String name;
     private Instant date;
     private String taskName;
@@ -23,6 +25,6 @@ public class PlanDto implements Comparable<PlanDto>{
     public int compareTo(PlanDto o) {
         int a = 1 - this.getType();
         int b = 1 - o.getType();
-        return Integer.compare(a,b);
+        return Integer.compare(a, b);
     }
 }

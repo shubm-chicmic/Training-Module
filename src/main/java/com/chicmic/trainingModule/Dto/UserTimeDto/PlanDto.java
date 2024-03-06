@@ -14,7 +14,7 @@ import java.util.List;
 public class PlanDto {
     private String _id;
     private String name;
-//    private String description;
+    //    private String description;
 //    private Integer estimatedTime;
 //    private Integer totalTasks;
     private List<PlanTaskDto> milestones;

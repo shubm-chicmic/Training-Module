@@ -41,10 +41,10 @@ public class SessionCRUD {
             HttpServletResponse response,
             Principal principal
     ) throws JsonProcessingException {
-        if(sortKey != null && sortKey.equals("createdAt")){
+        if (sortKey != null && sortKey.equals("createdAt")) {
             sortDirection = -1;
         }
-        if(sessionId == null || sessionId.isEmpty()) {
+        if (sessionId == null || sessionId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
@@ -54,20 +54,20 @@ public class SessionCRUD {
             List<SessionResponseDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToResponseDto(sessionList, principal.getName());
 //            Collections.reverse(sessionResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), sessionResponseDtoList.size() + " Sessions retrieved", sessionResponseDtoList, response);
-        }else {
+        } else {
             Session session = sessionService.getSessionById(sessionId);
-            if(session == null){
-                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
+            if (session == null) {
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
             }
             SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(session, principal.getName());
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response);
+            return new ApiResponseWithCount(1, HttpStatus.OK.value(), "Session retrieved successfully", sessionResponseDto, response);
         }
     }
 
     @PostMapping
     public ApiResponse create(@RequestBody SessionDto sessionDto, Principal principal) {
         if (checkRole("IND") || checkRole("TR"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to Create Session!!.");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You are not authorized to Create Session!!.");
         System.out.println("sessionDto = " + sessionDto);
         sessionDto.setCreatedBy(principal.getName());
         sessionDto.setStatus(StatusConstants.PENDING);
@@ -76,11 +76,11 @@ public class SessionCRUD {
     }
 
     @DeleteMapping("/{sessionId}")
-    public ApiResponse delete(@PathVariable String sessionId,Principal principal) {
+    public ApiResponse delete(@PathVariable String sessionId, Principal principal) {
         if (checkRole("IND") || checkRole("TR"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to Delete Session!!.");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You are not authorized to Delete Session!!.");
         System.out.println("sessionId = " + sessionId);
-        Boolean deleted = sessionService.deleteSessionById(sessionId,principal.getName());
+        Boolean deleted = sessionService.deleteSessionById(sessionId, principal.getName());
         if (deleted) {
             return new ApiResponse(HttpStatus.OK.value(), "Session deleted successfully", null);
         }
@@ -91,7 +91,7 @@ public class SessionCRUD {
     public ApiResponse updateSession(@RequestBody SessionDto sessionDto, @RequestParam String sessionId, Principal principal, HttpServletResponse response) {
         Session session = sessionService.getSessionById(sessionId);
         if (checkRole("TR"))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not authorized to update Session!!.");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You are not authorized to update Session!!.");
         if (sessionDto.getApprover() != null && sessionDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }
@@ -104,7 +104,7 @@ public class SessionCRUD {
             if (sessionDto != null && sessionDto.getApproved() != null) {
                 Set<String> approver = session.getApprover();
                 if (approver.contains(principal.getName())) {
-                    session =sessionService.approve(session, principal.getName(), sessionDto.getApproved());
+                    session = sessionService.approve(session, principal.getName(), sessionDto.getApproved());
                 } else {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this session", null, response);
 
@@ -112,18 +112,18 @@ public class SessionCRUD {
             }
             sessionDto.setApproved(session.isApproved());
             System.out.println("status = " + sessionDto.getStatus());
-            if(sessionDto.getStatus() != null){
-                if(sessionDto.getStatus() != StatusConstants.PENDING && sessionDto.getStatus() != StatusConstants.UPCOMING && sessionDto.getStatus() != StatusConstants.COMPLETED) {
+            if (sessionDto.getStatus() != null) {
+                if (sessionDto.getStatus() != StatusConstants.PENDING && sessionDto.getStatus() != StatusConstants.UPCOMING && sessionDto.getStatus() != StatusConstants.COMPLETED) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Status can only be 1 , 2 or 3", null, response);
                 }
-                if(!session.isApproved() && sessionDto.getStatus() != session.getStatus()) {
+                if (!session.isApproved() && sessionDto.getStatus() != session.getStatus()) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Can't update status since Session is not approved", null, response);
                 }
                 session = sessionService.updateStatus(sessionId, sessionDto.getStatus());
             }
             sessionDto.setStatus(session.getStatus());
-            if(sessionDto != null && sessionDto.getMessage() != null && !sessionDto.getMessage().isEmpty()) {
-                if(session.getStatus() == StatusConstants.COMPLETED) {
+            if (sessionDto != null && sessionDto.getMessage() != null && !sessionDto.getMessage().isEmpty()) {
+                if (session.getStatus() == StatusConstants.COMPLETED) {
                     System.out.println("sessionDto = " + sessionDto);//give status edit access to approvedBy,sessionBy
                     if (session.getSessionBy().contains(principal.getName()) || session.getApprovedBy().contains(principal.getName()) || session.getCreatedBy().equals(principal.getName())) {
                         session = sessionService.postMOM(sessionId, sessionDto.getMessage(), principal.getName());
@@ -131,8 +131,7 @@ public class SessionCRUD {
                         session = sessionService.updateStatus(sessionId, originalStatus);
                         return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Are Not Authorized to Post MOM", null, response);
                     }
-                }
-                else {
+                } else {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Posting Mom is not allowed when session is not completed", null, response);
                 }
 
@@ -144,13 +143,13 @@ public class SessionCRUD {
 //                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not Authorized to edit trainee list", null, response);
 //                }
 //            }
-            if(!session.getSessionBy().contains(principal.getName()) && !session.getApprover().contains(principal.getName()) && !session.getCreatedBy().equals(principal.getName()))
+            if (!session.getSessionBy().contains(principal.getName()) && !session.getApprover().contains(principal.getName()) && !session.getCreatedBy().equals(principal.getName()))
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to edit this session", null, response);
 
             SessionResponseDto sessionResponseDto = sessionResponseMapper.mapSessionToResponseDto(sessionService.updateSession(sessionDto, sessionId), principal.getName());
             return new ApiResponse(HttpStatus.CREATED.value(), "Session updated successfully", sessionResponseDto, response);
-        }else {
-                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
+        } else {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Session not found", null, response);
         }
     }
 

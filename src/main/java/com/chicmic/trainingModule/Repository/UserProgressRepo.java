@@ -14,6 +14,7 @@ public interface UserProgressRepo extends MongoRepository<UserProgress, String> 
 //    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
 //            String traineeId, String planId, String courseId, Integer progressType);
     public List<UserProgress> findByPlanIdAndSubTaskId(String planId, String subTaskId);
+
     long countByTraineeIdAndPlanIdAndCourseIdAndProgressTypeAndStatus(
             String traineeId, String planId, String courseId, Integer progressType, Integer status);
 
@@ -23,10 +24,14 @@ public interface UserProgressRepo extends MongoRepository<UserProgress, String> 
     //    Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndIdAndProgressType(
 //            String traineeId, String planId, String courseId,String id, Integer progressType);
     List<UserProgress> findByTraineeIdAndPlanId(String traineeId, String planId);
+
     Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseId(String traineeId, String planId, String courseId);
+
     List<UserProgress> findByTraineeId(String traineeId);
+
     Optional<UserProgress> findByTraineeIdAndPlanIdAndPlanTaskIdAndProgressType(
             String traineeId, String planId, String planTaskId, Integer progressType);
+
     Optional<UserProgress> findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
             String traineeId, String planId, String courseId, Integer progressType);
 

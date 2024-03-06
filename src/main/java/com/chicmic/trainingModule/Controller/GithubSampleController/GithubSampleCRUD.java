@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
+
 //TODO approver dto update
 @RestController
 @RequestMapping("/v1/training/githubSample")
@@ -24,6 +25,7 @@ import java.util.*;
 public class GithubSampleCRUD {
     private final GithubSampleService githubSampleService;
     private final GithubSampleResponseMapper githubSampleResponseMapper;
+
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -35,10 +37,10 @@ public class GithubSampleCRUD {
             HttpServletResponse response,
             Principal principal
     ) throws JsonProcessingException {
-        if(sortKey != null && sortKey.equals("createdAt")){
+        if (sortKey != null && sortKey.equals("createdAt")) {
             sortDirection = -1;
         }
-        if(githubSampleId == null || githubSampleId.isEmpty()) {
+        if (githubSampleId == null || githubSampleId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
@@ -51,11 +53,11 @@ public class GithubSampleCRUD {
         } else {
             System.out.println("i m called");
             GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
-            if(githubSample == null){
-                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "GithubSample not found", null, response);
+            if (githubSample == null) {
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "GithubSample not found", null, response);
             }
             GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSample);
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), "GithubSample retrieved successfully", githubSampleResponseDto, response);
+            return new ApiResponseWithCount(1, HttpStatus.OK.value(), "GithubSample retrieved successfully", githubSampleResponseDto, response);
         }
     }
 

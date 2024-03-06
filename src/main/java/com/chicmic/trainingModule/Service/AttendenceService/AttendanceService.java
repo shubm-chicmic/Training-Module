@@ -24,6 +24,7 @@ public class AttendanceService {
     private final RestTemplate restTemplate;
     @Value("${apiGatewayUrl}")
     private String apiGatewayUrl;
+
     public double getAttendanceRating(String userId, String token) {
         if (userId == null || userId.isEmpty()) {
             return 0.0f;

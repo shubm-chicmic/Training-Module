@@ -52,7 +52,7 @@ public class ConditionalValidator implements ConstraintValidator<Conditional, Ob
                 isValid = false;
                 context.disableDefaultConstraintViolation();
                 context
-                        .buildConstraintViolationWithTemplate(String.format("%s field is required.",property))
+                        .buildConstraintViolationWithTemplate(String.format("%s field is required.", property))
                         .addPropertyNode(property)
                         .addConstraintViolation();
             }

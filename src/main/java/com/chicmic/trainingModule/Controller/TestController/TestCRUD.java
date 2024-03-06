@@ -32,6 +32,7 @@ public class TestCRUD {
     private final PlanTaskRepo planTaskRepo;
 
     private final TestResponseMapper testResponseMapper;
+
     @RequestMapping(value = {""}, method = RequestMethod.GET)
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -45,8 +46,8 @@ public class TestCRUD {
             HttpServletResponse response,
             @RequestParam(required = false) String taineeId,
             Principal principal
-    )  {
-        if(sortKey != null && sortKey.equals("createdAt")){
+    ) {
+        if (sortKey != null && sortKey.equals("createdAt")) {
             sortDirection = -1;
         }
         System.out.println("dropdown key = " + isDropdown);
@@ -59,7 +60,7 @@ public class TestCRUD {
 //            Collections.reverse(testResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         }
-        if(testId == null || testId.isEmpty()) {
+        if (testId == null || testId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
@@ -72,16 +73,16 @@ public class TestCRUD {
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), testResponseDtoList.size() + " Tests retrieved", testResponseDtoList, response);
         } else {
             Test test = testService.getTestById(testId);
-            if(test == null){
-                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "Test not found", null, response);
+            if (test == null) {
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "Test not found", null, response);
             }
             TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(test);
-            return new ApiResponseWithCount(1,HttpStatus.OK.value(), "Test retrieved successfully", testResponseDto, response);
+            return new ApiResponseWithCount(1, HttpStatus.OK.value(), "Test retrieved successfully", testResponseDto, response);
         }
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody@Valid TestDto testDto, Principal principal) {
+    public ApiResponse create(@RequestBody @Valid TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
 
         Test test = Test.builder()
@@ -102,7 +103,7 @@ public class TestCRUD {
     public ApiResponse delete(@PathVariable String testId, HttpServletResponse response) {
         System.out.println("testId = " + testId);
         List<PlanTask> planTasks = planTaskRepo.findByPlanId(testId);
-        if(planTasks.size() > 0){
+        if (planTasks.size() > 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Test is already assigned to a plan", null, response
             );
         }
@@ -114,7 +115,7 @@ public class TestCRUD {
     }
 
     @PutMapping
-    public ApiResponse updateTest(@RequestBody@Valid TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updateTest(@RequestBody @Valid TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
         Test test = testService.getTestById(testId);
         System.out.println("testDto = " + testDto.getApprover());
 //        if (testDto.getReviewers() != null && testDto.getReviewers().size() == 0) {
@@ -135,14 +136,14 @@ public class TestCRUD {
             testDto.setApproved(test.getApproved());
             if (test.getApprover() != null && !testDto.getApprover().equals(test.getApprover())) {
                 List<PlanTask> planTasks = planTaskRepo.findByPlanId(testId);
-                if(planTasks.size() > 0){
+                if (planTasks.size() > 0) {
                     return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be edited since Test is already assigned to a plan", null, response
                     );
                 }
             }
             TestResponseDto testResponseDto = testResponseMapper.mapTestToResponseDto(testService.updateTest(testDto, testId));
             return new ApiResponse(HttpStatus.OK.value(), "Test updated successfully", testResponseDto, response);
-        }else {
+        } else {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Test not found", null, response);
         }
     }

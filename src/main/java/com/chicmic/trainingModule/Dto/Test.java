@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@Builder @Getter @Setter
+@Builder
+@Getter
+@Setter
 public class Test {
     private String _id;
     private String testName;

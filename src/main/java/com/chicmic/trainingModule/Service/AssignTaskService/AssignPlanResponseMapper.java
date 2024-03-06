@@ -45,7 +45,7 @@ public class AssignPlanResponseMapper {
     private final PlanTaskService planTaskService;
     private final UserTimeService userTimeService;
 
-    public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks,String planId, String traineeId, String userId) {
+    public List<PlanTaskResponseDto> mapAssignPlanToResponseDto(List<PlanTask> planTasks, String planId, String traineeId, String userId) {
         System.out.println("planTasks: " + planTasks.size());
         List<PlanTaskResponseDto> assignPlanResponseDtoList = new ArrayList<>();
         for (PlanTask planTask : planTasks) {
@@ -54,26 +54,27 @@ public class AssignPlanResponseMapper {
         System.out.println("assignPlanResponseDtoList: " + assignPlanResponseDtoList.size());
         return assignPlanResponseDtoList;
     }
-    public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask,String planId, String traineeId, String userId) {
+
+    public PlanTaskResponseDto mapAssignPlanToResponseDto(PlanTask planTask, String planId, String traineeId, String userId) {
         String planName = null;
-        if(planTask == null) {
+        if (planTask == null) {
             return null;
         }
         if (planTask.getPlanType() == 1) {
-            Course course =  courseService.getCourseById(planTask.getPlan());
-            if(course != null) {
+            Course course = courseService.getCourseById(planTask.getPlan());
+            if (course != null) {
                 planName = course.getName();
             }
 //            planTask.setEstimatedTime(course.getEstimatedTime());
-        }else if (planTask.getPlanType() == 2) {
+        } else if (planTask.getPlanType() == 2) {
             Test test = testService.getTestById(planTask.getPlan());
-            if(test != null) {
+            if (test != null) {
                 planName = test.getTestName();
             }
 //            planTask.setEstimatedTime(test.getEstimatedTime());
-        }else {
-            Course course =  courseService.getCourseById(planTask.getPlan());
-            if(course != null) {
+        } else {
+            Course course = courseService.getCourseById(planTask.getPlan());
+            if (course != null) {
                 planName = course.getName();
             }
 //            planTask.setEstimatedTime(course.getEstimatedTime());
@@ -87,42 +88,42 @@ public class AssignPlanResponseMapper {
         Integer totalTask = 0;
         Integer completedTasks = 0;
         Integer consumedTime = 0;
-        if(planTask.getMilestones() == null){
+        if (planTask.getMilestones() == null) {
             System.out.println("Milstones is null not available");
             planTask.setMilestones(new ArrayList<>());
         }
         for (Object milestone : planTask.getMilestones()) {
             Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
-            if (phase != null){
+            if (phase != null) {
                 List<Task> tasks = phase.getTasks();
-            List<SubTask> subTasks = tasks.stream()
-                    .flatMap(task -> task.getSubtasks().stream())
-                    .collect(Collectors.toList());
+                List<SubTask> subTasks = tasks.stream()
+                        .flatMap(task -> task.getSubtasks().stream())
+                        .collect(Collectors.toList());
 
-            for (SubTask subTask : subTasks) {
-                if (userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(), traineeId)) {
-                    completedTasks++;
+                for (SubTask subTask : subTasks) {
+                    if (userProgressService.findIsSubTaskCompleted(planId, planTask.getPlan(), subTask.get_id(), traineeId)) {
+                        completedTasks++;
+                    }
+                    consumedTime += userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, planId, planTask.get_id(), subTask.get_id());
+                    totalTask++;
                 }
-                consumedTime += userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, planId, planTask.get_id(), subTask.get_id());
-                totalTask++;
-            }
-            UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
-                    ._id(phase.get_id())
-                    .name(phase.getName())
-                    .build();
-            milestonesIdAndName.add(milestoneDetails);
+                UserIdAndNameDto milestoneDetails = UserIdAndNameDto.builder()
+                        ._id(phase.get_id())
+                        .name(phase.getName())
+                        .build();
+                milestonesIdAndName.add(milestoneDetails);
 //            totalTask += phase.getTotalTasks();
-        }
+            }
         }
 
         System.out.println("totalTask: " + totalTask);
         System.out.println("completedTasks: " + completedTasks);
 //        Integer completedTasks = userProgressService.getTotalSubTaskCompleted(traineeId,planId,planTask.getPlan(),5);
         Boolean isPlanCompleted = false;
-        if(totalTask == completedTasks) {
+        if (totalTask == completedTasks) {
             System.out.println("\u001B[31m in plan created \u001B[0m");
             UserProgress planProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), EntityType.COURSE);
-            if(planProgress == null) {
+            if (planProgress == null) {
                 UserProgress userProgress = UserProgress.builder()
                         .planId(planId)
                         .courseId(planTask.getPlan())
@@ -130,32 +131,32 @@ public class AssignPlanResponseMapper {
                         .status(ProgessConstants.Completed)
                         .build();
 //                userProgressService.createUserProgress(userProgress);
-            }else {
+            } else {
                 planProgress.setStatus(ProgessConstants.Completed);
 //                userProgressService.createUserProgress(planProgress);
             }
-            if(planProgress != null) {
+            if (planProgress != null) {
                 isPlanCompleted = planProgress.getStatus() == ProgessConstants.Completed;
             }
         }
 
 
         Integer feedbackType = null;
-        if(planTask.getPlanType() == 1) {
+        if (planTask.getPlanType() == 1) {
             feedbackType = 3;
-        }else if (planTask.getPlanType() == 2) {
+        } else if (planTask.getPlanType() == 2) {
             feedbackType = 2;
-        }else if (planTask.getPlanType() == 3) {
+        } else if (planTask.getPlanType() == 3) {
             feedbackType = 3;
-        }else if (planTask.getPlanType() == 4){
+        } else if (planTask.getPlanType() == 4) {
             feedbackType = 4;
         }
         List<String> milestonesIds = planTask.getMilestones().stream()
                 .map(Object::toString)
                 .collect(Collectors.toList());
         Feedback_V2 feedbackV2 = feedbackProgressService.feedbackOfParticularPhaseOfTrainee(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
-        Map<String,Object> response = feedbackProgressService.testAggregationQuery(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
-        if(planTask.getPlanType() != 3 && planTask.getPlanType() != 4) {
+        Map<String, Object> response = feedbackProgressService.testAggregationQuery(traineeId, planId, planTask.getPlan(), milestonesIds, String.valueOf(feedbackType), userId);
+        if (planTask.getPlanType() != 3 && planTask.getPlanType() != 4) {
 //            UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndCourseId(traineeId, planId, planTask.getPlan(), planTask.getPlanType());
 //            if(userProgress != null) {
 //                completedTasks = (userProgress.getStatus() == ProgessConstants.Completed) ? 1 : 0;
@@ -163,18 +164,18 @@ public class AssignPlanResponseMapper {
 //                completedTasks = 0;
 //            }
 //            totalTask = 1;
-            isPlanCompleted =(totalTask == completedTasks);
+            isPlanCompleted = (totalTask == completedTasks);
         }
-        if(planTask.getPlanType() == 3 || planTask.getPlanType() == 4){
+        if (planTask.getPlanType() == 3 || planTask.getPlanType() == 4) {
             completedTasks = 0;
             UserProgress userProgress = userProgressService.getUserProgressByTraineeIdPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id(), planTask.getPlanType());
-            if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed){
+            if (userProgress != null && userProgress.getStatus() == ProgessConstants.Completed) {
                 completedTasks++;
             }
 //            System.out.println("userProgress = " + userProgress);
-            if(userProgress != null && userProgress.getStatus() == ProgessConstants.Completed)completedTasks = 1;
+            if (userProgress != null && userProgress.getStatus() == ProgessConstants.Completed) completedTasks = 1;
             totalTask = 1;
-            isPlanCompleted =(totalTask == completedTasks);
+            isPlanCompleted = (totalTask == completedTasks);
         }
         Phase<PlanTask> phase = planTask.getPhase();
 //        Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskId(traineeId, planId, planTask.get_id());
@@ -192,7 +193,7 @@ public class AssignPlanResponseMapper {
                 .estimatedTime(planTask.getEstimatedTime())
                 .mentor(planTask.getMentorDetails())
                 .isCompleted(isPlanCompleted)
-                .feedbackId(response.containsKey("_id")?response.get("_id").toString():null)//(feedbackV2 == null ? null : feedbackV2.get_id())
+                .feedbackId(response.containsKey("_id") ? response.get("_id").toString() : null)//(feedbackV2 == null ? null : feedbackV2.get_id())
                 .rating((Double) response.get("overallRating"))//(feedbackV2 == null ? 0f : FeedbackService_V2.compute_rating(feedbackV2.getOverallRating(), 1))
                 .build();
     }
@@ -207,18 +208,18 @@ public class AssignPlanResponseMapper {
             for (Phase<PlanTask> phase : plan.getPhases()) {
                 for (PlanTask planTask : phase.getTasks()) {
                     String planName = null;
-                    if(planTask == null) {
+                    if (planTask == null) {
                         return null;
                     }
-                   if (planTask.getPlanType() == 2) {
+                    if (planTask.getPlanType() == 2) {
                         Test test1 = testService.getTestById(planTask.getPlan());
-                        if(test1 != null) {
+                        if (test1 != null) {
                             planName = test1.getTestName();
                         }
 //            planTask.setEstimatedTime(test.getEstimatedTime());
-                    }else {
-                        Course course =  courseService.getCourseById(planTask.getPlan());
-                        if(course != null) {
+                    } else {
+                        Course course = courseService.getCourseById(planTask.getPlan());
+                        if (course != null) {
                             planName = course.getName();
                         }
 //            planTask.setEstimatedTime(course.getEstimatedTime());
@@ -229,7 +230,7 @@ public class AssignPlanResponseMapper {
                             .build();
 
                     List<UserIdAndNameDto> milestonesIds = new ArrayList<>();
-                    if(planTask.getMilestones() != null) {
+                    if (planTask.getMilestones() != null) {
                         for (Object milestone : planTask.getMilestones()) {
                             Phase<Task> milestoneDetail = (Phase<Task>) phaseService.getPhaseById((String) milestone);
                             UserIdAndNameDto userIdAndNameDto = UserIdAndNameDto.builder()
@@ -239,21 +240,21 @@ public class AssignPlanResponseMapper {
                             milestonesIds.add(userIdAndNameDto);
                         }
                     }
-                   if(planTask.getPlanType() == 2) {
+                    if (planTask.getPlanType() == 2) {
                         FeedbackTestDto feedbackTestDto = FeedbackTestDto.builder()
                                 ._id(planTask.get_id())
                                 .test(planIdAndNameDto)
                                 .milestones(milestonesIds)
                                 .build();
                         test.add(feedbackTestDto);
-                    }else if(planTask.getPlanType() == 3) {
+                    } else if (planTask.getPlanType() == 3) {
                         FeedbackCourseDto feedbackCourseDto = FeedbackCourseDto.builder()
                                 ._id(planTask.get_id())
                                 .course(planIdAndNameDto)
                                 .phases(milestonesIds)
                                 .build();
                         viva.add(feedbackCourseDto);
-                    }else if(planTask.getPlanType() == 4) {
+                    } else if (planTask.getPlanType() == 4) {
                         FeedbackCourseDto feedbackCourseDto = FeedbackCourseDto.builder()
                                 ._id(planTask.get_id())
                                 .course(planIdAndNameDto)
@@ -298,31 +299,32 @@ public class AssignPlanResponseMapper {
 
     public AssignedPlanDto mapAssignedPlanWithPlanAndPhasesForTimeSheet(AssignedPlan assignedPlan, String planId, Integer planType) {
         Plan plan = planService.getPlanById(planId);
-        if(plan == null){
+        if (plan == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Plan is Deleted Or Not Exist");
         }
         List<Phase<PlanTask>> phases = plan.getPhases();
         List<PlanTaskDto> planTaskDtoList = new ArrayList<>();
         Set<String> planIdsInPlanTask = new HashSet<>();
-        for (Phase<PlanTask> phase : phases){
+        for (Phase<PlanTask> phase : phases) {
             List<PlanTask> planTasks = phase.getTasks();
-            for (PlanTask planTask : planTasks){ // size is 1 for now
+            for (PlanTask planTask : planTasks) { // size is 1 for now
                 System.out.println("PlanType " + planType);
                 System.out.println("Condition is = " + (planType != PlanType.VIVA && planType != PlanType.PPT));
-                if(planIdsInPlanTask.contains(planTask.getPlan()) && (planType != PlanType.VIVA && planType != PlanType.PPT))continue;
-                if(planType != planTask.getPlanType())continue;
+                if (planIdsInPlanTask.contains(planTask.getPlan()) && (planType != PlanType.VIVA && planType != PlanType.PPT))
+                    continue;
+                if (planType != planTask.getPlanType()) continue;
                 String planName = null;
                 if (planTask.getPlanType() == PlanType.TEST) {
                     Test test = testService.getTestById(planTask.getPlan());
-                    if(test == null)continue;
+                    if (test == null) continue;
                     planName = test.getTestName();
-                }else {
+                } else {
                     Course course = courseService.getCourseById(planTask.getPlan());
-                    if(course == null)continue;
+                    if (course == null) continue;
                     planName = course.getName();
                 }
                 String _id = (planType == PlanType.VIVA || planType == PlanType.PPT) ? planTask.get_id() : planTask.getPlan();
-                String date = (planType == PlanType.VIVA || planType == PlanType.PPT) ? " ("+DateTimeUtil.getDateFromInstant(planTask.getDate())+")" : "";
+                String date = (planType == PlanType.VIVA || planType == PlanType.PPT) ? " (" + DateTimeUtil.getDateFromInstant(planTask.getDate()) + ")" : "";
 
                 PlanTaskDto planTaskDto = PlanTaskDto.builder()
                         ._id(_id)
@@ -348,16 +350,16 @@ public class AssignPlanResponseMapper {
 
     public AssignedPlanDto mapAssignedPlanWithPlanAndPhaseAndMultipleTaskForTimeSheet(AssignedPlan assignedPlan, String planId, String taskPlanId, Integer planType) {
         Plan plan = planService.getPlanById(planId);
-        if(plan == null){
+        if (plan == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Plan is Deleted Or Not Exist");
         }
         List<SubTask> subtaskList = new ArrayList<>();
         for (Phase<PlanTask> phase : plan.getPhases()) {
             for (PlanTask planTask : phase.getTasks()) {
-                if(planTask.getPlan().equals(taskPlanId) && planTask.getPlanType() == planType) {
+                if (planTask.getPlan().equals(taskPlanId) && planTask.getPlanType() == planType) {
                     for (Object milestone : planTask.getMilestones()) {
                         Phase<Task> taskPhase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
-                        if (taskPhase != null){
+                        if (taskPhase != null) {
                             List<Task> tasks = taskPhase.getTasks();
                             List<SubTask> subTasks = tasks.stream()
                                     .flatMap(task -> task.getSubtasks().stream())
@@ -371,18 +373,18 @@ public class AssignPlanResponseMapper {
         String planName = "";
         if (planType == TimeSheetType.TEST) {
             Test test = testService.getTestById(taskPlanId);
-            if(test != null)
-            planName = test.getTestName();
-        }else if(planType == TimeSheetType.COURSE){
+            if (test != null)
+                planName = test.getTestName();
+        } else if (planType == TimeSheetType.COURSE) {
             Course course = courseService.getCourseById(taskPlanId);
-            if(course != null)
-            planName = course.getName();
-        }else {
+            if (course != null)
+                planName = course.getName();
+        } else {
             PlanTask planTask = planTaskService.getPlanTaskById(taskPlanId);
-            String date = (planType == PlanType.VIVA || planType == PlanType.PPT) ? " ("+DateTimeUtil.getDateFromInstant(planTask.getDate())+")" : "";
+            String date = (planType == PlanType.VIVA || planType == PlanType.PPT) ? " (" + DateTimeUtil.getDateFromInstant(planTask.getDate()) + ")" : "";
 
             Course course = courseService.getCourseById(planTask.getPlan());
-            if(course != null) planName = course.getName() + date;
+            if (course != null) planName = course.getName() + date;
         }
 
         PlanTaskDto planTaskDto = PlanTaskDto.builder()
@@ -401,7 +403,7 @@ public class AssignPlanResponseMapper {
                 .milestone(planTaskDto)
                 .project(planDto)
                 .build();
-        if(planType != PlanType.VIVA && planType != PlanType.PPT){
+        if (planType != PlanType.VIVA && planType != PlanType.PPT) {
             System.out.println("subtask list = " + subtaskList.size());
             assignedPlanDto.setTasks(subtaskList);
         }
@@ -411,31 +413,31 @@ public class AssignPlanResponseMapper {
 
     public AssignedPlanDto mapAssignedPlanWithPlanAndPhaseAndTaskForTimeSheet(AssignedPlan assignedPlan, String planId, String taskPlanId, Integer planType, String subTaskId) {
         Plan plan = planService.getPlanById(planId);
-        if(plan == null){
+        if (plan == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Plan is Deleted Or Not Exist");
         }
 
         SubTask subTask = null;
         try {
             subTask = phaseService.getSubTaskById(subTaskId);
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "SubTask is Deleted Or Not Exist");
         }
         String planName = "";
         if (planType == PlanType.TEST) {
             Test test = testService.getTestById(taskPlanId);
-            if(test != null)
+            if (test != null)
                 planName = test.getTestName();
-        }else if(planType == TimeSheetType.COURSE){
+        } else if (planType == TimeSheetType.COURSE) {
             Course course = courseService.getCourseById(taskPlanId);
-            if(course != null)
+            if (course != null)
                 planName = course.getName();
-        }else {
+        } else {
             PlanTask planTask = planTaskService.getPlanTaskById(taskPlanId);
-            if(planTask != null){
+            if (planTask != null) {
                 System.out.println("Co");
                 Course course = courseService.getCourseById(planTask.getPlan());
-                if(course != null)
+                if (course != null)
                     planName = course.getName();
             }
         }

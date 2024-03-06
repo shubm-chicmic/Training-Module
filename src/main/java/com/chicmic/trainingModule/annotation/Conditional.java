@@ -13,7 +13,9 @@ import java.lang.annotation.*;
 public @interface Conditional {
 
     String message() default "Field is required.";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 
     String conditionalProperty();

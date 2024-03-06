@@ -4,8 +4,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter @Builder
-public class Course{
+@Getter
+@Setter
+@Builder
+public class Course {
     private String _id;
     private String courseName;
 

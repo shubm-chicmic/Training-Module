@@ -21,6 +21,7 @@ public class ConversionUtility {
                 )
                 .orElse(null);
     }
+
     public static List<UserIdAndNameDto> convertToTeamIdAndName(Collection<String> ids) {
         return Optional.ofNullable(ids)
                 .map(idCollection -> idCollection.stream()

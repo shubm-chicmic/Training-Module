@@ -15,15 +15,16 @@ public class ApiError {
     private final Instant timestamp;
 
     public ApiError(HttpStatus status, List<String> message, Instant timestamp) {
-        if(message.size()>1 && message.get(0).equals(message.get(message.size()-1))) {
+        if (message.size() > 1 && message.get(0).equals(message.get(message.size() - 1))) {
             message.remove(message.size() - 1);
         }
-        this.status= status;
+        this.status = status;
         this.messages = message;
         this.timestamp = timestamp;
     }
-    public ApiError(HttpStatus status,String message,Instant timestamp){
-        this.status= status;
+
+    public ApiError(HttpStatus status, String message, Instant timestamp) {
+        this.status = status;
         this.message = message;
         this.timestamp = timestamp;
     }

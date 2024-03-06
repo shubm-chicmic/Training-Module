@@ -12,7 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Builder
 public class SessionIdNameAndTypeDto {
-//    private String _id;
+    //    private String _id;
 //    private String name;
     private Integer planType;
     List<UserIdAndNameDto> sessions = new ArrayList<>();

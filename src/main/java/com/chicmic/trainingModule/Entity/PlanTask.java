@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.chicmic.trainingModule.annotation.UserValidation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+
 @Document
 @Getter
 @Setter
@@ -32,13 +34,14 @@ public class PlanTask {
     @Transient
     private String planName;
     @NotNull(message = "Milestones cannot be Empty")
-    private List<Object> milestones= new ArrayList<>();
-//    @Transient
+    private List<Object> milestones = new ArrayList<>();
+    //    @Transient
 //    private List<UserIdAndNameDto> milestoneDetails;
+    @UserValidation
     private List<String> mentor;
     private Integer totalTasks;
     private Instant date;
-//    public void setDatePlusHours(LocalDateTime date) {
+    //    public void setDatePlusHours(LocalDateTime date) {
 //        if(date != null)
 //        this.date = date.plusHours(5).plusMinutes(30);
 //    }
@@ -50,19 +53,15 @@ public class PlanTask {
     @DBRef
     @JsonIgnore
     private Plan plans;
-//    public List<UserIdAndNameDto> getMilestones(){
-//        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
-//        for (String milestone : milestones) {
-//
-//        }
-//        return milestonesDetails;
-//    }
+
     public List<UserIdAndNameDto> getMentorDetails() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }
+
     public List<UserIdAndNameDto> getMentor() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }
+
     public List<String> getMentorIds() {
         return this.mentor;
     }
@@ -84,21 +83,25 @@ public class PlanTask {
         int totalSeconds = hours * 3600 + minutes * 60;
         this.estimatedTime = totalSeconds;
     }
+
     public String getEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
     public String getMilestonesEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
     public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
         this.estimatedTime = estimatedTimeInSeconds;
     }

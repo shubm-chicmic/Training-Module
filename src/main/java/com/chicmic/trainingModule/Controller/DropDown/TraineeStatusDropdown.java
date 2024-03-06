@@ -20,12 +20,13 @@ import java.security.Principal;
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
 public class TraineeStatusDropdown {
     private final TraineePlanService_V2 traineePlanServiceV2;
+
     @PatchMapping("/trainee-status")
-    public ApiResponse updateTraineeStatus(@RequestBody UserIdAndStatusDto userIdAndStatusDto, Principal principal){
+    public ApiResponse updateTraineeStatus(@RequestBody UserIdAndStatusDto userIdAndStatusDto, Principal principal) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TR");
-        if(flag)return new ApiResponse(200,"You Are Not Authorized To Update Status(Role = TR)",null);
+        if (flag) return new ApiResponse(200, "You Are Not Authorized To Update Status(Role = TR)", null);
         traineePlanServiceV2.updateTraineeStatus(userIdAndStatusDto, principal.getName());
-        return new ApiResponse(200,"Trainee status updated successfully!!",null);
+        return new ApiResponse(200, "Trainee status updated successfully!!", null);
     }
 }

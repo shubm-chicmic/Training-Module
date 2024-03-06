@@ -14,13 +14,15 @@ import java.util.Set;
 @Builder
 public class AssignTaskDto {
     private LocalDateTime date;
+
     public void setDate(LocalDateTime date) {
-        if(date != null)
+        if (date != null)
             this.date = date.plusHours(5).plusMinutes(30);
     }
+
     private List<String> users;
     private List<String> planIds;
-//    private Set<String> reviewers = new HashSet<>();
+    //    private Set<String> reviewers = new HashSet<>();
     private Boolean approved = false;
 
     @Override

@@ -45,18 +45,18 @@ public class TraineePlanService_V2 {
         this.assignTaskService = assignTaskService;
     }
 
-    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String currentUserId){
+    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String currentUserId) {
         System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
 
-        if(query==null || query.isBlank()) query = ".*";
+        if (query == null || query.isBlank()) query = ".*";
         int skipValue = pageNumber;//(pageNumber - 1) * pageSize;
 
 
         //query1.fields().include("plans._id")
-        List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(),AssignedPlan.class);
-        if (assignedPlanList.size() == 0){
-            mongoTemplate.insert(AssignedPlan.builder().userId("12345").date(LocalDateTime.now()).deleted(true),"assignedPlan");
+        List<AssignedPlan> assignedPlanList = mongoTemplate.find(new Query(), AssignedPlan.class);
+        if (assignedPlanList.size() == 0) {
+            mongoTemplate.insert(AssignedPlan.builder().userId("12345").date(LocalDateTime.now()).deleted(true), "assignedPlan");
         }
 
         java.util.regex.Pattern namePattern = java.util.regex.Pattern.compile(query, java.util.regex.Pattern.CASE_INSENSITIVE);
@@ -69,16 +69,15 @@ public class TraineePlanService_V2 {
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("IND"));
         for (UserDto userDto : traineeMap.values()) {
-            if(userDto.get_id().equals(currentUserId)){
+            if (userDto.get_id().equals(currentUserId)) {
                 Document document = new Document();
                 document.append("name", userDto.getName())
                         .append("team", userDto.getTeamName())
                         .append("empCode", userDto.getEmpCode())
                         .append("_id", userDto.get_id());
                 userDatasDocuments.add(document);
-            }
-            else if(isIndividualRole) {
-                if ((assignTaskService.isUserMentorOfTrainee(userDto.get_id(),currentUserId) || TraineeService.isUserInSameTeam(userDto, TrainingModuleApplication.idUserMap.get(currentUserId)))){
+            } else if (isIndividualRole) {
+                if ((assignTaskService.isUserMentorOfTrainee(userDto.get_id(), currentUserId) || TraineeService.isUserInSameTeam(userDto, TrainingModuleApplication.idUserMap.get(currentUserId)))) {
                     Document document = new Document();
                     document.append("name", userDto.getName())
                             .append("team", userDto.getTeamName())
@@ -86,8 +85,7 @@ public class TraineePlanService_V2 {
                             .append("_id", userDto.get_id());
                     userDatasDocuments.add(document);
                 }
-            }
-            else{
+            } else {
                 Document document = new Document();
                 document.append("name", userDto.getName())
                         .append("team", userDto.getTeamName())
@@ -112,14 +110,14 @@ public class TraineePlanService_V2 {
                                 new Document("$cond", Arrays.asList(
                                         new Document("$eq", Arrays.asList("$userId", "$userDatas._id")),
                                         new Document("name", new Document("$arrayElemAt", Arrays.asList("$plans.planName", 0)))
-                                                .append("_id", new Document("$toString",new Document("$arrayElemAt", Arrays.asList("$plans._id", 0)))),
+                                                .append("_id", new Document("$toString", new Document("$arrayElemAt", Arrays.asList("$plans._id", 0)))),
                                         "$$REMOVE"
                                 ))
                         ))
                         .append("status", new Document("$first", "$$ROOT.trainingStatus"))
-                        .append("startDate",new Document("$first","$$ROOT.date"))// Include the "deleted" field
+                        .append("startDate", new Document("$first", "$$ROOT.date"))// Include the "deleted" field
                 ),
-                context -> new Document("$facet",new Document("data",Arrays.asList(
+                context -> new Document("$facet", new Document("data", Arrays.asList(
                         new Document("$match", new Document("$or", Arrays.asList(
                                 new Document("name", new Document("$regex", namePattern)),
                                 new Document("team", new Document("$regex", namePattern)) // Search by 'team' field, without case-insensitive regex
@@ -128,7 +126,7 @@ public class TraineePlanService_V2 {
                         new Document("$skip", Integer.max(skipValue, 0)), // Apply skip to paginate
                         new Document("$limit", pageSize)
                 ))
-                        .append("total",Arrays.asList(
+                        .append("total", Arrays.asList(
                                 new Document("$match", new Document("$or", Arrays.asList(
                                         new Document("name", new Document("$regex", namePattern)),
                                         new Document("team", new Document("$regex", namePattern)) // Search by 'team' field, without case-insensitive regex
@@ -147,24 +145,24 @@ public class TraineePlanService_V2 {
 //                context -> new Document("$limit", pageSize)
         );
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        Document  response = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getUniqueMappedResult();
+        Document response = mongoTemplate.aggregate(aggregation, "assignedPlan", Document.class).getUniqueMappedResult();
         System.out.println("\u001B[34m" + response.get("total") + "\u001B[0m");
-        List<Document>  traineePlanResponseList = (List<Document>) response.get("data");
+        List<Document> traineePlanResponseList = (List<Document>) response.get("data");
         List<Document> countList = (List<Document>) response.get("total");
         int cnt = countList.isEmpty() ? 0 : (Integer) countList.get(0).get("total");
         System.out.println(cnt + "--------------");
-        for (Document tr : traineePlanResponseList){
+        for (Document tr : traineePlanResponseList) {
             List<UserIdAndNameDto> planDetails = new ArrayList<>();
             HashSet<String> names = new HashSet<>();
             assignedPlanList.forEach(ap -> {
-                if(ap.getUserId().equals(tr.get("_id")))
-                    ap.getPlans().forEach(p-> {
-                                if (p!= null)
+                if (ap.getUserId().equals(tr.get("_id")))
+                    ap.getPlans().forEach(p -> {
+                                if (p != null)
                                     planDetails.add(new UserIdAndNameDto(p.get_id(), p.getPlanName()));
-                                if(p!= null && !p.getDeleted() && p.getPhases()!=null) {
+                                if (p != null && !p.getDeleted() && p.getPhases() != null) {
                                     p.getPhases().forEach(ph -> {
-                                        ph.getTasks().forEach(pt ->{
-                                            if(pt!=null && pt instanceof PlanTask)
+                                        ph.getTasks().forEach(pt -> {
+                                            if (pt != null && pt instanceof PlanTask)
                                                 names.addAll(pt.getMentorIds());
                                         });
                                     });
@@ -185,50 +183,50 @@ public class TraineePlanService_V2 {
             System.out.println("\u001B[0m");
 
             tr.put("mentor", mentorNames);
-            tr.put("plan",planDetails);
+            tr.put("plan", planDetails);
             System.out.println(tr.get("status") + "}}}}}}}}}}}}}}");
             System.out.println(tr.get("startDate") + "}}}}}}}}}}}}}}");
             String userId = (String) tr.get("_id");
             AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
-            if(assignedPlan != null){
+            if (assignedPlan != null) {
                 tr.put("status", assignedPlan.getTrainingStatus());
                 tr.put("startDate", formatter.format(DateTimeUtil.convertLocalDateTimeToDate(assignedPlan.getDate())));
-            }else {
+            } else {
                 tr.put("status", TrainingStatus.PENDING);
-                tr.put("startDate",formatter.format(DateTimeUtil.convertLocalDateTimeToDate(LocalDateTime.now())));
+                tr.put("startDate", formatter.format(DateTimeUtil.convertLocalDateTimeToDate(LocalDateTime.now())));
             }
-        };
+        }
+        ;
 
         Set<String> userIds = new HashSet<>();
-        Map<String,Integer> userSummary = new HashMap<>();
+        Map<String, Integer> userSummary = new HashMap<>();
         int count = 0;
-        for (Document document : traineePlanResponseList){
+        for (Document document : traineePlanResponseList) {
             String _id = (String) document.get("_id");
 
             userIds.add(_id);
-            userSummary.put(_id,count++);
+            userSummary.put(_id, count++);
 //            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
 //            document.put("mentor","Rohit");
-            document.put("rating",0.0f);
+            document.put("rating", 0.0f);
         }
         List<Document> traineeRatingSummary = feedbackService.calculateEmployeeRatingSummary(userIds);
 //        Map<String,Document> traineeRatingMap = new HashMap<>();
-        for (Document document : traineeRatingSummary){
+        for (Document document : traineeRatingSummary) {
             String _id = (String) document.get("_id");
             int index = userSummary.get(_id);
-            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count")));
+            traineePlanResponseList.get(index).put("rating", compute_rating((Double) document.get("overallRating"), (int) document.get("count")));
         }
-        return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(count));
+        return new ApiResponse(200, "Plan fetched successfully to user", traineePlanResponseList, Long.valueOf(count));
 //        return traineePlanResponseList;
     }
 
-    public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto, String createdBy){
+    public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto, String createdBy) {
         Criteria criteria = Criteria.where("userId").is(userIdAndStatusDto.getTraineeId());
         Update update = new Update();
-        update.set("trainingStatus",userIdAndStatusDto.getStatus());
-        UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria),update,AssignedPlan.class);
-        if (updateResult.getModifiedCount() == 0)
-        {
+        update.set("trainingStatus", userIdAndStatusDto.getStatus());
+        UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria), update, AssignedPlan.class);
+        if (updateResult.getModifiedCount() == 0) {
             AssignedPlan assignedPlan = AssignedPlan.builder()
                     .plans(new ArrayList<>())
                     .date(LocalDateTime.now())

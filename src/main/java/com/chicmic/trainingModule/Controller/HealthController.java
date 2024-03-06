@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/training/serverstatus")
 public class HealthController {
     @GetMapping
-    public String healthCheck(HttpServletRequest request){
+    public String healthCheck(HttpServletRequest request) {
         return "Server is up on port " + request.getServerPort();
     }
 }

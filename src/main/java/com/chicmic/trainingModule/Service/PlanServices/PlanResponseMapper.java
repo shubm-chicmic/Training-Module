@@ -34,17 +34,17 @@ public class PlanResponseMapper {
         List<Phase<PlanTask>> phases = plan.getPhases();
         for (Phase<PlanTask> phase : phases) {
             for (PlanTask planTask : phase.getTasks()) {
-                if(planTask == null){
+                if (planTask == null) {
                     System.out.println("planTask is null  " + phase.get_id());
                     continue;
                 }
                 List<Object> milestoneDetails = new ArrayList<>();
-                if(planTask.getMilestones() != null) {
+                if (planTask.getMilestones() != null) {
                     for (Object milestoneId : planTask.getMilestones()) {
                         UserIdAndNameDto milestoneDetail = null;
                         System.out.println("Milestone Hello Response: " + milestoneId);
                         milestoneDetail = UserIdAndNameDto.builder()
-                                .name((phaseService.getPhaseById((String)milestoneId)) == null ? null : phaseService.getPhaseById((String)milestoneId).getName())
+                                .name((phaseService.getPhaseById((String) milestoneId)) == null ? null : phaseService.getPhaseById((String) milestoneId).getName())
                                 ._id((String) milestoneId)
                                 .build();
 //                        if (planTask.getPlanType() == 2) {
@@ -66,10 +66,10 @@ public class PlanResponseMapper {
                         milestoneDetails.add(milestoneDetail);
                     }
                 }
-                if(planTask.getPlanType() == 2) {
+                if (planTask.getPlanType() == 2) {
                     Test test = testService.getTestById(planTask.getPlan());
                     planTask.setPlanName(test == null ? "Test Not Found" : test.getTestName());
-                }else {
+                } else {
                     Course course = courseService.getCourseById(planTask.getPlan());
                     planTask.setPlanName(course == null ? "Course Not Found" : course.getName());
                 }

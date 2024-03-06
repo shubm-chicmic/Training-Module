@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Builder
-public class UserIdAndNameDto implements Comparable<UserIdAndNameDto>{
+public class UserIdAndNameDto implements Comparable<UserIdAndNameDto> {
     private String _id;
     private String name;
 

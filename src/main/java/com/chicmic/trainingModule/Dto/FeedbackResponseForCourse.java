@@ -5,7 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
-@Builder @Getter @Setter
+
+@Builder
+@Getter
+@Setter
 public class FeedbackResponseForCourse {
     private String _id;
     private String employeeFullName;

@@ -21,11 +21,12 @@ public class ApiResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double overallRating;
 
-    public ApiResponse(int status, String message, Object data){
+    public ApiResponse(int status, String message, Object data) {
         this.status = status;
         this.message = message;
         this.data = data;
     }
+
     public ApiResponse(int status, String message, Object data, HttpServletResponse response) {
         this.status = status;
         this.message = message;

@@ -23,6 +23,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.boot.CommandLineRunner;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -36,7 +37,7 @@ import java.util.*;
 @EnableScheduling
 @Log4j2
 public class TrainingModuleApplication implements CommandLineRunner {
-    private static String apiGateWayUrl;
+    public static String apiGateWayUrl;
     @Autowired
     private DatabaseVersionService databaseVersionService;
     @Autowired

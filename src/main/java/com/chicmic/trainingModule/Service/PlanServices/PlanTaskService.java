@@ -12,6 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PlanTaskService {
     private final PlanTaskRepo planTaskRepo;
+
     public PlanTask getPlanTaskById(String taskId) {
         PlanTask task = planTaskRepo.findById(taskId).orElse(null);
         return task.getIsDeleted() ? null : task;
@@ -20,6 +21,7 @@ public class PlanTaskService {
     public List<PlanTask> findByMilestoneId(String milestoneId) {
         return planTaskRepo.findByMilestoneId(milestoneId);
     }
+
     public PlanTask findByTypeAndPlanAndMilestoneIdForCourseAndTest(Integer type, String plan, String milestoneId, String planId) {
         // Validate type (1, 2, 3, 4)
         if (type < 1 || type > 4) {
@@ -32,7 +34,7 @@ public class PlanTaskService {
             System.out.println("Plantask size  " + planTasks.size());
             System.out.println("PlanTask  " + planTasks);
             for (PlanTask planTask : planTasks) {
-                if(planTask.getPlans() != null && !planTask.getIsDeleted() && planTask.getPlans().get_id().equals(planId)){
+                if (planTask.getPlans() != null && !planTask.getIsDeleted() && planTask.getPlans().get_id().equals(planId)) {
                     return planTask;
                 }
             }

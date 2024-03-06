@@ -8,12 +8,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Set;
-@Getter @Setter @Builder
+
+@Getter
+@Setter
+@Builder
 public class PlanRequestDto {
     @NotNull(message = "trainees can't be null")
     private Set<String> trainees;
 
-//    @NotBlank(message = "plan can't be null")
+    //    @NotBlank(message = "plan can't be null")
     private String planId;
 
     @NotNull(message = "reviewers can't be null")

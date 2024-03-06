@@ -40,6 +40,7 @@ public class Plan {
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     public List<Phase<PlanTask>> getPhases() {
         if (phases == null) {
             return null;
@@ -48,6 +49,7 @@ public class Plan {
                 .filter(phase -> !phase.getIsDeleted())
                 .collect(Collectors.toList());
     }
+
     public List<Phase<PlanTask>> getPhasesWithoutTasks() {
         if (phases == null) {
             return null;
@@ -69,11 +71,13 @@ public class Plan {
                 })
                 .collect(Collectors.toList());
     }
+
     public void setPhases(List<Phase<PlanTask>> phases) {
         this.phases = phases;
         updateTotalTasks();
         updateTotalEstimateTime();
     }
+
     private void updateTotalEstimateTime() {
         if (phases != null) {
             estimatedTime = phases.stream()
@@ -81,6 +85,7 @@ public class Plan {
                     .sum();
         }
     }
+
     public String getEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
@@ -88,12 +93,15 @@ public class Plan {
         return String.format("%02d:%02d", hours, minutes);
 
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
     public void setEstimatedTimeInSeconds(Integer estimatedTime) {
         this.estimatedTime = estimatedTime;
     }
+
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;
@@ -111,13 +119,14 @@ public class Plan {
         this.estimatedTime = totalSeconds;
     }
 
-    public void updateTotalTasks(){
+    public void updateTotalTasks() {
         if (this.phases != null) {
             totalTasks = this.phases.stream()
                     .mapToInt(phase -> phase.getTotalTasks())
                     .sum();
         }
     }
+
     public List<UserIdAndNameDto> getApproverDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approver);
     }

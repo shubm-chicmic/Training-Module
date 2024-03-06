@@ -29,9 +29,9 @@ public class UserTimeGet {
     private final UserTimeService userTimeService;
 
     @GetMapping
-    public ApiResponseWithCount getUserTime(HttpServletResponse response){
+    public ApiResponseWithCount getUserTime(HttpServletResponse response) {
         List<String> traineeId = userTimeService.getUniqueTraineeIds();
-        if(traineeId == null) {
+        if (traineeId == null) {
             traineeId = new ArrayList<>();
         }
         System.out.println("TraineeId .size " + traineeId.size());

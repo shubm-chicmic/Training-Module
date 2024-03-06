@@ -8,7 +8,9 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter @Setter @Builder
+@Getter
+@Setter
+@Builder
 public class PhaseResponse {
     private List<UserIdAndNameDto> subTask;
     private Double overallRating;

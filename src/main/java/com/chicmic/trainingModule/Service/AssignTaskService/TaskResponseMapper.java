@@ -28,10 +28,10 @@ public class TaskResponseMapper {
     private final UserTimeService userTimeService;
 
 
-    public  List<TaskDto> mapTaskToResponseDto(List<Task> taskList,String planId, String courseId, String traineeId, PlanTask planTask) {
+    public List<TaskDto> mapTaskToResponseDto(List<Task> taskList, String planId, String courseId, String traineeId, PlanTask planTask) {
         List<TaskDto> result = new ArrayList<TaskDto>();
         for (Task task : taskList) {
-            for (SubTask subTask : task.getSubtasks()){
+            for (SubTask subTask : task.getSubtasks()) {
                 System.out.println("Subtask " + subTask);
                 System.out.println("SubTaskId " + subTask.get_id());
                 Boolean isSubTaskCompleted = userProgressService.findIsSubTaskCompleted(planId, courseId, subTask.get_id(), traineeId);
@@ -45,9 +45,9 @@ public class TaskResponseMapper {
                         .name(task.getPhase().getName())
                         .build();
                 String reference = "";
-                if(subTask.getEntityType() == EntityType.TEST){
+                if (subTask.getEntityType() == EntityType.TEST) {
                     reference = subTask.getReference();
-                }else {
+                } else {
                     reference = subTask.getLink();
                 }
                 Integer consumedTime = userTimeService.getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, planId, planTask.get_id(), subTask.get_id());

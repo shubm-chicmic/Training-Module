@@ -30,9 +30,10 @@ public class SecurityConfig {
 
     private final JwtUtil jwtProvider;
     private final UserServiceImpl userService;
-//    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(){
-        DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
+
+    //    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(userService);
         authenticationProvider.setPasswordEncoder(TrainingModuleApplication.passwordEncoder());
         return authenticationProvider;
@@ -40,12 +41,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        CustomAuthenticationFilter filter=new CustomAuthenticationFilter(authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)),jwtProvider,userService);
+        CustomAuthenticationFilter filter = new CustomAuthenticationFilter(authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtProvider, userService);
 
         http.csrf(csrf -> csrf.disable());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/userProgress").permitAll());
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/**").authenticated());
+        http.authorizeHttpRequests(requests -> requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll());
+        http.authorizeHttpRequests(requests -> requests.requestMatchers(HttpMethod.POST, "/v1/training/userProgress").permitAll());
+        http.authorizeHttpRequests(requests -> requests.requestMatchers("/v1/training/**").authenticated());
         //        http.authorizeHttpRequests(requests->requests.requestMatchers("/v2/training","/v2/training/**").authenticated());
 //        http.authorizeHttpRequests(requests->requests
 //                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
@@ -57,9 +58,9 @@ public class SecurityConfig {
 //        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.POST,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
 //        http.authorizeHttpRequests(requests->requests.requestMatchers(HttpMethod.DELETE,"/v1/training/**").hasAnyAuthority("TL", "PA", "PM"));
 
-        http.authorizeHttpRequests(requests->requests.requestMatchers("/addCourseWithScript").permitAll());
+        http.authorizeHttpRequests(requests -> requests.requestMatchers("/addCourseWithScript").permitAll());
 //        http.authorizeHttpRequests(requests->requests.requestMatchers("/v1/training/course","/favicon.ico","/api/health-check").permitAll());
-        http.authorizeHttpRequests(requests->requests.anyRequest().permitAll());
+        http.authorizeHttpRequests(requests -> requests.anyRequest().permitAll());
 
         //adding filters
         http.addFilterBefore(new CustomAuthorizationFilter(userService), UsernamePasswordAuthenticationFilter.class);
@@ -67,6 +68,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();

@@ -11,9 +11,11 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = TrimValidator.class)
 public @interface TrimAll {
     String[] value() default {};
+
     String[] exclude() default {};
 
     String message() default "";
+
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};

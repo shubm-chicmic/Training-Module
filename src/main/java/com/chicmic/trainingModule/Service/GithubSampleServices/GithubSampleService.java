@@ -36,7 +36,7 @@ public class GithubSampleService {
 //        githubSampleRepo.deleteAll();
 //    }
 
-    public GithubSample createGithubSample(GithubSample githubSample){
+    public GithubSample createGithubSample(GithubSample githubSample) {
         githubSample.setCreatedAt(LocalDateTime.now());
         githubSample.setUpdatedAt(LocalDateTime.now());
         githubSample = githubSampleRepo.save(githubSample);
@@ -74,7 +74,7 @@ public class GithubSampleService {
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
-        if(isRolePermit){
+        if (isRolePermit) {
             approvedCriteria = Criteria.where("isApproved").is(true);
         }
         Criteria finalCriteria = new Criteria().andOperator(
@@ -112,7 +112,7 @@ public class GithubSampleService {
         return githubSamples;
     }
 
-    public GithubSample getGithubSampleById(String githubSampleId){
+    public GithubSample getGithubSampleById(String githubSampleId) {
         return githubSampleRepo.findById(githubSampleId).orElse(null);
     }
 
@@ -132,21 +132,21 @@ public class GithubSampleService {
         if (githubSample != null) {
             githubSample = (GithubSample) CustomObjectMapper.updateFields(githubSampleDto, githubSample);
             Integer count = 0;
-            for (String reviewer : githubSample.getApprover()){
-                if(githubSample.getApprovedBy().contains(reviewer)){
+            for (String reviewer : githubSample.getApprover()) {
+                if (githubSample.getApprovedBy().contains(reviewer)) {
                     count++;
                 }
             }
 
-            if(count > 0){
+            if (count > 0) {
                 githubSample.setIsApproved(true);
-            }else {
+            } else {
                 githubSample.setIsApproved(false);
             }
 
             Set<String> approvedBy = new HashSet<>();
-            for (String approver : githubSample.getApprovedBy()){
-                if(githubSample.getApprover().contains(approver)){
+            for (String approver : githubSample.getApprovedBy()) {
+                if (githubSample.getApprover().contains(approver)) {
                     approvedBy.add(approver);
                 }
             }
@@ -184,14 +184,13 @@ public class GithubSampleService {
                 .and("approver").in(userId);
         Criteria createdByCriteria = Criteria.where("isApproved").is(false)
                 .and("createdBy").is(userId);
-        if(isRolePermit){
+        if (isRolePermit) {
             approvedCriteria = Criteria.where("isApproved").is(true);
         }
         Criteria finalCriteria = new Criteria().andOperator(
                 criteria,
                 new Criteria().orOperator(approvedCriteria, reviewersCriteria, createdByCriteria)
         );
-
 
 
         MatchOperation matchStage = Aggregation.match(finalCriteria);

@@ -20,7 +20,8 @@ import java.util.List;
 public class UserTimeResponseService {
     private final UserTimeService userTimeService;
     private final PhaseService phaseService;
-    public  List<UserTimeResponseDto> mapUserTimeToResponseDto(List<String> traineeData) {
+
+    public List<UserTimeResponseDto> mapUserTimeToResponseDto(List<String> traineeData) {
         List<UserTimeResponseDto> userTimeResponseDtos = new ArrayList<>();
         for (String keyTraineeId : traineeData) {
             List<UserTime> userTimeList = userTimeService.getUserTimeByTraineeId(keyTraineeId);
@@ -29,12 +30,13 @@ public class UserTimeResponseService {
         }
         return userTimeResponseDtos;
     }
-    public  UserTimeResponseDto mapUserTimeToResponseDto(String traineeId, List<UserTime> userTimeList) {
+
+    public UserTimeResponseDto mapUserTimeToResponseDto(String traineeId, List<UserTime> userTimeList) {
         List<TaskTimeDto> taskTimeDto = new ArrayList<>();
         for (UserTime userTime : userTimeList) {
-            if(userTime.getSubTaskId() != null && !userTime.getSubTaskId().isEmpty()) {
+            if (userTime.getSubTaskId() != null && !userTime.getSubTaskId().isEmpty()) {
                 SubTask subTask = phaseService.getSubTaskById(userTime.getSubTaskId());
-                if(subTask == null)continue;
+                if (subTask == null) continue;
                 TaskTimeDto taskTime = TaskTimeDto.builder()
                         .taskId(userTime.getSubTaskId())
                         .consumedTime(userTime.getConsumedTime())

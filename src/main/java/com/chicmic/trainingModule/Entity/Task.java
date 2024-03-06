@@ -34,6 +34,7 @@ public class Task {
     @CascadeSave
     private List<SubTask> subtasks;
     private Boolean isDeleted = false;
+
     public List<SubTask> getSubtasks() {
         if (subtasks == null) {
             return new ArrayList<>();
@@ -55,18 +56,22 @@ public class Task {
                     .sum();
         }
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
     public String getEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
 
         return String.format("%02d:%02d", hours, minutes);
     }
-    public void setEstimatedTimeInSeconds(Integer estimatedTime){
+
+    public void setEstimatedTimeInSeconds(Integer estimatedTime) {
         this.estimatedTime = estimatedTime;
     }
+
     public void setEstimatedTime(String estimatedTime) {
         System.out.println("estimatedTime = " + estimatedTime);
         estimatedTime = estimatedTime.trim();

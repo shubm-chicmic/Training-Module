@@ -15,11 +15,11 @@ public class AssignTaskResponseDto {
     private String _id;
     private Object trainee;
     private LocalDateTime date;
-//    private Integer completedTask;
+    //    private Integer completedTask;
 //    private Integer totalTasks;
     private Boolean isCompleted;
     private List<PlanDto> plans;
-//    private List<Milestone> milestones;
+    //    private List<Milestone> milestones;
 //    private List<UserIdAndNameDto> approvedBy = new ArrayList<>();
     private String createdBy;
     private String createdByName;

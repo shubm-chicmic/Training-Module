@@ -38,6 +38,7 @@ public class SubTask {
     @JsonIgnore
     private Phase<Task> phase;
     private Boolean isDeleted = false;
+
     public void setEstimatedTime(String estimatedTime) {
         estimatedTime = estimatedTime.trim();
         int hours = 0;
@@ -55,12 +56,14 @@ public class SubTask {
         int totalSeconds = hours * 3600 + minutes * 60;
         this.estimatedTime = totalSeconds;
     }
+
     public String getEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }

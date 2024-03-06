@@ -27,10 +27,10 @@ public class FeedbackProgressService {
     private final TestService testService;
     private final CourseService courseService;
 
-    public Feedback_V2 feedbackOfParticularPhaseOfTrainee(String traineeId, String planId, String taskId, List<String> subtaskIds, String type, String userId){
+    public Feedback_V2 feedbackOfParticularPhaseOfTrainee(String traineeId, String planId, String taskId, List<String> subtaskIds, String type, String userId) {
         Criteria criteria = Criteria.where("traineeId").is(traineeId).and("type").is(type);
         criteria.and("planId").is(planId);
-        if (type.equals(VIVA_)||type.equals(PPT_)) {
+        if (type.equals(VIVA_) || type.equals(PPT_)) {
             criteria.and("details.courseId").is(taskId);
             if (type.equals(VIVA_))
                 criteria.and("phaseIds").all(subtaskIds);
@@ -41,7 +41,8 @@ public class FeedbackProgressService {
         criteria.and("createdBy").is(userId);
         return mongoTemplate.findOne(new Query(criteria), Feedback_V2.class);
     }
-    public Map<String,Object> testAggregationQuery(String traineeId, String planId, String taskId, List<String> subtaskIds, String type, String userId) {
+
+    public Map<String, Object> testAggregationQuery(String traineeId, String planId, String taskId, List<String> subtaskIds, String type, String userId) {
         Document matchCriteria1 = new Document("traineeId", traineeId).append("type", type).append("planId", planId).append("isDeleted", false);
         Document matchCriteria2 = new Document("traineeId", traineeId).append("type", type).append("planId", planId).append("isDeleted", false);
         if (type.equals(VIVA_) || type.equals(PPT_)) {
@@ -49,17 +50,17 @@ public class FeedbackProgressService {
             matchCriteria1.append("details.courseId", taskId);
             matchCriteria2.append("details.courseId", taskId);
             if (type.equals(VIVA_)) {
-                matchCriteria1.append("phaseIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
+                matchCriteria1.append("phaseIds", new Document("$size", subtaskIds.size()).append("$in", subtaskIds));
 //                matchCriteria1.append("phaseIds", subtaskIds);
-                matchCriteria2.append("phaseIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
+                matchCriteria2.append("phaseIds", new Document("$size", subtaskIds.size()).append("$in", subtaskIds));
 //                matchCriteria2.append("phaseIds", new Document("$all", subtaskIds));
             }
         } else if (type.equals(TEST_)) {
             matchCriteria1.append("details.testId", taskId);
-            matchCriteria1.append("milestoneIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
+            matchCriteria1.append("milestoneIds", new Document("$size", subtaskIds.size()).append("$in", subtaskIds));
 //            matchCriteria1.append("milestoneIds", subtaskIds);
             matchCriteria2.append("details.testId", taskId);
-            matchCriteria2.append("milestoneIds", new Document("$size", subtaskIds.size()).append("$in",subtaskIds));
+            matchCriteria2.append("milestoneIds", new Document("$size", subtaskIds.size()).append("$in", subtaskIds));
 //            matchCriteria2.append("milestoneIds", new Document("$all", subtaskIds));
         }
         matchCriteria2.append("createdBy", userId);
@@ -86,7 +87,7 @@ public class FeedbackProgressService {
             response.put("overallRating", compute_rating(totalOverAllRating, count));
         }
         List<Document> feedback = (List<Document>) results.get("feedback");
-        if (feedback != null && !feedback.isEmpty()){
+        if (feedback != null && !feedback.isEmpty()) {
             Document feedbackV2 = feedback.get(0);
             response.put("_id", feedbackV2.get("_id"));
         }

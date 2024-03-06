@@ -12,7 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class PlanDto {
-//    private Integer planType;
+    //    private Integer planType;
     private String name;
     private String _id;
     private String assignPlanId;

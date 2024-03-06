@@ -34,9 +34,11 @@ public class UserTimeService {
         this.phaseService = phaseService;
         this.planTaskService = planTaskService;
     }
+
     public List<UserTime> getUserTimeByTraineeId(String traineeId) {
         return userTimeRepo.findByTraineeId(traineeId, TimeSheetType.VIVA, TimeSheetType.PPT);
     }
+
     public List<String> getUniqueTraineeIds() {
         List<UserTime> userTimes = userTimeRepo.findDistinctTraineeIds();
         return userTimes.stream()
@@ -44,13 +46,14 @@ public class UserTimeService {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
     public UserTime getUserTimeByDto(UserTimeDto userTimeDto, String traineeId) {
         if (userTimeDto == null) {
             return null;
         }
-        if(userTimeDto.getType() != TimeSheetType.VIVA && userTimeDto.getType() != TimeSheetType.PPT) {
+        if (userTimeDto.getType() != TimeSheetType.VIVA && userTimeDto.getType() != TimeSheetType.PPT) {
             // Retrieve user time based on the provided parameters
-            List<UserTime> userTimeList =  userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(
+            List<UserTime> userTimeList = userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(
                     traineeId,
                     userTimeDto.getPlanId(),
                     userTimeDto.getPlanTaskId(),
@@ -58,10 +61,11 @@ public class UserTimeService {
             );
             System.out.println("Getting userTime size " + userTimeList.size());
             return userTimeList != null && userTimeList.size() > 0 ? userTimeList.get(0) : null;
-        }else {
+        } else {
             return userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdForVivaAndPPT(traineeId, userTimeDto.getPlanId(), userTimeDto.getPlanTaskId(), TimeSheetType.VIVA, TimeSheetType.PPT);
         }
     }
+
     public UserTime getSessionByDto(UserTimeDto userTimeDto) {
         if (userTimeDto == null) {
             return null;
@@ -73,6 +77,7 @@ public class UserTimeService {
                 userTimeDto.getType()
         ).orElse(null);
     }
+
     public Integer getTotalTimeByTraineeId(String traineeId) {
         List<UserTime> userTimes = userTimeRepo.findByTraineeId(traineeId, PlanType.VIVA, PlanType.PPT);
         return calculateTotalTime(userTimes);
@@ -115,36 +120,36 @@ public class UserTimeService {
 
         SubTask subTask = null;
         PlanTask planTask = null;
-        if(userTimeDto.getType() != PlanType.PPT && userTimeDto.getType() != PlanType.VIVA){
+        if (userTimeDto.getType() != PlanType.PPT && userTimeDto.getType() != PlanType.VIVA) {
             subTask = phaseService.getSubTaskById(userTimeDto.getSubTaskId());
-            if(subTask != null) {
+            if (subTask != null) {
                 Task task = subTask.getTask();
                 Phase<Task> phase = task.getPhase();
                 String moduleId = null;
-                if(phase.getEntityType() == PlanType.COURSE){
-                    Course course = ((Course)phase.getEntity());
-                    if(course != null){
+                if (phase.getEntityType() == PlanType.COURSE) {
+                    Course course = ((Course) phase.getEntity());
+                    if (course != null) {
                         moduleId = course.get_id();
                     }
-                }else if(phase.getEntityType() == PlanType.TEST){
-                    Test test = ((Test)phase.getEntity());
-                    if(test != null){
+                } else if (phase.getEntityType() == PlanType.TEST) {
+                    Test test = ((Test) phase.getEntity());
+                    if (test != null) {
                         moduleId = test.get_id();
                     }
                 }
-                planTask = planTaskService.findByTypeAndPlanAndMilestoneIdForCourseAndTest(userTimeDto.getType(),moduleId , phase.get_id(), userTimeDto.getPlanId());
+                planTask = planTaskService.findByTypeAndPlanAndMilestoneIdForCourseAndTest(userTimeDto.getType(), moduleId, phase.get_id(), userTimeDto.getPlanId());
             }
-        }else {
+        } else {
             String planTaskId = userTimeDto.getTaskId();
             planTask = planTaskService.getPlanTaskById(planTaskId);
         }
-        if(planTask != null)
-        userTimeDto.setPlanTaskId(planTask.get_id());
+        if (planTask != null)
+            userTimeDto.setPlanTaskId(planTask.get_id());
         UserTime existingUserTime = getUserTimeByDto(userTimeDto, traineeId);
         if (existingUserTime != null) {
 //            // Update the existing user time
             Integer finalEstimateTime = existingUserTime.getConsumedTime() + userTimeDto.getConsumedTime();
-            if(finalEstimateTime < 0)finalEstimateTime = 0;
+            if (finalEstimateTime < 0) finalEstimateTime = 0;
             existingUserTime.setConsumedTime(finalEstimateTime);
             existingUserTime.setUpdatedAt(LocalDateTime.now());
             // You may need to update other fields as well if necessary
@@ -169,7 +174,7 @@ public class UserTimeService {
         if (existingUserTime != null) {
             // Update the existing user time
             Integer finalEstimateTime = existingUserTime.getConsumedTime() + userTimeDto.getConsumedTime();
-            if(finalEstimateTime < 0)finalEstimateTime = 0;
+            if (finalEstimateTime < 0) finalEstimateTime = 0;
             existingUserTime.setConsumedTime(finalEstimateTime);
             existingUserTime.setUpdatedAt(LocalDateTime.now());
             // You may need to update other fields as well if necessary
@@ -194,7 +199,7 @@ public class UserTimeService {
             for (Task task : phase.getTasks()) {
                 for (SubTask subTask : task.getSubtasks()) {
                     List<UserTime> userTime = userTimeRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, plan.get_id(), planTask.get_id(), subTask.get_id(), TimeSheetType.VIVA, TimeSheetType.PPT);
-                    for(UserTime subtaskTime : userTime) {
+                    for (UserTime subtaskTime : userTime) {
                         consumedTime += subtaskTime.getConsumedTime();
                     }
                 }

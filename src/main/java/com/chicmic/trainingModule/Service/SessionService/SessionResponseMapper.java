@@ -29,7 +29,7 @@ public class SessionResponseMapper {
 
     public static SessionResponseDto mapSessionToResponseDto(Session session, String userId) {
         MomMessageResponseDto Mommessage = null;
-        if(session.getMOM() != null){
+        if (session.getMOM() != null) {
             Mommessage = MomMessageResponseDto.builder()
                     ._id(session.getMOM().get_id())
                     .message(session.getMOM().getMessage())
@@ -40,9 +40,9 @@ public class SessionResponseMapper {
         String reason = null;
         Set<UserIdAndSessionStatusDto> attendedTrainees = session.getTraineesDetailsWithStatus();
         for (UserIdAndSessionStatusDto traineeSessionStatus : attendedTrainees) {
-            if(traineeSessionStatus.get_id().equals(userId)){
+            if (traineeSessionStatus.get_id().equals(userId)) {
                 attendanceStatus = traineeSessionStatus.getAttendanceStatus();
-                if(traineeSessionStatus.getAttendanceStatus() == SessionAttendedStatus.NOT_ATTENDED){
+                if (traineeSessionStatus.getAttendanceStatus() == SessionAttendedStatus.NOT_ATTENDED) {
                     reason = traineeSessionStatus.getReason();
                 }
             }
@@ -70,6 +70,7 @@ public class SessionResponseMapper {
                 .reason(reason)
                 .build();
     }
+
     public static List<UserIdAndNameDto> mapSessionToDropdownResponseDto(List<Session> sessions) {
         List<UserIdAndNameDto> sessionResponseDtoList = new ArrayList<>();
         for (Session session : sessions) {

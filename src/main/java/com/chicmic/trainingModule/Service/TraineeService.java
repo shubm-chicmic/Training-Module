@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class TraineeService {
 
     public static boolean isUserInSameTeam(UserDto user1, UserDto user2) {
-        if(user1 == null || user2 == null) {
+        if (user1 == null || user2 == null) {
             return false;
         }
         for (String team : user1.getTeams()) {

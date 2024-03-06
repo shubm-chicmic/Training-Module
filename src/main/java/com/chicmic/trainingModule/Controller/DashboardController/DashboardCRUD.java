@@ -33,37 +33,38 @@ public class DashboardCRUD {
         this.sessionService = sessionService;
         this.assignTaskService = assignTaskService;
     }
+
     @GetMapping("/{traineeId}")
-    public ApiResponse getTraineeRatingSummary(@PathVariable String traineeId, Principal principal, @RequestHeader("Authorization") String authorizationToken){
+    public ApiResponse getTraineeRatingSummary(@PathVariable String traineeId, Principal principal, @RequestHeader("Authorization") String authorizationToken) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean flag = authentication.getAuthorities().contains("TR");
-        if(flag && !traineeId.equals(principal.getName()))
-            throw new ApiException(HttpStatus.BAD_REQUEST,"You are not allowed to view  dashboard!!");
-        flag  = authentication.getAuthorities().stream()
+        if (flag && !traineeId.equals(principal.getName()))
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You are not allowed to view  dashboard!!");
+        flag = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("IND"));
-        if(flag){
+        if (flag) {
             AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
             List<Plan> plans = assignedPlan.getPlans();
             boolean isRolePermitted = false;
-            for (Plan plan : plans){
-                for (Phase<PlanTask> phase : plan.getPhases()){
-                    for (PlanTask planTask : phase.getTasks()){
-                        if(planTask.getMentorIds().contains(principal.getName())){
+            for (Plan plan : plans) {
+                for (Phase<PlanTask> phase : plan.getPhases()) {
+                    for (PlanTask planTask : phase.getTasks()) {
+                        if (planTask.getMentorIds().contains(principal.getName())) {
                             isRolePermitted = true;
                             break;
                         }
                     }
                 }
             }
-            if(!isRolePermitted)
-                throw new ApiException(HttpStatus.BAD_REQUEST,"You are not allowed to view this dashboard!!");
+            if (!isRolePermitted)
+                throw new ApiException(HttpStatus.BAD_REQUEST, "You are not allowed to view this dashboard!!");
         }
         DashboardResponse dashboardResponse = dashboardService.getTraineeRatingSummary(traineeId);
         Long totalAttendedSession = sessionService.countTotalAttendedSessionsByUser(traineeId);
         System.out.println("totalAttendedSession = " + totalAttendedSession);
         dashboardResponse.setAttendedSessions(totalAttendedSession);
         dashboardResponse.setTotalSessions(sessionService.countTotalSessionsForUser(traineeId));
-        return new ApiResponse(200,"Trainee Rating summary",dashboardResponse);
+        return new ApiResponse(200, "Trainee Rating summary", dashboardResponse);
     }
 }

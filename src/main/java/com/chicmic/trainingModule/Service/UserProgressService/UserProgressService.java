@@ -36,7 +36,7 @@ public class UserProgressService {
 //        System.out.println("allUserProgress: " + allUserProgress);
         for (UserProgress userProgress : allUserProgress) {
 
-            if(userProgress.getPlanId() != null && userProgress.getCourseId() != null
+            if (userProgress.getPlanId() != null && userProgress.getCourseId() != null
                     && userProgress.getTraineeId() != null && userProgress.getSubTaskId() != null
             ) {
                 if (userProgress.getPlanId().equals(planId) && userProgress.getCourseId().equals(courseId)
@@ -47,9 +47,10 @@ public class UserProgressService {
             }
 
         }
-        return  null;
+        return null;
     }
-    public UserProgress getUserProgress(UserProgressDto userProgressDto){
+
+    public UserProgress getUserProgress(UserProgressDto userProgressDto) {
         return checkUserProgressExists(
                 userProgressDto.getPlanId(),
                 userProgressDto.getCourseId(),
@@ -61,26 +62,31 @@ public class UserProgressService {
     public UserProgress getUserProgressByTraineeIdAndPlanId(String traineeId, String planId, Integer progressType) {
         return userProgressRepo.findByTraineeIdAndPlanIdAndProgressType(traineeId, planId, progressType).orElse(null);
     }
+
     public UserProgress getUserProgressByTraineeIdPlanIdAndPlanTaskId(String traineeId, String planId, String planTaskId, Integer progressType) {
         return userProgressRepo.findByTraineeIdAndPlanIdAndPlanTaskIdAndProgressType(traineeId, planId, planTaskId, progressType).orElse(null);
     }
+
     public UserProgress getUserProgressByTraineeIdPlanIdAndCourseId(String traineeId, String planId, String courseId, Integer progressType) {
         return userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(traineeId, planId, courseId, progressType).orElse(null);
     }
+
     public List<UserProgress> getAllUserProgressByTraineeId(String traineeId) {
         return userProgressRepo.findByTraineeId(traineeId);
     }
+
     public Boolean findIsPlanCompleted(String traineeId, String planId, Integer progressType) {
         UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndProgressType(
-             traineeId,
+                traineeId,
                 planId,
                 progressType
         ).orElse(null);
-        if(userProgress == null){
+        if (userProgress == null) {
             return false;
         }
         return userProgress.getStatus() == ProgessConstants.Completed;
     }
+
     public Boolean findIsCourseCompleted(String traineeId, String planId, String courseId, Integer progressType) {
         UserProgress userProgress = userProgressRepo.findByTraineeIdAndPlanIdAndCourseIdAndProgressType(
                 traineeId,
@@ -88,7 +94,7 @@ public class UserProgressService {
                 courseId,
                 progressType
         ).orElse(null);
-        if(userProgress == null){
+        if (userProgress == null) {
             return false;
         }
         return userProgress.getStatus() == ProgessConstants.Completed;
@@ -133,19 +139,19 @@ public class UserProgressService {
 //               id
 //        ).orElse(null);
 //        System.out.println("User Progress : = " + userProgress);
-        if(userProgress == null){
+        if (userProgress == null) {
             return false;
         }
         return userProgress.getStatus() == ProgessConstants.Completed;
     }
 
-//    public long getTotalCompletedTasks(String traineeId, String planType, String id) {
+    //    public long getTotalCompletedTasks(String traineeId, String planType, String id) {
 //        Query query = new Query();
 //        query.addCriteria(Criteria.where("userId").is(traineeId).and("progressType").is(planType).and("id").is(id));
 //        return userProgressRepo.count(query);
 //
 //    }
-    public Integer getTotalSubTaskCompleted(String traineeId,String planId, String courseid, Integer progressType) {
+    public Integer getTotalSubTaskCompleted(String traineeId, String planId, String courseid, Integer progressType) {
         return Math.toIntExact(userProgressRepo.countByTraineeIdAndPlanIdAndCourseIdAndProgressTypeAndStatus(
                 traineeId,
                 planId,
@@ -185,7 +191,7 @@ public class UserProgressService {
                     .collect(Collectors.toList());
             mongoTemplate.findAllAndRemove(Query.query(Criteria.where("_id").in(idsToDelete)), UserProgress.class);
 
-    }
+        }
     }
 
     public void deleteAllBySubTaskId(String planId, String milestone) {
@@ -193,7 +199,7 @@ public class UserProgressService {
         phase = phase != null && !phase.getIsDeleted() ? phase : null;
         for (Object task : phase.getTasks()) {
             Task task1 = (Task) task;
-            for (SubTask subTask : task1.getSubtasks()){
+            for (SubTask subTask : task1.getSubtasks()) {
                 List<UserProgress> userProgressList = userProgressRepo.findByPlanIdAndSubTaskId(planId, subTask.get_id());
                 List<String> idsToDelete = userProgressList.stream()
                         .map(UserProgress::get_id)

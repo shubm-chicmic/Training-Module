@@ -12,11 +12,11 @@ import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.*;
 public interface Rating {
 //    public String getCourseId();
 
-    default public String getCourseId(){
+    default public String getCourseId() {
         return null;
     }
 
-    default public String getTestId(){
+    default public String getTestId() {
         return null;
     }
 

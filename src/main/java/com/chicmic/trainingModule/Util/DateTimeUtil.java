@@ -1,4 +1,5 @@
 package com.chicmic.trainingModule.Util;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -17,6 +18,7 @@ public class DateTimeUtil {
         formattedTime = formattedTime.replaceAll("(?i)AM", "Am").replaceAll("(?i)PM", "Pm");
         return formattedTime;
     }
+
     public static String getTimeFromInstant(Instant instant) {
         if (instant == null) {
             return "Invalid Instant";
@@ -27,18 +29,21 @@ public class DateTimeUtil {
         formattedTime = formattedTime.replaceAll("(?i)AM", "Am").replaceAll("(?i)PM", "Pm");
         return formattedTime;
     }
-    public static Date convertLocalDateTimeToDate(LocalDateTime localDateTime){
+
+    public static Date convertLocalDateTimeToDate(LocalDateTime localDateTime) {
         ZoneId zoneId = ZoneId.systemDefault();
         ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
         Date date = Date.from(zonedDateTime.toInstant());
         return date;
     }
+
     public static String getDateFromDate(LocalDateTime dateTime) {
         if (dateTime == null) {
             return "Invalid DateTime";
         }
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
+
     public static String getDateFromInstant(Instant instant) {
         if (instant == null) {
             return "Invalid Instant";

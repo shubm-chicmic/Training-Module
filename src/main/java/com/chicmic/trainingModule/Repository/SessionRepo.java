@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface SessionRepo extends MongoRepository<Session, String> {
     Page<Session> findAllBy(TextCriteria criteria, Pageable pageable);
+
     List<Session> findByTitleContainingAndIsDeletedIsFalse(String title);
 }
 

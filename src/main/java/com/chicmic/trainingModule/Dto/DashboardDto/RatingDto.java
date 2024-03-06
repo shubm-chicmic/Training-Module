@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter @Builder
+@Getter
+@Setter
+@Builder
 public class RatingDto {
     private Float totalRating;
     private Integer count;
@@ -13,10 +15,12 @@ public class RatingDto {
         this.totalRating = totalRating;
         this.count = count;
     }
-    public void incrTotalRating(float val){
+
+    public void incrTotalRating(float val) {
         totalRating += val;
     }
-    public void incrcount(){
+
+    public void incrcount() {
         count += 1;
     }
 }

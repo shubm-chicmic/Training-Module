@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter @Builder
+@Getter
+@Setter
+@Builder
 public class TraineeRating {
     int index;
     Double rating;
@@ -15,10 +17,12 @@ public class TraineeRating {
         this.rating = rating;
         this.count = count;
     }
-    public void incrRating(Double val){
+
+    public void incrRating(Double val) {
         rating += val;
     }
-    public void incrCount(){
+
+    public void incrCount() {
         count += 1;
     }
 }

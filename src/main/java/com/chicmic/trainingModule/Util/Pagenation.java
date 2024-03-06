@@ -17,6 +17,7 @@ public class Pagenation {
             return List.of();
         }
     }
+
     public static <T> List<T> paginateWithoutPageIndexConversion(List<T> list, int pageNumber, int pageSize) {
         int totalItems = list.size();
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);

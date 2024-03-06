@@ -44,7 +44,7 @@ public class Course {
     private Integer completedTasks;
     private Integer totalTasks;
 
-//    public Course() {
+    //    public Course() {
 //        Phase.count = 0;
 //    }
     public List<UserIdAndNameDto> getApproverDetails() {
@@ -54,6 +54,7 @@ public class Course {
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
     }
+
     public List<Phase<Task>> getPhases() {
         if (phases == null) {
             return null;
@@ -62,18 +63,21 @@ public class Course {
                 .filter(phase -> !phase.getIsDeleted())
                 .collect(Collectors.toList());
     }
+
     public void setPhases(List<Phase<Task>> phases) {
         this.phases = phases;
         updateTotalTasks();
         updateTotalEstimateTime();
     }
-    public void updateTotalTasks(){
+
+    public void updateTotalTasks() {
         if (this.phases != null) {
             totalTasks = this.phases.stream()
                     .mapToInt(phase -> phase.getTotalTasks())
                     .sum();
         }
     }
+
     private void updateTotalEstimateTime() {
         if (phases != null) {
             estimatedTime = phases.stream()
@@ -81,15 +85,18 @@ public class Course {
                     .sum();
         }
     }
+
     public String getEstimatedTime() {
         int hours = estimatedTime / 3600;
         int minutes = (estimatedTime % 3600) / 60;
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;

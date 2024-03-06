@@ -16,10 +16,10 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PlanTaskDto {
     private String _id;
-//    private String phaseId;
+    //    private String phaseId;
 //    private String phaseName;
     private String name;
-//    private String planName;
+    //    private String planName;
     private Integer planType;
     private Instant date;
 //    private List<SubTask> subTasks;

@@ -26,7 +26,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserServiceImpl userService;
-    private RedirectStrategy redirectStrategy=new DefaultRedirectStrategy();
+    private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtil jwtProvider, UserServiceImpl userService) {
         this.authenticationManager = authenticationManager;
@@ -96,15 +96,14 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         }
         System.out.println("Port = " + request.getServerPort());
         String redirectUrl = "";
-        if(request.getServerName().equals("localhost")){
-            redirectUrl = "http://" + request.getServerName() + ":" +  request.getServerPort() + contextPath + "/" + defaultRedirectPath;
-        }else {
+        if (request.getServerName().equals("localhost")) {
+            redirectUrl = "http://" + request.getServerName() + ":" + request.getServerPort() + contextPath + "/" + defaultRedirectPath;
+        } else {
             redirectUrl = protocol + "://" + request.getServerName() + contextPath + "/" + defaultRedirectPath;
         }
         System.out.println("Redirecting to: " + redirectUrl + "\u100B[0m");
         return redirectUrl;
     }
-
 
 
     private void clearSessionCookie(HttpServletRequest request, HttpServletResponse response) {

@@ -17,32 +17,33 @@ import java.security.Principal;
 @AllArgsConstructor
 public class UserTimeCreate {
     private final UserTimeService userTimeService;
-   @PostMapping
+
+    @PostMapping
     public ApiResponse createUserTime(
             @RequestBody UserTimeDto userTimeDto,
             HttpServletResponse response,
             Principal principal
-   ){
-       if(userTimeDto != null){
-           System.out.println("\u001B[35m Usertime Dto : ");
-           System.out.println(userTimeDto + "\u001B[0m");
-           if(userTimeDto.getType() < TimeSheetType.COURSE || userTimeDto.getType() > TimeSheetType.SESSION){
-               return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid TimeSheet Type", null, response);
-           }
+    ) {
+        if (userTimeDto != null) {
+            System.out.println("\u001B[35m Usertime Dto : ");
+            System.out.println(userTimeDto + "\u001B[0m");
+            if (userTimeDto.getType() < TimeSheetType.COURSE || userTimeDto.getType() > TimeSheetType.SESSION) {
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid TimeSheet Type", null, response);
+            }
 //           try {
-           if(userTimeDto.getType() == TimeSheetType.SESSION){
-               UserTime userTime = userTimeService.createSessionTimeForUser(userTimeDto, principal.getName());
-               return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Session", userTime, response);
-           }else {
-               UserTime userTime = userTimeService.createUserTime(userTimeDto, principal.getName());
-               return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Task", userTime, response);
-           }
+            if (userTimeDto.getType() == TimeSheetType.SESSION) {
+                UserTime userTime = userTimeService.createSessionTimeForUser(userTimeDto, principal.getName());
+                return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Session", userTime, response);
+            } else {
+                UserTime userTime = userTimeService.createUserTime(userTimeDto, principal.getName());
+                return new ApiResponse(HttpStatus.OK.value(), "Time Saved Successfully For the Task", userTime, response);
+            }
 //           }catch (Exception ex){
 //               return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Exception Occur While Saving Time!", ex.getMessage(), response);
 //           }
 
-       }
-       return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Request Body is Empty", null, response);
+        }
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Request Body is Empty", null, response);
 
-   }
+    }
 }

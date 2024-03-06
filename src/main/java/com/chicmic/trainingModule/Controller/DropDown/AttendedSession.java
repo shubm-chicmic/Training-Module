@@ -34,6 +34,7 @@ import java.util.List;
 public class AttendedSession {
     private final SessionService sessionService;
     private final SessionResponseMapper sessionResponseMapper;
+
     @RequestMapping(value = {"/attendedSession"}, method = RequestMethod.GET)
     public ResponseEntity<ApiResponse> getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
@@ -44,7 +45,7 @@ public class AttendedSession {
             @RequestParam(value = "entryDate", required = false) String entryDate,
             HttpServletResponse response,
             Principal principal
-    )  {
+    ) {
         pageNumber = null;
         pageSize = null;
 
@@ -60,7 +61,7 @@ public class AttendedSession {
                     sessionOfTodayDate.add(session);
                 }
             }
-        }else {
+        } else {
             sessionOfTodayDate = sessionList;
         }
         List<UserIdAndNameDto> sessionResponseDtoList = sessionResponseMapper.mapSessionToDropdownResponseDto(sessionOfTodayDate);

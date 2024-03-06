@@ -35,6 +35,7 @@ public class Phase<T> {
     @JsonIgnore
     private Object entity;
     private Boolean isDeleted = false;
+
     public List<T> getTasks() {
         if (tasks == null) {
             return new ArrayList<>();
@@ -50,6 +51,7 @@ public class Phase<T> {
                 })
                 .collect(Collectors.toList());
     }
+
     public void setTasks(List<T> tasks) {
         this.tasks = tasks;
         updateTotalSubTasks();
@@ -78,8 +80,7 @@ public class Phase<T> {
                     .mapToInt(task -> {
                         if (task instanceof Task) {
                             return ((Task) task).getEstimatedTimeInSeconds();
-                        }
-                        else if (task instanceof PlanTask) {
+                        } else if (task instanceof PlanTask) {
                             return ((PlanTask) task).getEstimatedTimeInSeconds();
                         }
                         return 0;
@@ -94,12 +95,15 @@ public class Phase<T> {
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
     public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
         this.estimatedTime = estimatedTimeInSeconds;
     }
+
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;

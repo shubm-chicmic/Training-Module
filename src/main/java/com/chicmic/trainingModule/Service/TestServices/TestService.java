@@ -46,10 +46,9 @@ public class TestService {
 
         List<Phase<Task>> milestones = phaseService.createPhases(test.getMilestones(), test, EntityType.TEST, false);
         test.setMilestones(milestones);
-        try{
+        try {
             test = testRepo.save(test);
-        }
-        catch (org.springframework.dao.DuplicateKeyException ex) {
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
             // Catch DuplicateKeyException and throw ApiException with 400 status
             throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
         }
@@ -71,7 +70,7 @@ public class TestService {
         );
         Collation collation = Collation.of(Locale.ENGLISH).strength(Collation.ComparisonLevel.secondary());
 
-        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));;
+        Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
 //        if (!sortKey.isEmpty()) {
@@ -101,7 +100,7 @@ public class TestService {
         if (traineeId != null && !traineeId.isEmpty()) {
             System.out.println("\u001B[33m traineeId is coming in test \u001B[0m" + traineeId);
             List<String> testIds = courseService.getCoursesAndTestsByTraineeId(traineeId, EntityType.TEST);
-            if(testIds != null && testIds.size() > 0) {
+            if (testIds != null && testIds.size() > 0) {
                 for (Test test : tests) {
                     if (testIds.contains(test.get_id())) {
                         testList.add(test);
@@ -135,6 +134,7 @@ public class TestService {
 
         return tests;
     }
+
     public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
         Pageable pageable;
         pageable = PageRequest.of(pageNumber, pageSize);
@@ -228,19 +228,19 @@ public class TestService {
             if (testDto.getApprover() != null) {
                 test.setApprover(testDto.getApprover());
                 Integer count = 0;
-                for (String approver : test.getApprover()){
-                    if(test.getApprovedBy().contains(approver)){
+                for (String approver : test.getApprover()) {
+                    if (test.getApprovedBy().contains(approver)) {
                         count++;
                     }
                 }
-                if(count == test.getApprover().size()){
+                if (count == test.getApprover().size()) {
                     test.setApproved(true);
-                }else {
+                } else {
                     test.setApproved(false);
                 }
                 Set<String> approvedBy = new HashSet<>();
-                for (String approver : test.getApprovedBy()){
-                    if(test.getApprover().contains(approver)){
+                for (String approver : test.getApprovedBy()) {
+                    if (test.getApprover().contains(approver)) {
                         approvedBy.add(approver);
                     }
                 }
@@ -251,10 +251,9 @@ public class TestService {
             }
 
             // Saving the updated test
-            try{
+            try {
                 test = testRepo.save(test);
-            }
-            catch (org.springframework.dao.DuplicateKeyException ex) {
+            } catch (org.springframework.dao.DuplicateKeyException ex) {
                 // Catch DuplicateKeyException and throw ApiException with 400 status
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
             }
@@ -312,19 +311,45 @@ public class TestService {
             return Collections.emptyList();
         }
     }
-    public List<Map<String,String>> findTestsByIds(List<String> Ids){
+
+    public List<Map<String, String>> findTestsByIds(List<String> Ids) {
         Criteria criteria = Criteria.where("_id").in(Ids);
         Query query = new Query(criteria);
-        query.fields().include("_id","name","milestones._id","milestones.name");
-        List<Test> test = mongoTemplate.find(new Query(criteria),Test.class);
+        query.fields().include("_id", "name", "milestones._id", "milestones.name");
+        List<Test> test = mongoTemplate.find(new Query(criteria), Test.class);
 //        HashMap<String,String> courseDetails = new HashMap<>();
-        List<Map<String,String>> testDetailsList = Arrays.asList(new HashMap<>(),new HashMap<>());
+        List<Map<String, String>> testDetailsList = Arrays.asList(new HashMap<>(), new HashMap<>());
         test.forEach(t -> {
-            testDetailsList.get(0).put(t.get_id(),t.getTestName());
+            testDetailsList.get(0).put(t.get_id(), t.getTestName());
             t.getMilestones().forEach(p -> {
-                testDetailsList.get(1).put(p.get_id(),p.getName());
+                testDetailsList.get(1).put(p.get_id(), p.getName());
             });
         });
         return testDetailsList;
+    }
+
+    public boolean isValidTest(String testId) {
+        Test test = testRepo.findById(testId).orElse(null);
+        return test != null && !test.getDeleted();
+    }
+
+    public boolean areMilestonesBelongToTest(String testId, List<String> milestoneIds) {
+        Test test = testRepo.findById(testId).orElse(null);
+        if (test == null || test.getDeleted()) {
+            return false; // Course not found
+        }
+        // Get the list of phase IDs associated with the course
+        List<String> milestoneIdsOfTest = test.getMilestones().stream()
+                .map(Phase::get_id)
+                .collect(Collectors.toList());
+        // Check if each phase ID in the list belongs to the course
+        for (String milestoneId : milestoneIds) {
+            if (!milestoneIdsOfTest.contains(milestoneId)) {
+                return false; // Phase ID doesn't belong to the course
+            }
+        }
+
+        return true; // All phase IDs belong to the course
+
     }
 }

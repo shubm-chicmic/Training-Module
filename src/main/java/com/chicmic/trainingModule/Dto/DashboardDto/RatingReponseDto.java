@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter @Builder
+@Getter
+@Setter
+@Builder
 public class RatingReponseDto {
     private double overall;
     private String comment;

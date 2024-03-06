@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.Feedback_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Set;
@@ -14,8 +15,10 @@ import java.util.Set;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA_;
 
-@Getter @Setter @Builder
-public class FeedbackResponse_COURSE implements FeedbackResponse{
+@Getter
+@Setter
+@Builder
+public class FeedbackResponse_COURSE implements FeedbackResponse {
     private String _id;
     private UserDto reviewer;
     private UserDto trainee;
@@ -36,7 +39,7 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
         this.subTask = subTask;
     }
 
-    public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
+    public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback) {
         Rating_COURSE rating_course = (Rating_COURSE) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
@@ -52,9 +55,9 @@ public class FeedbackResponse_COURSE implements FeedbackResponse{
                 .theoreticalRating(rating_course.getTheoreticalRating())
                 .technicalRating(rating_course.getTechnicalRating())
                 .communicationRating(rating_course.getCommunicationRating())
-                .feedbackType(new UserIdAndNameDto(VIVA_,"VIVA"))
+                .feedbackType(new UserIdAndNameDto(VIVA_, "VIVA"))
                 .task(new UserIdAndNameDto(rating_course.getCourseId(), rating_course.getCourseId()))
-                .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id,id)).toList())
+                .subTask(subTaskIds.stream().map(id -> new UserIdAndNameDto(id, id)).toList())
                 .createdOn(formatter.format(feedback.getCreatedAt()))
                 .rating(feedback.getOverallRating())
                 .build();

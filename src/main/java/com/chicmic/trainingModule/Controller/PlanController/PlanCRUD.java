@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Plan;
 
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanResponseMapper;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
@@ -32,7 +33,8 @@ public class PlanCRUD {
     private final PlanTaskService planTaskService;
     private final AssignTaskService assignTaskService;
     private final PlanResponseMapper planResponseMapper;
-//    @GetMapping("/getting")
+
+    //    @GetMapping("/getting")
 //    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
 //       return planService.getPlanCourseByPlanIds(plansIds);
 //    }
@@ -49,7 +51,7 @@ public class PlanCRUD {
             HttpServletResponse response,
             Principal principal
     ) {
-        if(sortKey != null && sortKey.equals("createdAt")){
+        if (sortKey != null && sortKey.equals("createdAt")) {
             sortDirection = -1;
         }
         System.out.println("dropdown key = " + isDropdown);
@@ -85,10 +87,13 @@ public class PlanCRUD {
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal) {
+    public ApiResponse create(@Valid @RequestBody PlanDto planDto, Principal principal) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
-
+        Boolean isPlanDtoPlanValid = planService.isPlanDtoValid(planDto);
+        if (!isPlanDtoPlanValid) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones duplicated in Another Task");
+        }
         Plan plan = planService.createPlan(planDto, principal);
 
         return new ApiResponse(HttpStatus.CREATED.value(), "Plan created successfully", plan);
@@ -97,28 +102,32 @@ public class PlanCRUD {
     @DeleteMapping("/{planId}")
     public ApiResponse delete(@PathVariable String planId, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
-        if(plan != null) {
+        if (plan != null) {
             System.out.println("planId = " + planId);
             List<AssignedPlan> assignedPlans = assignTaskService.getAssignedPlansByPlan(plan);
             System.out.println("assigned Plan size = " + assignedPlans.size());
-            if (assignedPlans.size() > 0){
+            if (assignedPlans.size() > 0) {
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "This plan is already assigned to a User", null, response);
             }
             Boolean deleted = planService.deletePlanById(planId);
             if (deleted) {
                 return new ApiResponse(HttpStatus.OK.value(), "Plan deleted successfully", null, response);
-            }else {
+            } else {
                 return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not deleted", null, response);
 
             }
         }
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not found", null, response);
+        return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not found", null, response);
 
     }
 
     @PutMapping
-    public ApiResponse updatePlan(@RequestBody@Valid PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
+    public ApiResponse updatePlan(@Valid @RequestBody PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
+        Boolean isPlanDtoPlanValid = planService.isPlanDtoValid(planDto);
+        if (!isPlanDtoPlanValid) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones duplicated in Another Task");
+        }
         if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);
         }

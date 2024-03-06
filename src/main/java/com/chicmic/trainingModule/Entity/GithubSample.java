@@ -35,6 +35,7 @@ public class GithubSample {
     private Boolean isApproved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     public List<UserIdAndNameDto> getApproverDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approver);
     }
@@ -42,9 +43,11 @@ public class GithubSample {
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
     }
+
     public List<UserIdAndNameDto> getTeamMembers() {
         return ConversionUtility.convertToTeamIdAndName(this.teams);
     }
+
     public List<UserIdAndNameDto> getRepoCreatedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.repoCreatedBy);
     }

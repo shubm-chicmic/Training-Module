@@ -8,13 +8,14 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class Rating_TEST implements Rating{
+public class Rating_TEST implements Rating {
     private String testId;
     private Double theoreticalRating;
     private Double codingRating;
     private Double communicationRating;
-    public Double computeOverallRating(){
+
+    public Double computeOverallRating() {
         double total = communicationRating + theoreticalRating + codingRating;
-        return total/3;
+        return total / 3;
     }
 }

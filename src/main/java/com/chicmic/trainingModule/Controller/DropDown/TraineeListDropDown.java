@@ -30,8 +30,9 @@ import java.util.Map;
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND','TR')")
 public class TraineeListDropDown {
     private final AssignTaskService assignTaskService;
+
     @GetMapping("/traineeList")
-    public ApiResponseWithCount getTraineeData(Principal principal){
+    public ApiResponseWithCount getTraineeData(Principal principal) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Boolean isIndividualRole = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -43,17 +44,15 @@ public class TraineeListDropDown {
             String traineeId = entry.getKey();
             UserDto traineeDto = entry.getValue();
             String traineeName = traineeDto.getEmployeeFullName();
-            if(traineeId.equals(principal.getName())){
+            if (traineeId.equals(principal.getName())) {
                 traineeList.add(traineeDto);
-            }
-            else if(isIndividualRole) {
+            } else if (isIndividualRole) {
                 if ((assignTaskService.isUserMentorOfTrainee(traineeId, principal.getName()) || TraineeService.isUserInSameTeam(traineeDto, currentUserData)))
                     traineeList.add(traineeDto);
-            }
-            else{
+            } else {
                 traineeList.add(traineeDto);
             }
         }
-        return new ApiResponseWithCount(traineeList.size(), HttpStatus.OK.value(), "Trainee data Fetched Successfully",traineeList);
+        return new ApiResponseWithCount(traineeList.size(), HttpStatus.OK.value(), "Trainee data Fetched Successfully", traineeList);
     }
 }

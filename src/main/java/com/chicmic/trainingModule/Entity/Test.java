@@ -42,6 +42,7 @@ public class Test {
     private Integer totalTasks;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     public List<Phase<Task>> getMilestones() {
         if (milestones == null) {
             return new ArrayList<>();
@@ -50,17 +51,20 @@ public class Test {
                 .filter(phase -> !phase.getIsDeleted()) // Filter out deleted milestones
                 .collect(Collectors.toList());
     }
+
     public void setMilestones(List<Phase<Task>> milestones) {
         this.milestones = milestones;
         updateTotalTasks();
         updateTotalEstimateTime();
     }
-//    public Test() {
+
+    //    public Test() {
 //        Milestone.count = 0;
 //    }
     public List<UserIdAndNameDto> getTeamsDetails() {
         return ConversionUtility.convertToTeamIdAndName(this.teams);
     }
+
     public List<UserIdAndNameDto> getApproverDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approver);
     }
@@ -68,13 +72,15 @@ public class Test {
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
     }
-    public void updateTotalTasks(){
+
+    public void updateTotalTasks() {
         if (this.milestones != null) {
             totalTasks = this.milestones.stream()
                     .mapToInt(phase -> phase.getTotalTasks())
                     .sum();
         }
     }
+
     private void updateTotalEstimateTime() {
         if (milestones != null) {
             estimatedTime = milestones.stream()
@@ -82,7 +88,8 @@ public class Test {
                     .sum();
         }
     }
-//    public String getEstimatedTime() {
+
+    //    public String getEstimatedTime() {
 //        int hours = estimatedTime / 3600;
 //        int minutes = (estimatedTime % 3600) / 60;
 //
@@ -101,9 +108,11 @@ public class Test {
 
         return String.format("%02d:%02d", hours, minutes);
     }
+
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
+
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
         int minutes = 0;

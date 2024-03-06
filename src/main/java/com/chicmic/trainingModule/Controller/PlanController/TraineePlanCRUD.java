@@ -18,12 +18,13 @@ import java.security.Principal;
 @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM','IND', 'TR')")
 public class TraineePlanCRUD {
     private final TraineePlanService_V2 traineePlanService;
-   private final MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
     public TraineePlanCRUD(TraineePlanService_V2 traineePlanService, MongoTemplate mongoTemplate) {
         this.traineePlanService = traineePlanService;
         this.mongoTemplate = mongoTemplate;
     }
+
     @GetMapping
     public ApiResponse fetchAllResponse(@RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
                                         @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -31,13 +32,13 @@ public class TraineePlanCRUD {
                                         @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
                                         @RequestParam(value = "sortKey", defaultValue = "employeeCode", required = false) String sortKey,
                                         Principal principal
-                                        ){
+    ) {
         //pageNumber /= pageSize;
         if (pageNumber < 0 || pageSize < 1)
-            throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
+            throw new ApiException(HttpStatus.NO_CONTENT, "invalid pageNumber or pageSize");
         System.out.println("request reaches here!!");
-        sortDirection = (sortDirection!=1)?-1:1;
-        sortKey = (sortKey.equals("startDate"))?"date":sortKey;
+        sortDirection = (sortDirection != 1) ? -1 : 1;
+        sortKey = (sortKey.equals("startDate")) ? "date" : sortKey;
         return traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
         //long count  = mongoTemplate.count(new Query(),AssignedPlan.class);
         //return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);

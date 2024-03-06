@@ -30,15 +30,16 @@ public class AssignedPlan {
     private Integer consumedTime;
     @DBRef
     private List<Plan> plans;
-//    private Set<String> reviewers = new HashSet<>();
+    //    private Set<String> reviewers = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
     private Integer trainingStatus = TrainingStatus.ONGOING;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     public List<Plan> getPlans() {
-        if(this.plans == null)return null;
+        if (this.plans == null) return null;
         return plans.stream()
                 .filter(plan -> !plan.getDeleted())
                 .collect(Collectors.toList());

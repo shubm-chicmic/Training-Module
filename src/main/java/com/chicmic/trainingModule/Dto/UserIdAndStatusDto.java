@@ -5,7 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 public class UserIdAndStatusDto {
     @NotBlank(message = "traineeId can't be null")
     private String traineeId;

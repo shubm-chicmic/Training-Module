@@ -13,6 +13,7 @@ public interface PlanTaskRepo extends MongoRepository<PlanTask, String> {
 
     @Query("{'milestones': ?0, 'isDeleted': false}")
     List<PlanTask> findByMilestoneId(String milestoneId);
+
     @Query("{'plan': ?0, 'isDeleted': false}")
     List<PlanTask> findByPlanId(String planId);
 }

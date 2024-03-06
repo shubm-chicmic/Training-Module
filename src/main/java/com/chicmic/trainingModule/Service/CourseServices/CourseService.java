@@ -43,6 +43,7 @@ public class CourseService {
     private final CourseRepo courseRepo;
     private final MongoTemplate mongoTemplate;
     private final PhaseService phaseService;
+
     public Course getCourseByName(String courseName) {
         Query query = new Query(Criteria.where("name").is(courseName).and("isDeleted").is(false));
         Course course = mongoTemplate.findOne(query, Course.class);
@@ -353,4 +354,29 @@ public class CourseService {
         });
         return courseDetailsList;
     }
+
+    public boolean isValidCourse(String courseId) {
+        Course course = courseRepo.findById(courseId).orElse(null);
+        return course != null && !course.getIsDeleted();
+    }
+
+    public boolean arePhasesBelongToCourse(String courseId, List<String> phaseIds) {
+        Course course = courseRepo.findById(courseId).orElse(null);
+        if (course == null || course.getIsDeleted()) {
+            return false; // Course not found
+        }
+        // Get the list of phase IDs associated with the course
+        List<String> coursePhaseIds = course.getPhases().stream()
+                .map(Phase::get_id)
+                .collect(Collectors.toList());
+        // Check if each phase ID in the list belongs to the course
+        for (String phaseId : phaseIds) {
+            if (!coursePhaseIds.contains(phaseId)) {
+                return false; // Phase ID doesn't belong to the course
+            }
+        }
+
+        return true; // All phase IDs belong to the course
+    }
+
 }

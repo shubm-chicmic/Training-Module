@@ -17,6 +17,7 @@ public class ApiResponseWithCount {
     private int status;
     private String message;
     private Object data;
+
     public ApiResponseWithCount(long count, int status, String message, Object data, HttpServletResponse response) {
         this.count = count;
         this.status = status;

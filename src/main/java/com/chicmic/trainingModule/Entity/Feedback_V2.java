@@ -16,7 +16,9 @@ import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.TEST;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.VIVA;
 
-@Getter @Setter @Builder
+@Getter
+@Setter
+@Builder
 @Document
 public class Feedback_V2 {
     @Id
@@ -34,12 +36,12 @@ public class Feedback_V2 {
     private String planId;
     private boolean isDeleted;
 
-    public static Feedback_V2 buildFeedbackFromFeedbackRequestDto(FeedbackRequestDto feedbackDto,String reviewer){
+    public static Feedback_V2 buildFeedbackFromFeedbackRequestDto(FeedbackRequestDto feedbackDto, String reviewer) {
         Date date = new Date();
         //SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-       // String type = FEEDBACK_TYPE_CATEGORY_V2[feedbackDto.getFeedbackType().charAt(0) - '1'];
+        // String type = FEEDBACK_TYPE_CATEGORY_V2[feedbackDto.getFeedbackType().charAt(0) - '1'];
 
-        Feedback_V2 feedbackV2 =  Feedback_V2.builder()
+        Feedback_V2 feedbackV2 = Feedback_V2.builder()
                 .traineeId(feedbackDto.getTrainee())
                 .type(feedbackDto.getFeedbackType())
                 .details(getRating(feedbackDto))
@@ -47,13 +49,13 @@ public class Feedback_V2 {
                 .createdAt(date)
                 .updateAt(date)
                 .createdBy(reviewer)
-                .overallRating(compute_rating(feedbackDto.computeRating(),1))
+                .overallRating(compute_rating(feedbackDto.computeRating(), 1))
                 .planId(feedbackDto.getPlanId())
                 .isDeleted(false)
                 .build();
         if (feedbackDto.getFeedbackType().equals(VIVA.toString()))
             feedbackV2.setPhaseIds(feedbackDto.getPhase());
-        else if(feedbackDto.getFeedbackType().equals(TEST.toString()))
+        else if (feedbackDto.getFeedbackType().equals(TEST.toString()))
             feedbackV2.setMilestoneIds(feedbackDto.getMilestone());
 
         return feedbackV2;

@@ -16,6 +16,7 @@ public class UserIdAndSessionStatusDto {
     private String _id;
     private Integer attendanceStatus;
     private String reason = null;
+
     public UserIdAndSessionStatusDto(String _id, Integer attendanceStatus) {
         this._id = _id;
         this.attendanceStatus = attendanceStatus;
@@ -23,12 +24,14 @@ public class UserIdAndSessionStatusDto {
             this.reason = null;
         }
     }
+
     public void setAttendanceStatus(Integer attendanceStatus) {
         this.attendanceStatus = attendanceStatus;
         if (attendanceStatus != null && attendanceStatus != SessionAttendedStatus.NOT_ATTENDED) {
             this.reason = null;
         }
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

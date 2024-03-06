@@ -119,6 +119,16 @@
 			<artifactId>json</artifactId>
 			<version>20230227</version> <!-- Replace with the latest version -->
 		</dependency>
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+			<version>2.0.1.Final</version> <!-- or the latest version available -->
+		</dependency>
+
 	</dependencies>
 
 	<build>

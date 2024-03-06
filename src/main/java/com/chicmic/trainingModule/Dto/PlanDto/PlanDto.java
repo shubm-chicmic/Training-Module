@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Dto.PlanDto;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
+import com.chicmic.trainingModule.annotation.ApproverValidation;
 import lombok.*;
 
 import java.util.List;
@@ -18,6 +19,8 @@ import java.util.Set;
 public class PlanDto {
     private String planName;
     private String description;
+
+    @ApproverValidation
     private Set<String> approver;
     private List<Phase<PlanTask>> phases;
     private Boolean approved = false;

@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.Feedback_V2;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +15,11 @@ import java.util.List;
 import static com.chicmic.trainingModule.TrainingModuleApplication.searchUserById;
 import static com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType.BEHAVIUOR_;
 
-@Getter @Setter @Builder
-public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
-        private String _id;
+@Getter
+@Setter
+@Builder
+public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse {
+    private String _id;
     private UserDto reviewer;
     private UserDto trainee;
     private UserIdAndNameDto feedbackType;
@@ -27,7 +30,8 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
     private Double teamSpiritRating;
     private Double attitudeRating;
     private Double overallRating;
-    public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback){
+
+    public static FeedbackResponse buildFeedback_V2Response(Feedback_V2 feedback) {
         Rating_BEHAVIOUR rating_behaviour = (Rating_BEHAVIOUR) feedback.getDetails();
         UserDto trainee = searchUserById(feedback.getTraineeId());
         UserDto reviewer = searchUserById(feedback.getCreatedBy());
@@ -45,12 +49,15 @@ public class FeedbackResponse_BEHAVIOUR implements FeedbackResponse{
                 .rating(feedback.getOverallRating())
                 .build();
     }
+
     @Override
     public UserIdAndNameDto getTask() {
         return null;
     }
+
     @Override
-    public void setTask(UserIdAndNameDto task) {}
+    public void setTask(UserIdAndNameDto task) {
+    }
 
     @Override
     public List<UserIdAndNameDto> getSubTask() {

@@ -31,6 +31,7 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -319,5 +320,62 @@ public class PlanService {
         for (Plan plan : plans)
             planDetails.put(plan.get_id(), plan.getPlanName());
         return planDetails;
+    }
+
+    public Boolean isPlanDtoValid(PlanDto planDto) {
+        // Do not repeat milestones ids in case of course and tests
+        HashMap<String, Set<String>> planMilestonesMap = new HashMap<>();
+        for (Phase<PlanTask> phase : planDto.getPhases()) {
+
+            for (PlanTask task : phase.getTasks()) {
+                Set<Object> encounteredMilestones = new HashSet<>();
+                System.out.println("\u001B[43m taskMilestones = " + task.getMilestones() + "\u001B[0m");
+                for (Object milestone : task.getMilestones()) {
+                    if (!encounteredMilestones.add(milestone)) {
+                        throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones duplicated in Same Task");
+                    }
+                }
+                if (task.getPlanType() == EntityType.COURSE || task.getPlanType() == EntityType.TEST) {
+                    List<String> milestonesStrings = task.getMilestones().stream()
+                            .map(Object::toString) // Convert each object to its string representation
+                            .collect(Collectors.toList());
+                    if (task.getPlanType() == EntityType.COURSE) {
+                        if (!courseService.isValidCourse(task.getPlan())) {
+                            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid Course Id");
+                        } else if (!courseService.arePhasesBelongToCourse(task.getPlan(), milestonesStrings)) {
+                            throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones Id does Not belong to the course");
+                        }
+                    } else if (task.getPlanType() == EntityType.TEST) {
+                        if (!testService.isValidTest(task.getPlan())) {
+                            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid Test Id");
+                        } else if (!testService.areMilestonesBelongToTest(task.getPlan(), milestonesStrings)) {
+                            throw new ApiException(HttpStatus.BAD_REQUEST, "Milestone Id does Not belong to the Test");
+                        }
+                    }
+
+                    if (planMilestonesMap.containsKey(task.getPlan())) {
+                        Set<String> nonRepeatingMilestones = new HashSet<>();
+                        for (Object milestone : task.getMilestones()) {
+                            if (planMilestonesMap.get(task.getPlan()).contains((String) milestone)) {
+                                return false;
+                            } else {
+                                nonRepeatingMilestones.add((String) milestone);
+                            }
+                        }
+                        planMilestonesMap.get(task.getPlan()).addAll(nonRepeatingMilestones);
+                    } else {
+                        Set<String> nonRepeatingMilestones = new HashSet<>();
+                        for (Object milestone : task.getMilestones()) {
+                            nonRepeatingMilestones.add((String) milestone);
+                        }
+                        nonRepeatingMilestones.addAll(nonRepeatingMilestones);
+                        planMilestonesMap.put(task.getPlan(), nonRepeatingMilestones);
+                    }
+
+                }
+                System.out.println("\u001B[43m planMilestonesMap = " + planMilestonesMap + "\u001B[0m");
+            }
+        }
+        return true;
     }
 }
