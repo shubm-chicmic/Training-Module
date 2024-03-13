@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.validator;
+package com.chicmic.trainingModule.annotation.validator;
 
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.TrainingModuleApplication;

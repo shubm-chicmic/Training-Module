@@ -1,8 +1,14 @@
 package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
 import com.chicmic.trainingModule.annotation.CascadeSave;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -24,12 +30,19 @@ public class Phase<T> {
     @Id
     private String _id;
     private Integer entityType;
+    @Trim
+    @NotNull(message = "Phase Name is Required")
+    @NotBlank(message = "Phase Name is Required")
+    @Size(max = 25, message = "Phase name must be at most 25 characters long")
     private String name;
     private Integer estimatedTime = 0;
     private Integer completedTasks = 0;
     private Integer totalTasks = 0;
     @DBRef
     @CascadeSave
+    @NotNull(message = "Tasks Cannot Be Null")
+    @NotEmpty(message = "Tasks Cannot Be Empty")
+    @Valid
     private List<T> tasks;
     @DBRef
     @JsonIgnore

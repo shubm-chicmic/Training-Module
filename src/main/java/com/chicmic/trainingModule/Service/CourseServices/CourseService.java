@@ -356,6 +356,9 @@ public class CourseService {
     }
 
     public boolean isValidCourse(String courseId) {
+        if(courseId == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "CourseId cannot be null");
+        }
         Course course = courseRepo.findById(courseId).orElse(null);
         return course != null && !course.getIsDeleted();
     }

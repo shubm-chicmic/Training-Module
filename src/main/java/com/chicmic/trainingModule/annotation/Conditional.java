@@ -1,6 +1,6 @@
 package com.chicmic.trainingModule.annotation;
 
-import com.chicmic.trainingModule.validator.ConditionalValidator;
+import com.chicmic.trainingModule.annotation.validator.ConditionalValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

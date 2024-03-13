@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Entity;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Util.ConversionUtility;
 import com.chicmic.trainingModule.annotation.CascadeSave;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -49,7 +50,7 @@ public class Plan {
                 .filter(phase -> !phase.getIsDeleted())
                 .collect(Collectors.toList());
     }
-
+    @JsonIgnore
     public List<Phase<PlanTask>> getPhasesWithoutTasks() {
         if (phases == null) {
             return null;

@@ -122,12 +122,14 @@
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
+			<version>8.0.1.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>2.0.1.Final</version> <!-- or the latest version available -->
-		</dependency>
+
+<!--		<dependency>-->
+<!--			<groupId>javax.validation</groupId>-->
+<!--			<artifactId>validation-api</artifactId>-->
+<!--			<version>2.0.1.Final</version> &lt;!&ndash; or the latest version available &ndash;&gt;-->
+<!--		</dependency>-->
 
 	</dependencies>
 

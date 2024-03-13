@@ -325,6 +325,9 @@ public class PlanService {
     public Boolean isPlanDtoValid(PlanDto planDto) {
         // Do not repeat milestones ids in case of course and tests
         HashMap<String, Set<String>> planMilestonesMap = new HashMap<>();
+        if(planDto.getPhases() == null){
+            return true;
+        }
         for (Phase<PlanTask> phase : planDto.getPhases()) {
 
             for (PlanTask task : phase.getTasks()) {

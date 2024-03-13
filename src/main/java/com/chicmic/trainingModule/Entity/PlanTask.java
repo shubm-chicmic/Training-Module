@@ -4,8 +4,12 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
 import com.chicmic.trainingModule.annotation.UserValidation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -28,8 +32,13 @@ import java.util.List;
 public class PlanTask {
     @Id
     private String _id;
+    @NotNull(message = "Plan type is Required")
+    @Min(value = 1, message = "Plan type must be between 1 and 4")
+    @Max(value = 4, message = "Plan type must be between 1 and 4")
     private Integer planType;
+    @Trim
     @NotNull(message = "Plan Id cannot be empty")
+    @NotBlank(message = "Plan Id cannot be empty")
     private String plan;
     @Transient
     private String planName;
@@ -45,6 +54,8 @@ public class PlanTask {
 //        if(date != null)
 //        this.date = date.plusHours(5).plusMinutes(30);
 //    }
+    @NotNull(message = "Estimated Time is Required")
+    @Min(value = 1, message = "Estimated Time must be greater than 0")
     private Integer estimatedTime;
     private Boolean isDeleted = false;
     @DBRef
@@ -53,7 +64,6 @@ public class PlanTask {
     @DBRef
     @JsonIgnore
     private Plan plans;
-
     public List<UserIdAndNameDto> getMentorDetails() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }
@@ -90,18 +100,16 @@ public class PlanTask {
 
         return String.format("%02d:%02d", hours, minutes);
     }
-
-    public String getMilestonesEstimatedTime() {
-        int hours = estimatedTime / 3600;
-        int minutes = (estimatedTime % 3600) / 60;
-
-        return String.format("%02d:%02d", hours, minutes);
-    }
-
+//
+//    public String getMilestonesEstimatedTime() {
+//        int hours = estimatedTime / 3600;
+//        int minutes = (estimatedTime % 3600) / 60;
+//
+//        return String.format("%02d:%02d", hours, minutes);
+//    }
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
     }
-
     public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
         this.estimatedTime = estimatedTimeInSeconds;
     }

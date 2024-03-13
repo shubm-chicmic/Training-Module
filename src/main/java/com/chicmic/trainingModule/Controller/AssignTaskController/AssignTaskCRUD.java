@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+//TODO Permission check for apis for individual roles and trainee roles
 @RestController
 @RequestMapping("/v1/training/assignedPlan")
 @AllArgsConstructor
@@ -59,7 +59,18 @@ public class AssignTaskCRUD {
 //        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
 //                .reviewers(assignTaskDto.getApprover()).build();
 //        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
-
+        Boolean isIndividualRole;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
+        Boolean isTraineeRole;
+        isTraineeRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("TR"));
+        if(isIndividualRole || isTraineeRole){
+            throw new ApiException(HttpStatus.FORBIDDEN, "You are not authorized to create this plan");
+        }
         System.out.println("assignTaskDto = " + assignTaskDto);
         Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
@@ -93,6 +104,18 @@ public class AssignTaskCRUD {
 
     @PutMapping
     public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response, Principal principal) {
+        Boolean isIndividualRole;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
+        Boolean isTraineeRole;
+        isTraineeRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("TR"));
+        if(isIndividualRole || isTraineeRole){
+                throw new ApiException(HttpStatus.FORBIDDEN, "You are not authorized to update this plan");
+        }
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
         if (assignedPlan != null) {
             List<Plan> plans = new ArrayList<>();

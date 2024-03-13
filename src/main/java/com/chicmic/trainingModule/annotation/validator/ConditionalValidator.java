@@ -1,4 +1,4 @@
-package com.chicmic.trainingModule.validator;
+package com.chicmic.trainingModule.annotation.validator;
 
 import com.chicmic.trainingModule.annotation.Conditional;
 import com.fasterxml.jackson.databind.util.BeanUtil;
