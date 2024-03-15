@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -25,11 +26,14 @@ public class SubTask {
     private Integer entityType;
     @JsonProperty(value = "subTask", required = true)
     @Trim
+    @NotBlank(message = "Subtask Name is Required")
     private String subTask;
     private Integer estimatedTime;
     @Trim
+    @Pattern(regexp = "/^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.,~#?&\\/=]*)$/", message = "Invalid Link format")
     private String link = "";
     @Trim
+    @Pattern(regexp = "/^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.,~#?&\\/=]*)$/", message = "Invalid Reference format")
     private String reference;
     @DBRef
     @JsonIgnore

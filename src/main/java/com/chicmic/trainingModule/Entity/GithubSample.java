@@ -3,6 +3,7 @@ package com.chicmic.trainingModule.Entity;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,13 +24,17 @@ import java.util.stream.Collectors;
 public class GithubSample {
     @Id
     private String _id;
+    @Trim
     private String projectName;
+    @Trim
     private String url;
     private List<String> repoCreatedBy;
     private List<String> teams;
     private Set<String> approver;
     private Set<String> approvedBy = new HashSet<String>();
+    @Trim
     private String createdBy;
+    @Trim
     private String comment;
     private Boolean isDeleted = false;
     private Boolean isApproved = false;

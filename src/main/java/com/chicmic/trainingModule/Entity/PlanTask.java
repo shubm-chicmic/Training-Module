@@ -49,6 +49,7 @@ public class PlanTask {
     @UserValidation
     private List<String> mentor;
     private Integer totalTasks;
+    @NotNull(message = "Date is Required")
     private Instant date;
     //    public void setDatePlusHours(LocalDateTime date) {
 //        if(date != null)

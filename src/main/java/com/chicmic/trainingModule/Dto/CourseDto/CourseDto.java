@@ -20,7 +20,9 @@ public class CourseDto {
     @Trim
     private String name;
     private Set<String> approver;
+    @Trim
     private String figmaLink = "";
+    @Trim
     private String guidelines = "";
     private List<Phase<Task>> phases;
     private Boolean approved = false;

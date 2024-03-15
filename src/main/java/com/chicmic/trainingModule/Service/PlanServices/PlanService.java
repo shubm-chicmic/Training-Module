@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.EntityType;
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
@@ -338,15 +339,15 @@ public class PlanService {
                         throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones duplicated in Same Task");
                     }
                 }
-                if (task.getPlanType() == EntityType.COURSE || task.getPlanType() == EntityType.TEST) {
-                    List<String> milestonesStrings = task.getMilestones().stream()
-                            .map(Object::toString) // Convert each object to its string representation
-                            .collect(Collectors.toList());
+                List<String> milestonesStrings = task.getMilestones().stream()
+                        .map(Object::toString) // Convert each object to its string representation
+                        .collect(Collectors.toList());
+                if (task.getPlanType() == PlanType.COURSE || task.getPlanType() == PlanType.TEST) {
                     if (task.getPlanType() == EntityType.COURSE) {
                         if (!courseService.isValidCourse(task.getPlan())) {
                             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid Course Id");
                         } else if (!courseService.arePhasesBelongToCourse(task.getPlan(), milestonesStrings)) {
-                            throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones Id does Not belong to the course");
+                            throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones Id does Not belong to the Course");
                         }
                     } else if (task.getPlanType() == EntityType.TEST) {
                         if (!testService.isValidTest(task.getPlan())) {
@@ -375,6 +376,12 @@ public class PlanService {
                         planMilestonesMap.put(task.getPlan(), nonRepeatingMilestones);
                     }
 
+                }else if(task.getPlanType() == PlanType.VIVA || task.getPlanType() == PlanType.PPT){
+                    if (!courseService.isValidCourse(task.getPlan())) {
+                        throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid Course Id");
+                    } else if (!courseService.arePhasesBelongToCourse(task.getPlan(), milestonesStrings)) {
+                        throw new ApiException(HttpStatus.BAD_REQUEST, "Milestones Id does Not belong to the Course");
+                    }
                 }
                 System.out.println("\u001B[43m planMilestonesMap = " + planMilestonesMap + "\u001B[0m");
             }

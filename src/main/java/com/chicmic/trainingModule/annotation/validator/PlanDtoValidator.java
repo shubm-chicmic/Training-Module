@@ -26,7 +26,6 @@ public class PlanDtoValidator implements ConstraintValidator<PlanDtoValidation, 
         if(dto.getApprover() !=null && dto.getPlanName() == null && dto.getDescription() == null && dto.getPhases() == null){
             return isValidApprovers(dto.getApprover(), context);
         }
-
         return isValidPlanName(dto.getPlanName(), context)
                 && isValidDescription(dto.getDescription(), context)
                 && isValidApprovers(dto.getApprover(), context)
