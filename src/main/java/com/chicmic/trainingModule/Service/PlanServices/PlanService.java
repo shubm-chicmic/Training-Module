@@ -320,4 +320,41 @@ public class PlanService {
             planDetails.put(plan.get_id(), plan.getPlanName());
         return planDetails;
     }
+
+    public Plan clonePlan(Plan originalPlan, String createdUserId) {
+        Plan clonedPlan =Plan.builder()
+                ._id(String.valueOf(new ObjectId()))
+                .build();
+        List<Phase<PlanTask>> phases = originalPlan.getPhases();
+        for (Phase<PlanTask> phase : phases){
+            phase.set_id(null);
+            for (PlanTask planTask : phase.getTasks()){
+                planTask.set_id(null);
+            }
+        }
+        phases = phaseService.createPlanPhases(phases, clonedPlan);
+        clonedPlan.setPhases(phases);
+        clonedPlan.setApproved(false);
+        clonedPlan.setDeleted(false);
+        clonedPlan.setDescription(originalPlan.getDescription());
+        clonedPlan.setPlanName(generateUniquePlanName(originalPlan.getPlanName()));
+        clonedPlan.setCreatedBy(createdUserId);
+        clonedPlan.setApprover(originalPlan.getApprover());
+        clonedPlan.setCreatedAt(LocalDateTime.now());
+        clonedPlan.setUpdatedAt(LocalDateTime.now());
+        try {
+            clonedPlan = planRepo.save(clonedPlan);
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+        }
+        return clonedPlan;
+    }
+    private String generateUniquePlanName(String originalPlanName) {
+        // Append a suffix to the original plan name to make it unique
+        // You can use a counter or a timestamp to generate the suffix
+        // For simplicity, let's use the current timestamp
+        String uniqueSuffix = "_Copy";
+        return originalPlanName + uniqueSuffix;
+    }
 }
