@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,5 +39,21 @@ public class PlanTaskService {
             }
         }
         return null;
+    }
+    public List<PlanTask> findPlanTasksByMentorId(String userId) {
+        List<PlanTask> planTaskIds = new ArrayList<>();
+        List<PlanTask> allPlanTasks = planTaskRepo.findAll();
+        if(allPlanTasks == null){
+            return null;
+        }
+        for (PlanTask planTask : allPlanTasks) {
+            if(planTask != null) {
+                if (planTask.getMentor() != null && planTask.getMentor().contains(userId)) {
+                    planTaskIds.add(planTask);
+                }
+            }
+        }
+
+        return planTaskIds;
     }
 }

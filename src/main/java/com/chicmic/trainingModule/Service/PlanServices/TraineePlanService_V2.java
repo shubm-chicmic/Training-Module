@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Dto.UserIdAndStatusDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
+import com.chicmic.trainingModule.Entity.Filters.Filters;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
@@ -45,7 +46,7 @@ public class TraineePlanService_V2 {
         this.assignTaskService = assignTaskService;
     }
 
-    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String currentUserId){
+    public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String currentUserId, Filters filters){
         System.out.println("dsbvmdsbvbnsd....................");
         //searching!!!
 
@@ -69,16 +70,29 @@ public class TraineePlanService_V2 {
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("IND"));
         for (UserDto userDto : traineeMap.values()) {
-            if(userDto.get_id().equals(currentUserId)){
-                Document document = new Document();
-                document.append("name", userDto.getName())
-                        .append("team", userDto.getTeamName())
-                        .append("empCode", userDto.getEmpCode())
-                        .append("_id", userDto.get_id());
-                userDatasDocuments.add(document);
-            }
-            else if(isIndividualRole) {
-                if ((assignTaskService.isUserMentorOfTrainee(userDto.get_id(),currentUserId) || TraineeService.isUserInSameTeam(userDto, TrainingModuleApplication.idUserMap.get(currentUserId)))){
+            Set<String> userTeams = new HashSet<>(userDto.getTeams());
+            Set<String> teamsFilter = filters.getTeamsFilter();
+            boolean teamsFilterNullOrEmpty = teamsFilter == null || teamsFilter.isEmpty();
+            boolean hasCommonTeam = teamsFilterNullOrEmpty || !Collections.disjoint(userTeams, teamsFilter);
+
+            if(hasCommonTeam) {
+                if (userDto.get_id().equals(currentUserId)) {
+                    Document document = new Document();
+                    document.append("name", userDto.getName())
+                            .append("team", userDto.getTeamName())
+                            .append("empCode", userDto.getEmpCode())
+                            .append("_id", userDto.get_id());
+                    userDatasDocuments.add(document);
+                } else if (isIndividualRole) {
+                    if ((assignTaskService.isUserMentorOfTrainee(userDto.get_id(), currentUserId) || TraineeService.isUserInSameTeam(userDto, TrainingModuleApplication.idUserMap.get(currentUserId)))) {
+                        Document document = new Document();
+                        document.append("name", userDto.getName())
+                                .append("team", userDto.getTeamName())
+                                .append("empCode", userDto.getEmpCode())
+                                .append("_id", userDto.get_id());
+                        userDatasDocuments.add(document);
+                    }
+                } else {
                     Document document = new Document();
                     document.append("name", userDto.getName())
                             .append("team", userDto.getTeamName())
@@ -87,15 +101,6 @@ public class TraineePlanService_V2 {
                     userDatasDocuments.add(document);
                 }
             }
-            else{
-                Document document = new Document();
-                document.append("name", userDto.getName())
-                        .append("team", userDto.getTeamName())
-                        .append("empCode", userDto.getEmpCode())
-                        .append("_id", userDto.get_id());
-                userDatasDocuments.add(document);
-            }
-
         }
 
 
@@ -207,8 +212,19 @@ public class TraineePlanService_V2 {
 
             userIds.add(_id);
             userSummary.put(_id,count++);
-//            UserDto userDto = TrainingModuleApplication.searchUserById(_id);
-//            document.put("mentor","Rohit");
+            UserDto userDto = traineeMap.get(_id);
+            if (userDto != null) {
+                List<String> teams = userDto.getTeams();
+                List<UserIdAndNameDto> teamsIdNames = new ArrayList<>();
+                for (String teamId : teams) {
+                    teamsIdNames.add(UserIdAndNameDto.builder()
+                                    ._id(teamId)
+                                    .name(TrainingModuleApplication.teamIdAndNameMap.get(teamId))
+                                    .build());
+                }
+                document.put("teams", teamsIdNames);
+
+            }
             document.put("rating",0.0f);
         }
         List<Document> traineeRatingSummary = feedbackService.calculateEmployeeRatingSummary(userIds);

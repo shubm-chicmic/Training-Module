@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Controller.PlanController;
 
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
+import com.chicmic.trainingModule.Entity.Filters.Filters;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.PlanServices.TraineePlanService_V2;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.util.List;
+import java.util.Set;
 
 @RequestMapping("/v1/training/traineeList")
 @RestController
@@ -30,6 +33,7 @@ public class TraineePlanCRUD {
                                         @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
                                         @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
                                         @RequestParam(value = "sortKey", defaultValue = "employeeCode", required = false) String sortKey,
+                                        @RequestParam(value = "appliedForTeam", defaultValue = "", required = false) Set<String> teams,
                                         Principal principal
                                         ){
         //pageNumber /= pageSize;
@@ -38,7 +42,10 @@ public class TraineePlanCRUD {
         System.out.println("request reaches here!!");
         sortDirection = (sortDirection!=1)?-1:1;
         sortKey = (sortKey.equals("startDate"))?"date":sortKey;
-        return traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
+        Filters filters = Filters.builder()
+                .teamsFilter(teams)
+                .build();
+        return traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName(),filters);
         //long count  = mongoTemplate.count(new Query(),AssignedPlan.class);
         //return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
     }

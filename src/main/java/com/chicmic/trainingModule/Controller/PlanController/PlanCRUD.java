@@ -18,6 +18,9 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -26,7 +29,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/v1/training/plan")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM')")
+@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM', 'IND')")
 public class PlanCRUD {
     private final PlanService planService;
     private final PlanTaskService planTaskService;
@@ -85,11 +88,26 @@ public class PlanCRUD {
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal) {
+    public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal, HttpServletResponse response) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
+        Boolean isIndividualRole;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
+        List<PlanTask> planTaskListOfMentor = planTaskService.findPlanTasksByMentorId(principal.getName());
 
-        Plan plan = planService.createPlan(planDto, principal);
+        Plan plan = null;
+        if(isIndividualRole) {
+            if (planTaskListOfMentor != null && !planTaskListOfMentor.isEmpty()) {
+                plan = planService.createPlan(planDto, principal);
+            }else {
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Are Not Authorize to Create a Plan", plan, response);
+            }
+        }else {
+            plan = planService.createPlan(planDto, principal);
+        }
 
         return new ApiResponse(HttpStatus.CREATED.value(), "Plan created successfully", plan);
     }
