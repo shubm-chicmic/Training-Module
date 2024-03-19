@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,10 +35,15 @@ public class TraineePlanCRUD {
                                         @RequestParam(value = "searchString", defaultValue = "", required = false) String searchString,
                                         @RequestParam(value = "sortDirection", defaultValue = "2", required = false) Integer sortDirection,
                                         @RequestParam(value = "sortKey", defaultValue = "employeeCode", required = false) String sortKey,
-                                        @RequestParam(value = "appliedForTeam", defaultValue = "", required = false) Set<String> teams,
+                                        @RequestParam(value = "teams", required = false) String teamsParam,
                                         Principal principal
                                         ){
         //pageNumber /= pageSize;
+
+        Set<String> teams = null ;
+        if(teamsParam != null ){
+            teams = new HashSet<>(Arrays.asList(teamsParam.replaceAll("[\\[\\]\"]", "").split(",")));
+        }
         if (pageNumber < 0 || pageSize < 1)
             throw new ApiException(HttpStatus.NO_CONTENT,"invalid pageNumber or pageSize");
         System.out.println("request reaches here!!");

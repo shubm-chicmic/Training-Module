@@ -234,7 +234,7 @@ public class TraineePlanService_V2 {
             int index = userSummary.get(_id);
             traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count")));
         }
-        return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(count));
+        return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(cnt));
 //        return traineePlanResponseList;
     }
 
