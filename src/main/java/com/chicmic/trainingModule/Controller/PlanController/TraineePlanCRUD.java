@@ -52,6 +52,7 @@ public class TraineePlanCRUD {
         Filters filters = Filters.builder()
                 .teamsFilter(teams)
                 .build();
+
         return traineePlanService.fetchUserPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName(),filters);
         //long count  = mongoTemplate.count(new Query(),AssignedPlan.class);
         //return new ApiResponse(200,"Plan fetched successfully to user",documentList,count);
