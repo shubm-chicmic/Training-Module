@@ -16,6 +16,7 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AttendenceService.AttendanceService;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
+import com.chicmic.trainingModule.Service.RatingService.RatingService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.bson.Document;
@@ -51,13 +52,15 @@ public class FeedbackService {
     private final CourseService courseService;
     private final PlanService planService;
     private final AttendanceService attendanceService;
+    private final RatingService ratingService;
 
-    public FeedbackService(MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PlanService planService, AttendanceService attendanceService) {
+    public FeedbackService(MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PlanService planService, AttendanceService attendanceService, RatingService ratingService) {
         this.mongoTemplate = mongoTemplate;
         this.testService = testService;
         this.courseService = courseService;
         this.planService = planService;
         this.attendanceService = attendanceService;
+        this.ratingService = ratingService;
     }
 
     public List<String> checkTaskAssignedOrNot(FeedbackRequestDto feedbackRequestDto){
@@ -828,7 +831,9 @@ public class FeedbackService {
 //        String authenticationToken = (String)authentication.getCredentials();
 //        double attendanceRating = attendanceService.getAttendanceRating(traineeId, authenticationToken);
 //        ratingReponseDto.setAttendance(attendanceRating);
-        ratingReponseDto.setOverall(computeOverallRatingOfTrainee(traineeId));
+        double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
+        ratingReponseDto.setOverall(computeOverallRatingOfTraineeWithCourseRating(traineeId, courseRating));
+        ratingReponseDto.setCourseRating(courseRating);
         ratingReponseDto.setComment(getFeedbackMessageBasedOnOverallRating(ratingReponseDto.getOverall()));
         return ratingReponseDto;
     }
@@ -1029,7 +1034,8 @@ public class FeedbackService {
         if (document.isEmpty()) return 0.00;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return compute_rating(totalRating,count);
+        double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
+        return compute_rating(totalRating + courseRating,count + (courseRating == 0 ? 0 : 1));
     }
     public Double computeOverallPlanRatingOfTrainee(String traineeId) {
         Aggregation aggregation = Aggregation.newAggregation(
@@ -1050,7 +1056,23 @@ public class FeedbackService {
         double totalRating = (double) document.get(0).get("overallRating");
         return compute_rating(totalRating, count);
     }
-
+    private Double computeOverallRatingOfTraineeWithCourseRating(String traineeId, double courseRating){
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),
+                group("traineeId")
+                        .sum("overallRating").as("overallRating")
+                        .count().as("count")
+        );
+        AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
+        List<Document> document = aggregationResults.getMappedResults();
+        if (document.isEmpty()) return courseRating;
+        int count = (int) document.get(0).get("count");
+        double totalRating = (double) document.get(0).get("overallRating");
+        double overallRating = (totalRating + courseRating) ;
+        if(courseRating == 0)     return compute_rating(overallRating,count);
+        return compute_rating(overallRating,count + 1);
+//        return roundOff_Rating(totalRating/count);
+    }
     private Double computeOverallRatingOfTrainee(String traineeId, double attendanceRating){
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("traineeId").is(traineeId).and("isDeleted").is(false)),

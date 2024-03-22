@@ -453,6 +453,7 @@ public class PhaseService {
 
     public SubTask getSubTaskById(String taskId) {
         SubTask task = subTaskRepo.findById(taskId).orElse(null);
+        if(task == null)return null;
         return task.getIsDeleted() ? null : task;
     }
 

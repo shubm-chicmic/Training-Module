@@ -10,6 +10,7 @@ import com.chicmic.trainingModule.Entity.Filters.Filters;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
+import com.chicmic.trainingModule.Service.RatingService.RatingService;
 import com.chicmic.trainingModule.Service.TraineeService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.DateTimeUtil;
@@ -39,11 +40,13 @@ public class TraineePlanService_V2 {
     private final MongoTemplate mongoTemplate;
     private final FeedbackService feedbackService;
     private final AssignTaskService assignTaskService;
+    private final RatingService ratingService;
 
-    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService feedbackService, AssignTaskService assignTaskService) {
+    public TraineePlanService_V2(MongoTemplate mongoTemplate, FeedbackService feedbackService, AssignTaskService assignTaskService, RatingService ratingService) {
         this.mongoTemplate = mongoTemplate;
         this.feedbackService = feedbackService;
         this.assignTaskService = assignTaskService;
+        this.ratingService = ratingService;
     }
 
     public ApiResponse fetchUserPlans(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String currentUserId, Filters filters){
@@ -232,7 +235,8 @@ public class TraineePlanService_V2 {
         for (Document document : traineeRatingSummary){
             String _id = (String) document.get("_id");
             int index = userSummary.get(_id);
-            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count")));
+            double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
+            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating") + courseRating,(int)document.get("count") + (courseRating == 0 ? 0 : 1)));
         }
         return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(cnt));
 //        return traineePlanResponseList;

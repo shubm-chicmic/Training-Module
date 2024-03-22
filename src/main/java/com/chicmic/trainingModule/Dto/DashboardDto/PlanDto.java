@@ -16,6 +16,7 @@ public class PlanDto implements Comparable<PlanDto>{
     private String taskName;
     private Integer type;
     private List<Object> subtasks;
+    private Integer extraConsumedTime;
     @JsonProperty("isComplete")
     private boolean isComplete;
 

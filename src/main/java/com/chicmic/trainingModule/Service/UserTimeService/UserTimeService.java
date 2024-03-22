@@ -7,6 +7,7 @@ import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Repository.UserTimeRepo;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -201,5 +202,29 @@ public class UserTimeService {
             }
         }
         return consumedTime;
+    }
+
+    public Integer getExtraConsumedTimeForPlanTask(String planTaskId, String traineeId, Plan plan) {
+        PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
+        if(planTask == null)return 0;
+        if(planTask.getPlanType() == PlanType.COURSE) {
+            Integer consumedTime = 0;
+            for (Object milestone : planTask.getMilestones()) {
+                Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
+                if (phase != null) {
+                    List<Task> tasks = phase.getTasks();
+                    List<SubTask> subTasks = tasks.stream()
+                            .flatMap(task -> task.getSubtasks().stream())
+                            .collect(Collectors.toList());
+
+                    for (SubTask subTask : subTasks) {
+                        consumedTime += getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, plan.get_id(), planTask.get_id(), subTask.get_id());
+                    }
+                }
+            }
+            Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+            return  consumedTime >= estimatedTime ? consumedTime - estimatedTime : 0;
+        }
+        return 0;
     }
 }

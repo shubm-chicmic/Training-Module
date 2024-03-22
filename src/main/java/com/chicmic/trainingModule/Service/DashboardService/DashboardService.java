@@ -4,12 +4,14 @@ package com.chicmic.trainingModule.Service.DashboardService;
 import com.chicmic.trainingModule.Dto.DashboardDto.*;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Entity.UserProgress;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
+import com.chicmic.trainingModule.Service.UserTimeService.UserTimeService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -32,13 +34,15 @@ public class DashboardService {
     private final TestService testService;
     private final CourseService courseService;
     private final PhaseService phaseService;
+    private final UserTimeService userTimeService;
 
-    public DashboardService(FeedbackService feedbackService, MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PhaseService phaseService ) {
+    public DashboardService(FeedbackService feedbackService, MongoTemplate mongoTemplate, TestService testService, CourseService courseService, PhaseService phaseService, UserTimeService userTimeService) {
         this.feedbackService = feedbackService;
         this.mongoTemplate = mongoTemplate;
         this.testService = testService;
         this.courseService = courseService;
         this.phaseService = phaseService;
+        this.userTimeService = userTimeService;
     }
 
     public DashboardResponse getTraineeRatingSummary(String traineeId) {
@@ -100,7 +104,17 @@ public class DashboardService {
                             criteriaList.add(Criteria.where("planId").is(p.get_id()).and("traineeId").is(traineeId).and("progressType").is(5).and("courseId").is(pt.getPlan()).and("status").is(3));
                         }
                         if(pt!= null && pt instanceof  PlanTask){
-                            PlanDto planDto = PlanDto.builder().name(p.getPlanName()).taskName(pt.getPlan()).subtasks(pt.getMilestones()).isComplete(false).date(pt.getDate()).type(pt.getPlanType()).build();
+                            PlanDto planDto = PlanDto.builder()
+                                    .name(p.getPlanName())
+                                    .taskName(pt.getPlan())
+                                    .subtasks(pt.getMilestones())
+                                    .isComplete(false)
+                                    .date(pt.getDate())
+                                    .type(pt.getPlanType())
+                                    .build();
+                            if(pt.getPlanType() == PlanType.COURSE) {
+                                planDto.setExtraConsumedTime(userTimeService.getExtraConsumedTimeForPlanTask(pt.get_id(), traineeId, p));
+                            }
                             planDtoList.add(planDto);
                                 if(pt.getPlanType().equals(TEST)){
                                     int totalTask = phaseService.countTotalSubtask(pt.getMilestones());

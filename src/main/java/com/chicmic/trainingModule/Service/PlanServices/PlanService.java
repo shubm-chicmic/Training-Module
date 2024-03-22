@@ -346,7 +346,7 @@ public class PlanService {
             clonedPlan = planRepo.save(clonedPlan);
         } catch (org.springframework.dao.DuplicateKeyException ex) {
             // Catch DuplicateKeyException and throw ApiException with 400 status
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan "+ clonedPlan.getPlanName()+" already exists!");
         }
         return clonedPlan;
     }

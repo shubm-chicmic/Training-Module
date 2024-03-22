@@ -9,6 +9,7 @@ import com.chicmic.trainingModule.Entity.Plan;
 
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.PlanServices.MentorService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanResponseMapper;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
@@ -29,17 +30,18 @@ import java.util.*;
 @RestController
 @RequestMapping("/v1/training/plan")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM', 'IND')")
 public class PlanCRUD {
     private final PlanService planService;
     private final PlanTaskService planTaskService;
     private final AssignTaskService assignTaskService;
     private final PlanResponseMapper planResponseMapper;
+    private final MentorService mentorService;
 //    @GetMapping("/getting")
 //    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
 //       return planService.getPlanCourseByPlanIds(plansIds);
 //    }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canViewPlan')")
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -52,6 +54,8 @@ public class PlanCRUD {
             HttpServletResponse response,
             Principal principal
     ) {
+        Boolean isCurrentUserIsMentor = mentorService.isUserIsMentorInPlanTask(principal.getName());
+        System.out.println("\u001B[45m Mentor = " + mentorService.getPlanOfMentor(principal.getName()) + "\u001B[0m");
         if(sortKey != null && sortKey.equals("createdAt")){
             sortDirection = -1;
         }
@@ -88,31 +92,16 @@ public class PlanCRUD {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#planDto, 'canCreatePlan')")
     public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal, HttpServletResponse response) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
-        Boolean isIndividualRole;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        isIndividualRole = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("IND"));
-        List<PlanTask> planTaskListOfMentor = planTaskService.findPlanTasksByMentorId(principal.getName());
-
-        Plan plan = null;
-        if(isIndividualRole) {
-            if (planTaskListOfMentor != null && !planTaskListOfMentor.isEmpty()) {
-                plan = planService.createPlan(planDto, principal);
-            }else {
-                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You Are Not Authorize to Create a Plan", plan, response);
-            }
-        }else {
-            plan = planService.createPlan(planDto, principal);
-        }
-
+        Plan plan = planService.createPlan(planDto, principal);
         return new ApiResponse(HttpStatus.CREATED.value(), "Plan created successfully", plan);
     }
 
     @DeleteMapping("/{planId}")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canDeletePlan')")
     public ApiResponse delete(@PathVariable String planId, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
         if(plan != null) {
@@ -135,6 +124,7 @@ public class PlanCRUD {
     }
 
     @PutMapping
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#planDto, 'canEditPlan')")
     public ApiResponse updatePlan(@RequestBody@Valid PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
         if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {

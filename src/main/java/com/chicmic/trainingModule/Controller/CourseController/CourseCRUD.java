@@ -40,13 +40,14 @@ import org.springframework.http.ResponseEntity;
 @RestController
 @RequestMapping("/v1/training/course")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM')")
+//@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM')")
 public class CourseCRUD {
     private final CourseService courseService;
     private final PlanTaskRepo planTaskRepo;
     private final CourseResponseMapper courseResponseMapper;
 
     @RequestMapping(value = {""}, method = RequestMethod.GET)
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#courseDto, 'canViewCourse')")
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -96,6 +97,7 @@ public class CourseCRUD {
 
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#courseDto, 'canCreateCourse')")
     public ApiResponse create(@RequestBody @Valid CourseDto courseDto, Principal principal) {
         System.out.println("\u001B[33m courseDto previos = " + courseDto);
         List<Phase<Task>> phases = new ArrayList<>();
@@ -122,6 +124,7 @@ public class CourseCRUD {
     }
 
     @PostMapping("/upload")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canCreateCourse')")
     public ApiResponse createCourseWithFile(@RequestParam("courseExcelFile") MultipartFile file, Principal principal, HttpServletResponse response) {
         // Check if the file is empty
         if (file.isEmpty()) {
@@ -142,6 +145,7 @@ public class CourseCRUD {
         }
     }
     @DeleteMapping("/{courseId}")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canDeleteCourse')")
     public ApiResponse delete(@PathVariable String courseId, HttpServletResponse response) {
         System.out.println("courseId = " + courseId);
         List<PlanTask> planTasks = planTaskRepo.findByPlanId(courseId);
@@ -157,6 +161,7 @@ public class CourseCRUD {
     }
 
     @PutMapping
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#courseDto, 'canEditCourse')")
     public ApiResponse updateCourse(@RequestBody @Valid CourseDto courseDto, @RequestParam String courseId, Principal principal, HttpServletResponse response) {
         Course course = courseService.getCourseById(courseId);
         System.out.println("course Dto = " + courseDto);

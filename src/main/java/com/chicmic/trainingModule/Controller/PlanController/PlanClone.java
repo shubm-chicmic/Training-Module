@@ -21,11 +21,11 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/v1/training/plan/clone")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM')")
 public class PlanClone {
     private final PlanService planService;
     private final PlanResponseMapper planResponseMapper;
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#planCloneRequestDto, 'canCreatePlan')")
     public ApiResponse planClone(Principal principal, @RequestBody PlanCloneRequestDto planCloneRequestDto) {
         String planId  = planCloneRequestDto.getPlanId();
         if(planId != null) {

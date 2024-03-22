@@ -50,6 +50,9 @@ public class CourseService {
     }
 
     public Course createCourse(Course course, Boolean isCourseIsAddingFromScript) {
+        if (getCourseByName(course.getName()) == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+        }
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
         course.set_id(String.valueOf(new ObjectId()));

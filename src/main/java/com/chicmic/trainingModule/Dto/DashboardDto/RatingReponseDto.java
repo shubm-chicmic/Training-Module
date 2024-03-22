@@ -13,4 +13,5 @@ public class RatingReponseDto {
     private double test;
     private double behaviour;
     private double attendance;
+    private double courseRating;
 }
