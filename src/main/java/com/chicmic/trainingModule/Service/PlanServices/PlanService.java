@@ -42,8 +42,16 @@ public class PlanService {
     private final PhaseService phaseService;
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
+    public Plan getPlanByName(String planName) {
+        Query query = new Query(Criteria.where("planName").is(planName).and("deleted").is(false));
+        Plan plan = mongoTemplate.findOne(query, Plan.class);
+        return plan;
+    }
 
     public Plan createPlan(PlanDto planDto, Principal principal) {
+        if (getPlanByName(planDto.getPlanName()) != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+        }
         Plan plan = Plan.builder()
                 ._id(String.valueOf(new ObjectId()))
                 .build();
@@ -237,13 +245,17 @@ public class PlanService {
             if (planDto.getDescription() != null) {
                 plan.setDescription(planDto.getDescription());
             }
-            if (planDto.getPhases() != null) {
-                List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
-                plan.setPhases(phases);
-            }
+
             plan.setUpdatedAt(LocalDateTime.now());
             try {
                 System.out.println(plan);
+                if (getPlanByName(planDto.getPlanName()) != null) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+                }
+                if (planDto.getPhases() != null) {
+                    List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
+                    plan.setPhases(phases);
+                }
                 plan = planRepo.save(plan);
             } catch (org.springframework.dao.DuplicateKeyException ex) {
                 // Catch DuplicateKeyException and throw ApiException with 400 status
@@ -325,15 +337,7 @@ public class PlanService {
         Plan clonedPlan =Plan.builder()
                 ._id(String.valueOf(new ObjectId()))
                 .build();
-        List<Phase<PlanTask>> phases = originalPlan.getPhases();
-        for (Phase<PlanTask> phase : phases){
-            phase.set_id(null);
-            for (PlanTask planTask : phase.getTasks()){
-                planTask.set_id(null);
-            }
-        }
-        phases = phaseService.createPlanPhases(phases, clonedPlan);
-        clonedPlan.setPhases(phases);
+
         clonedPlan.setApproved(false);
         clonedPlan.setDeleted(false);
         clonedPlan.setDescription(originalPlan.getDescription());
@@ -343,6 +347,18 @@ public class PlanService {
         clonedPlan.setCreatedAt(LocalDateTime.now());
         clonedPlan.setUpdatedAt(LocalDateTime.now());
         try {
+            if (getPlanByName(clonedPlan.getPlanName()) != null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+            }
+            List<Phase<PlanTask>> phases = originalPlan.getPhases();
+            for (Phase<PlanTask> phase : phases){
+                phase.set_id(null);
+                for (PlanTask planTask : phase.getTasks()){
+                    planTask.set_id(null);
+                }
+            }
+            phases = phaseService.createPlanPhases(phases, clonedPlan);
+            clonedPlan.setPhases(phases);
             clonedPlan = planRepo.save(clonedPlan);
         } catch (org.springframework.dao.DuplicateKeyException ex) {
             // Catch DuplicateKeyException and throw ApiException with 400 status

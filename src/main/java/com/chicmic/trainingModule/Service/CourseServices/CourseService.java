@@ -50,6 +50,10 @@ public class CourseService {
     }
 
     public Course createCourse(Course course, Boolean isCourseIsAddingFromScript) {
+        if (getCourseByName(course.getName()) != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+        }
+
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
         course.set_id(String.valueOf(new ObjectId()));
@@ -248,12 +252,7 @@ public class CourseService {
         try {
             Course course = courseRepo.findById(courseId).orElse(null);
             if (course != null) {
-                if (courseDto.getPhases() != null) {
-                    System.out.println("Course Dto ");
-                    System.out.println(courseDto.getPhases());
-                    List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE, false);
-                    course.setPhases(phases);
-                }
+
                 if (courseDto.getName() != null) {
                     course.setName(courseDto.getName());
                 }
@@ -287,6 +286,15 @@ public class CourseService {
                     course.setApprovedBy(approvedBy);
                 }
                 try {
+                    if (getCourseByName(course.getName()) != null) {
+                        throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+                    }
+                    if (courseDto.getPhases() != null) {
+                        System.out.println("Course Dto ");
+                        System.out.println(courseDto.getPhases());
+                        List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE, false);
+                        course.setPhases(phases);
+                    }
                     course = courseRepo.save(course);
                 } catch (org.springframework.dao.DuplicateKeyException ex) {
                     // Catch DuplicateKeyException and throw ApiException with 400 status

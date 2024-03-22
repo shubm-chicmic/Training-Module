@@ -38,8 +38,15 @@ public class TestService {
     private final MongoTemplate mongoTemplate;
     private final PhaseService phaseService;
     private final CourseService courseService;
-
+    public Test getTestByName(String testName) {
+        Query query = new Query(Criteria.where("testName").is(testName).and("deleted").is(false));
+        Test test = mongoTemplate.findOne(query, Test.class);
+        return test;
+    }
     public Test createTest(Test test) {
+        if(getTestByName(test.getTestName()) != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
+        }
         test.setCreatedAt(LocalDateTime.now());
         test.setUpdatedAt(LocalDateTime.now());
         test.set_id(String.valueOf(new ObjectId()));
@@ -217,10 +224,7 @@ public class TestService {
     public Test updateTest(TestDto testDto, String testId) {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
-            if (testDto.getMilestones() != null) {
-                List<Phase<Task>> milestones = phaseService.createPhases(testDto.getMilestones(), test, EntityType.TEST, false);
-                test.setMilestones(milestones);
-            }
+
             // Only update properties from the DTO if they are not null
             if (testDto.getTestName() != null) {
                 test.setTestName(testDto.getTestName());
@@ -252,6 +256,13 @@ public class TestService {
 
             // Saving the updated test
             try{
+                if(getTestByName(test.getTestName()) != null) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
+                }
+                if (testDto.getMilestones() != null) {
+                    List<Phase<Task>> milestones = phaseService.createPhases(testDto.getMilestones(), test, EntityType.TEST, false);
+                    test.setMilestones(milestones);
+                }
                 test = testRepo.save(test);
             }
             catch (org.springframework.dao.DuplicateKeyException ex) {
