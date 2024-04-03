@@ -8,6 +8,7 @@ import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Entity.Filters.Filters;
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.FeedBackService.FeedbackService;
 import com.chicmic.trainingModule.Service.RatingService.RatingService;
@@ -21,6 +22,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -243,13 +245,38 @@ public class TraineePlanService_V2 {
     }
 
     public void updateTraineeStatus(UserIdAndStatusDto userIdAndStatusDto, String createdBy){
-        Criteria criteria = Criteria.where("userId").is(userIdAndStatusDto.getTraineeId());
-        Update update = new Update();
-        update.set("trainingStatus",userIdAndStatusDto.getStatus());
-        UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria),update,AssignedPlan.class);
-        if (updateResult.getModifiedCount() == 0)
-        {
-            AssignedPlan assignedPlan = AssignedPlan.builder()
+//        Criteria criteria = Criteria.where("userId").is(userIdAndStatusDto.getTraineeId());
+//        Update update = new Update();
+//        update.set("trainingStatus",userIdAndStatusDto.getStatus());
+//        UpdateResult updateResult = mongoTemplate.updateFirst(new Query(criteria),update,AssignedPlan.class);
+//        if (updateResult.getModifiedCount() == 0)
+//        {
+//            AssignedPlan assignedPlan = AssignedPlan.builder()
+//                    .plans(new ArrayList<>())
+//                    .date(LocalDateTime.now())
+//                    .trainingStatus(userIdAndStatusDto.getStatus())
+//                    .userId(userIdAndStatusDto.getTraineeId())
+//                    .updatedAt(LocalDateTime.now())
+//                    .createdAt(LocalDateTime.now())
+//                    .createdBy(createdBy)
+//                    .deleted(false)
+//                    .approved(false)
+//                    .build();
+//            assignTaskService.saveAssignTask(assignedPlan);
+//        }
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userIdAndStatusDto.getTraineeId());
+        if(assignedPlan != null) {
+            if((assignedPlan.getPlans() == null || assignedPlan.getPlans().size() == 0) && userIdAndStatusDto.getStatus() == TrainingStatus.ONGOING){
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan Not Found , Status cannot be Updated to ONGOING");
+            }
+            assignedPlan.setTrainingStatus(userIdAndStatusDto.getStatus());
+            assignedPlan.setUpdatedAt(LocalDateTime.now());
+            assignTaskService.save(assignedPlan);
+        }else {
+            if(userIdAndStatusDto.getStatus() == TrainingStatus.ONGOING){
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan Not Found , Status cannot be Updated to ONGOING");
+            }
+            assignedPlan = AssignedPlan.builder()
                     .plans(new ArrayList<>())
                     .date(LocalDateTime.now())
                     .trainingStatus(userIdAndStatusDto.getStatus())
@@ -260,7 +287,7 @@ public class TraineePlanService_V2 {
                     .deleted(false)
                     .approved(false)
                     .build();
-            assignTaskService.saveAssignTask(assignedPlan);
+            assignTaskService.save(assignedPlan);
         }
     }
 }

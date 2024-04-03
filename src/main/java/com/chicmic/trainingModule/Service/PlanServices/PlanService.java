@@ -42,8 +42,24 @@ public class PlanService {
     private final PhaseService phaseService;
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
-
+    public Plan getPlanByName(String planName) {
+        Query query = new Query(Criteria.where("planName").is(planName).and("deleted").is(false));
+        Plan plan = mongoTemplate.findOne(query, Plan.class);
+        return plan;
+    }
+    private Plan save(Plan plan){
+        try {
+            plan = planRepo.save(plan);
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+        }
+        return plan;
+    }
     public Plan createPlan(PlanDto planDto, Principal principal) {
+        if (getPlanByName(planDto.getPlanName()) != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
+        }
         Plan plan = Plan.builder()
                 ._id(String.valueOf(new ObjectId()))
                 .build();
@@ -58,12 +74,7 @@ public class PlanService {
         plan.setCreatedAt(LocalDateTime.now());
         plan.setUpdatedAt(LocalDateTime.now());
         plan.setCreatedBy(principal.getName());
-        try {
-            plan = planRepo.save(plan);
-        } catch (org.springframework.dao.DuplicateKeyException ex) {
-            // Catch DuplicateKeyException and throw ApiException with 400 status
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
-        }
+        plan = save(plan);
         return plan;
     }
 
@@ -237,18 +248,14 @@ public class PlanService {
             if (planDto.getDescription() != null) {
                 plan.setDescription(planDto.getDescription());
             }
+
+            plan.setUpdatedAt(LocalDateTime.now());
+            plan = save(plan);
             if (planDto.getPhases() != null) {
                 List<Phase<PlanTask>> phases = phaseService.createPlanPhases(planDto.getPhases(), plan);
                 plan.setPhases(phases);
             }
-            plan.setUpdatedAt(LocalDateTime.now());
-            try {
-                System.out.println(plan);
-                plan = planRepo.save(plan);
-            } catch (org.springframework.dao.DuplicateKeyException ex) {
-                // Catch DuplicateKeyException and throw ApiException with 400 status
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan name already exists!");
-            }
+            plan = save(plan);
             return plan;
         } else {
             return null;
@@ -325,15 +332,6 @@ public class PlanService {
         Plan clonedPlan =Plan.builder()
                 ._id(String.valueOf(new ObjectId()))
                 .build();
-        List<Phase<PlanTask>> phases = originalPlan.getPhases();
-        for (Phase<PlanTask> phase : phases){
-            phase.set_id(null);
-            for (PlanTask planTask : phase.getTasks()){
-                planTask.set_id(null);
-            }
-        }
-        phases = phaseService.createPlanPhases(phases, clonedPlan);
-        clonedPlan.setPhases(phases);
         clonedPlan.setApproved(false);
         clonedPlan.setDeleted(false);
         clonedPlan.setDescription(originalPlan.getDescription());
@@ -348,6 +346,16 @@ public class PlanService {
             // Catch DuplicateKeyException and throw ApiException with 400 status
             throw new ApiException(HttpStatus.BAD_REQUEST, "Plan "+ clonedPlan.getPlanName()+" already exists!");
         }
+        List<Phase<PlanTask>> phases = originalPlan.getPhases();
+        for (Phase<PlanTask> phase : phases){
+            phase.set_id(null);
+            for (PlanTask planTask : phase.getTasks()){
+                planTask.set_id(null);
+            }
+        }
+        phases = phaseService.createPlanPhases(phases, clonedPlan);
+        clonedPlan.setPhases(phases);
+        clonedPlan = save(clonedPlan);
         return clonedPlan;
     }
     private String generateUniquePlanName(String originalPlanName) {

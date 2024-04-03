@@ -48,9 +48,17 @@ public class CourseService {
         Course course = mongoTemplate.findOne(query, Course.class);
         return course;
     }
-
+    private Course save(Course course) {
+        try {
+            course = courseRepo.save(course);
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+        }
+        return course;
+    }
     public Course createCourse(Course course, Boolean isCourseIsAddingFromScript) {
-        if (getCourseByName(course.getName()) == null) {
+        if (getCourseByName(course.getName()) != null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
         }
         course.setCreatedAt(LocalDateTime.now());
@@ -61,12 +69,7 @@ public class CourseService {
         course.setPhases(phases);
 
         System.out.println("course in service " + course);
-        try {
-            course = courseRepo.save(course);
-        } catch (org.springframework.dao.DuplicateKeyException ex) {
-            // Catch DuplicateKeyException and throw ApiException with 400 status
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
-        }
+        course = save(course);
         return course;
     }
 
@@ -251,12 +254,6 @@ public class CourseService {
         try {
             Course course = courseRepo.findById(courseId).orElse(null);
             if (course != null) {
-                if (courseDto.getPhases() != null) {
-                    System.out.println("Course Dto ");
-                    System.out.println(courseDto.getPhases());
-                    List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE, false);
-                    course.setPhases(phases);
-                }
                 if (courseDto.getName() != null) {
                     course.setName(courseDto.getName());
                 }
@@ -289,12 +286,14 @@ public class CourseService {
                     }
                     course.setApprovedBy(approvedBy);
                 }
-                try {
-                    course = courseRepo.save(course);
-                } catch (org.springframework.dao.DuplicateKeyException ex) {
-                    // Catch DuplicateKeyException and throw ApiException with 400 status
-                    throw new ApiException(HttpStatus.BAD_REQUEST, "Course name already exists!");
+                course = save(course);
+                if (courseDto.getPhases() != null) {
+                    System.out.println("Course Dto ");
+                    System.out.println(courseDto.getPhases());
+                    List<Phase<Task>> phases = phaseService.createPhases(courseDto.getPhases(), course, EntityType.COURSE, false);
+                    course.setPhases(phases);
                 }
+                course = save(course);
                 return course;
             } else {
                 return null;

@@ -38,8 +38,25 @@ public class TestService {
     private final MongoTemplate mongoTemplate;
     private final PhaseService phaseService;
     private final CourseService courseService;
-
+    public Test getTestByName(String testName) {
+        Query query = new Query(Criteria.where("testName").is(testName).and("deleted").is(false));
+        Test test = mongoTemplate.findOne(query, Test.class);
+        return test;
+    }
+    private Test save(Test test) {
+        try{
+            test = testRepo.save(test);
+        }
+        catch (org.springframework.dao.DuplicateKeyException ex) {
+            // Catch DuplicateKeyException and throw ApiException with 400 status
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
+        }
+        return test;
+    }
     public Test createTest(Test test) {
+        if (getTestByName(test.getTestName()) != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
+        }
         test.setCreatedAt(LocalDateTime.now());
         test.setUpdatedAt(LocalDateTime.now());
         test.set_id(String.valueOf(new ObjectId()));
@@ -74,28 +91,7 @@ public class TestService {
         Query searchQuery = new Query(finalCriteria).collation(collation).with(Sort.by(sortDirection == 1 ? Sort.Direction.ASC : Sort.Direction.DESC, sortKey));;
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-//        if (!sortKey.isEmpty()) {
-//            Comparator<Test> testComparator = Comparator.comparing(test -> {
-//                try {
-//                    Field field = Test.class.getDeclaredField(sortKey);
-//                    field.setAccessible(true);
-//                    Object value = field.get(test);
-//                    if (value instanceof String) {
-//                        return ((String) value).toLowerCase();
-//                    }
-//                    return value.toString();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    return "";
-//                }
-//            });
-//
-//            if (sortDirection != 1) {
-//                tests.sort(testComparator.reversed());
-//            } else {
-//                tests.sort(testComparator);
-//            }
-//        }
+
         System.out.println("Tests : " + tests.size());
         List<Test> testList = new ArrayList<>();
         if (traineeId != null && !traineeId.isEmpty()) {
@@ -110,29 +106,6 @@ public class TestService {
             }
             return testList;
         }
-//        if (!sortKey.isEmpty()) {
-//            Comparator<Test> testComparator = Comparator.comparing(test -> {
-//                try {
-//                    Field field = Test.class.getDeclaredField(sortKey);
-//                    field.setAccessible(true);
-//                    Object value = field.get(test);
-//                    if (value instanceof String) {
-//                        return ((String) value).toLowerCase();
-//                    }
-//                    return value.toString();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    return "";
-//                }
-//            });
-//
-//            if (sortDirection != 1) {
-//                tests.sort(testComparator.reversed());
-//            } else {
-//                tests.sort(testComparator);
-//            }
-//        }
-
         return tests;
     }
     public List<Test> getAllTests(Integer pageNumber, Integer pageSize, String query, Integer sortDirection, String sortKey, String userId) {
@@ -161,39 +134,6 @@ public class TestService {
 //                .with(pageable);
 
         List<Test> tests = mongoTemplate.find(searchQuery, Test.class);
-//        List<Test> finalTestList = new ArrayList<>();
-//        for (Test test : tests){
-//            if(test.getApproved()){
-//                finalTestList.add(test);
-//            }else {
-//                if(test.getReviewers().contains(userId) || test.getCreatedBy().equals(userId)){
-//                    finalTestList.add(test);
-//                }
-//            }
-//        }
-//        tests = finalTestList;
-//        if (!sortKey.isEmpty()) {
-//            Comparator<Test> testComparator = Comparator.comparing(test -> {
-//                try {
-//                    Field field = Test.class.getDeclaredField(sortKey);
-//                    field.setAccessible(true);
-//                    Object value = field.get(test);
-//                    if (value instanceof String) {
-//                        return ((String) value).toLowerCase();
-//                    }
-//                    return value.toString();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    return "";
-//                }
-//            });
-//
-//            if (sortDirection != 1) {
-//                tests.sort(testComparator.reversed());
-//            } else {
-//                tests.sort(testComparator);
-//            }
-//        }
 
         return tests;
     }
@@ -217,10 +157,7 @@ public class TestService {
     public Test updateTest(TestDto testDto, String testId) {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
-            if (testDto.getMilestones() != null) {
-                List<Phase<Task>> milestones = phaseService.createPhases(testDto.getMilestones(), test, EntityType.TEST, false);
-                test.setMilestones(milestones);
-            }
+
             // Only update properties from the DTO if they are not null
             if (testDto.getTestName() != null) {
                 test.setTestName(testDto.getTestName());
@@ -249,15 +186,13 @@ public class TestService {
             if (testDto.getTeams() != null) {
                 test.setTeams(testDto.getTeams());
             }
-
             // Saving the updated test
-            try{
-                test = testRepo.save(test);
+            test = save(test);
+            if (testDto.getMilestones() != null) {
+                List<Phase<Task>> milestones = phaseService.createPhases(testDto.getMilestones(), test, EntityType.TEST, false);
+                test.setMilestones(milestones);
             }
-            catch (org.springframework.dao.DuplicateKeyException ex) {
-                // Catch DuplicateKeyException and throw ApiException with 400 status
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Test name already exists!");
-            }
+            test = save(test);
             return test;
         } else {
             return null;

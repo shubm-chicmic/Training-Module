@@ -44,6 +44,9 @@ public class AssignTaskService {
     private final MongoTemplate mongoTemplate;
 
     //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
+    public AssignedPlan save(AssignedPlan assignPlan) {
+        return assignTaskRepo.save(assignPlan);
+    }
     public AssignedPlan saveAssignTask(AssignedPlan assignedPlan){
         if(assignedPlan == null)return null;
         if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);

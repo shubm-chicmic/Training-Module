@@ -1031,10 +1031,10 @@ public class FeedbackService {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
-        if (document.isEmpty()) return 0.00;
+        double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
+        if (document.isEmpty()) return courseRating;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
         return compute_rating(totalRating + courseRating,count + (courseRating == 0 ? 0 : 1));
     }
     public Double computeOverallPlanRatingOfTrainee(String traineeId) {
@@ -1043,7 +1043,7 @@ public class FeedbackService {
                         Criteria.where("traineeId")
                                 .is(traineeId)
                                 .and("isDeleted").is(false)
-                                .and("type").ne("5") // Exclude rating of behaviours
+                                .and("type").ne("5") // Exclude rating of behaviors
                 ),
                 group("traineeId")
                         .sum("overallRating").as("overallRating")
@@ -1069,7 +1069,9 @@ public class FeedbackService {
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
         double overallRating = (totalRating + courseRating) ;
-        if(courseRating == 0)     return compute_rating(overallRating,count);
+        if(courseRating == 0) {
+            return compute_rating(overallRating, count);
+        }
         return compute_rating(overallRating,count + 1);
 //        return roundOff_Rating(totalRating/count);
     }

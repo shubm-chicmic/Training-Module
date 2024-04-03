@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -64,6 +65,20 @@ public class DashboardCRUD {
         System.out.println("totalAttendedSession = " + totalAttendedSession);
         dashboardResponse.setAttendedSessions(totalAttendedSession);
         dashboardResponse.setTotalSessions(sessionService.countTotalSessionsForUser(traineeId));
+
+        List<String> notesForRatingCalculation = new ArrayList<>();
+        String point1ForNotes = "The overall rating is determined as the average of all individual ratings.";
+        String point2ForNotes = "Course rating is computed as the average of ratings for all courses across all plans.";
+        String point3ForNotes = "If the consumed time is less than the estimated time in a course, a 5-star rating is awarded.";
+        String point4ForNotes = "A 4-star rating is awarded if the actual time matches the estimated time.";
+        String point5ForNotes = "If the consumed time exceeds the estimated time in a course, the percentage increase in consumed time from the estimated time is subtracted from the 4-star rating.";
+        notesForRatingCalculation.add(point1ForNotes);
+        notesForRatingCalculation.add(point2ForNotes);
+        notesForRatingCalculation.add(point3ForNotes);
+        notesForRatingCalculation.add(point4ForNotes);
+        notesForRatingCalculation.add(point5ForNotes);
+
+        dashboardResponse.setNotes(notesForRatingCalculation);
         return new ApiResponse(200,"Trainee Rating summary",dashboardResponse);
     }
 }

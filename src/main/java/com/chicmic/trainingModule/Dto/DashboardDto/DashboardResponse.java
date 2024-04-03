@@ -12,6 +12,7 @@ public class DashboardResponse {
     private String name;
     private List<FeedbackResponseDto> feedbacks;
     private RatingReponseDto rating;
+    private List<String> notes;
     private List<CourseDto> courses;
     private List<PlanDto> plan;
     private Long totalSessions;
