@@ -68,15 +68,15 @@ public class DashboardCRUD {
 
         List<String> notesForRatingCalculation = new ArrayList<>();
         String point1ForNotes = "The overall rating is determined as the average of all individual ratings.";
-        String point2ForNotes = "Course rating is computed as the average of ratings for all courses across all plans.";
-        String point3ForNotes = "If the consumed time is less than the estimated time in a course, a 5-star rating is awarded.";
-        String point4ForNotes = "A 4-star rating is awarded if the actual time matches the estimated time.";
-        String point5ForNotes = "If the consumed time exceeds the estimated time in a course, the percentage increase in consumed time from the estimated time is subtracted from the 4-star rating.";
+        String point2ForNotes = "Course rating is determined by averaging ratings for all courses based on whether consumed time is less than, equal to, or exceeds estimated time, with adjustments for performance relative to estimated time.";
+//        String point3ForNotes = "If the consumed time is less than the estimated time in a course, a 5-star rating is awarded.";
+//        String point4ForNotes = "A 4-star rating is awarded if the actual time matches the estimated time.";
+//        String point5ForNotes = "If the consumed time exceeds the estimated time in a course, the percentage increase in consumed time from the estimated time is subtracted from the 4-star rating.";
         notesForRatingCalculation.add(point1ForNotes);
         notesForRatingCalculation.add(point2ForNotes);
-        notesForRatingCalculation.add(point3ForNotes);
-        notesForRatingCalculation.add(point4ForNotes);
-        notesForRatingCalculation.add(point5ForNotes);
+//        notesForRatingCalculation.add(point3ForNotes);
+//        notesForRatingCalculation.add(point4ForNotes);
+//        notesForRatingCalculation.add(point5ForNotes);
 
         dashboardResponse.setNotes(notesForRatingCalculation);
         return new ApiResponse(200,"Trainee Rating summary",dashboardResponse);
