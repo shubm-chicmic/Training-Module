@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Service.DashboardService;
 
 
 import com.chicmic.trainingModule.Dto.DashboardDto.*;
+import com.chicmic.trainingModule.Dto.TimeTrack;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
@@ -112,9 +113,13 @@ public class DashboardService {
                                     .date(pt.getDate())
                                     .type(pt.getPlanType())
                                     .build();
-                            if(pt.getPlanType() == PlanType.COURSE) {
-                                planDto.setExtraConsumedTime(userTimeService.getExtraConsumedTimeForPlanTask(pt.get_id(), traineeId, p));
+                            if(pt.getPlanType() == PlanType.COURSE || pt.getPlanType() == PlanType.TEST) {
+                                TimeTrack timeInPlanTask = userTimeService.getTimeForPlanTask(pt.get_id(), traineeId, p);
+                                planDto.setExtraConsumedTime(Math.max((timeInPlanTask.getConsumedTime() - timeInPlanTask.getEstimatedTime()), 0));
+                                planDto.setConsumedTime(timeInPlanTask.getConsumedTime());
+                                planDto.setEstimatedTime(timeInPlanTask.getEstimatedTime());
                             }
+                            planDto.setEstimatedTime(pt.getEstimatedTimeInSeconds());
                             planDtoList.add(planDto);
                                 if(pt.getPlanType().equals(TEST)){
                                     int totalTask = phaseService.countTotalSubtask(pt.getMilestones());

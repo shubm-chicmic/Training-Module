@@ -1,5 +1,6 @@
 package com.chicmic.trainingModule.Service.UserTimeService;
 
+import com.chicmic.trainingModule.Dto.TimeTrack;
 import com.chicmic.trainingModule.Dto.UserTimeDto.UserTimeDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
@@ -226,5 +227,32 @@ public class UserTimeService {
             return  consumedTime >= estimatedTime ? consumedTime - estimatedTime : 0;
         }
         return 0;
+    }
+    public TimeTrack getTimeForPlanTask(String planTaskId, String traineeId, Plan plan) {
+        PlanTask planTask = planTaskService.getPlanTaskById(planTaskId);
+        if(planTask == null)return null;
+        if(planTask.getPlanType() == PlanType.COURSE || planTask.getPlanType() == PlanType.TEST) {
+            Integer consumedTime = 0;
+            for (Object milestone : planTask.getMilestones()) {
+                Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
+                if (phase != null) {
+                    List<Task> tasks = phase.getTasks();
+                    List<SubTask> subTasks = tasks.stream()
+                            .flatMap(task -> task.getSubtasks().stream())
+                            .collect(Collectors.toList());
+
+                    for (SubTask subTask : subTasks) {
+                        consumedTime += getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, plan.get_id(), planTask.get_id(), subTask.get_id());
+                    }
+                }
+            }
+            Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+            return TimeTrack.builder()
+                    .estimatedTime(estimatedTime)
+                    .consumedTime(consumedTime)
+                    .build();
+//            return  consumedTime >= estimatedTime ? consumedTime - estimatedTime : 0;
+        }
+        return null;
     }
 }
