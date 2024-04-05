@@ -10,10 +10,14 @@ public class CourseDto {
     private String name;
     private String planId;
     private Integer progress;
+    private Integer consumedTime;
+    private Integer estimatedTime;
 
-    public CourseDto(String name,String planId ,Integer progress) {
+    public CourseDto(String name, String planId, Integer progress, Integer consumedTime, Integer estimatedTime) {
         this.name = name;
         this.planId = planId;
         this.progress = progress;
+        this.consumedTime = consumedTime;
+        this.estimatedTime = estimatedTime;
     }
 }

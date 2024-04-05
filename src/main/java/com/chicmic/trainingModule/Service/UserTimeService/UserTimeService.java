@@ -6,35 +6,26 @@ import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Entity.Constants.TimeSheetType;
 import com.chicmic.trainingModule.Repository.UserTimeRepo;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.PhaseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
-import io.swagger.v3.oas.models.security.SecurityScheme;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.GroupOperation;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class UserTimeService {
     private final UserTimeRepo userTimeRepo;
     private final PhaseService phaseService;
     private final PlanTaskService planTaskService;
-
-    public UserTimeService(UserTimeRepo userTimeRepo, PhaseService phaseService, PlanTaskService planTaskService) {
+    private final AssignTaskService assignTaskService;
+    public UserTimeService(UserTimeRepo userTimeRepo, PhaseService phaseService, PlanTaskService planTaskService, AssignTaskService assignTaskService) {
         this.userTimeRepo = userTimeRepo;
         this.phaseService = phaseService;
         this.planTaskService = planTaskService;
+        this.assignTaskService = assignTaskService;
     }
     public List<UserTime> getUserTimeByTraineeId(String traineeId) {
         return userTimeRepo.findByTraineeId(traineeId, TimeSheetType.VIVA, TimeSheetType.PPT);
@@ -254,5 +245,39 @@ public class UserTimeService {
 //            return  consumedTime >= estimatedTime ? consumedTime - estimatedTime : 0;
         }
         return null;
+    }
+    public TimeTrack getTimeForCourseInsidePlan(String courseId, String planId, String traineeId) {
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+        List<Plan> plans = assignedPlan.getPlans();
+        Integer estimatedTime = 0;
+        Integer consumedTime = 0;
+        for (Plan plan : plans) {
+            if(plan.get_id().equals(planId)){
+                for (Phase<PlanTask> phase : plan.getPhases()) {
+                    for (PlanTask planTask : phase.getTasks()) {
+                        if(planTask.getPlanType() == PlanType.COURSE && planTask.getPlan().equals(courseId)){
+                            for (Object milestone : planTask.getMilestones()) {
+                                Phase<Task> coursePhase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
+                                if (coursePhase != null) {
+                                    List<Task> tasks = coursePhase.getTasks();
+                                    List<SubTask> subTasks = tasks.stream()
+                                            .flatMap(task -> task.getSubtasks().stream())
+                                            .collect(Collectors.toList());
+
+                                    for (SubTask subTask : subTasks) {
+                                        consumedTime += getTotalTimeByTraineeIdAndPlanIdAndPlanTaskIdAndSubTaskId(traineeId, plan.get_id(), planTask.get_id(), subTask.get_id());
+                                    }
+                                }
+                            }
+                            estimatedTime += planTask.getEstimatedTimeInSeconds();
+                        }
+                    }
+                }
+            }
+        }
+        return TimeTrack.builder()
+                .consumedTime(consumedTime)
+                .estimatedTime(estimatedTime)
+                .build();
     }
 }

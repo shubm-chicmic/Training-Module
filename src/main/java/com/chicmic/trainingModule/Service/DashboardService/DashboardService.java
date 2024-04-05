@@ -144,7 +144,7 @@ public class DashboardService {
 //                    planId.set(p.get_id());
                 });
                 for (Map.Entry<String, Integer> c : courseProgress.entrySet())
-                    courseDtoList.add(new CourseDto(c.getKey(), p.get_id(), c.getValue()));
+                    courseDtoList.add(new CourseDto(c.getKey(), p.get_id(), c.getValue(), 0, 0));
             }
         });
 
@@ -182,6 +182,8 @@ public class DashboardService {
             //c.setProgress(0);
             int total = c.getProgress();
             c.setProgress(0);
+            String planId = c.getPlanId();
+            String courseId = c.getName();
 
             documentList.forEach(d ->{
                 if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId")) ){
@@ -190,6 +192,9 @@ public class DashboardService {
                     if (total!=0) c.setProgress(completed * 100 / total);
                 }
             });
+            TimeTrack courseTrack = userTimeService.getTimeForCourseInsidePlan(courseId, planId, traineeId);
+            c.setConsumedTime(courseTrack.getConsumedTime());
+            c.setEstimatedTime(courseTrack.getEstimatedTime());
         });
 
         courseDtoList.forEach(c -> c.setName(courseDetails.get(0).get(c.getName())));
