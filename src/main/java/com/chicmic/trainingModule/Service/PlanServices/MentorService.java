@@ -1,35 +1,38 @@
 package com.chicmic.trainingModule.Service.PlanServices;
 
+import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Plan;
 import com.chicmic.trainingModule.Entity.PlanTask;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
-import com.chicmic.trainingModule.Repository.PhaseRepo;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
-import com.chicmic.trainingModule.Service.CourseServices.CourseService;
-import com.chicmic.trainingModule.Service.PhaseService;
-import com.chicmic.trainingModule.Service.TestServices.TestService;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Util.Pagenation;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 @RequiredArgsConstructor
 public class MentorService {
     private final PlanRepo planRepo;
     private final PlanTaskRepo planTaskRepo;
+    private final AssignTaskService assignTaskService;
     private final MongoTemplate mongoTemplate;
     public Boolean isUserIsMentorInPlanTask(String userId) {
         List<PlanTask> allPlanTasks = planTaskRepo.findAll();
@@ -96,5 +99,105 @@ public class MentorService {
         }
        return false;
     }
+    public List<UserIdAndNameDto> getMentorOfTrainee(String traineeId){
+        System.out.println("trianee id is " + traineeId);
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+        if(assignedPlan == null) return new ArrayList<>();
+        List<UserIdAndNameDto> mentorList = new ArrayList<>();
+        List<Plan> plans = assignedPlan.getPlans();
+        Set<String> uniqueMentorIds = new HashSet<>();
+        for (Plan plan : plans) {
+            for (Phase<PlanTask> phase : plan.getPhases()) {
+                for (PlanTask planTask : phase.getTasks()) {
+                    if(planTask != null) {
+                        if(planTask.getMentorIds() != null && planTask.getMentorDetails() != null) {
+                            for (UserIdAndNameDto mentorDetail : planTask.getMentorDetails()) {
+                                // Check if the mentor ID has not been encountered before
+                                if (!uniqueMentorIds.contains(mentorDetail.get_id())) {
+                                    mentorList.add(mentorDetail); // Add mentor details to the list
+                                    uniqueMentorIds.add(mentorDetail.get_id()); // Add mentor ID to the HashSet
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return mentorList;
+    }
+    public ApiResponseWithCount getAllMentors(Integer pageNumber, Integer pageSize, Integer sortDirection, String sortKey, String searchString) {
+        List<PlanTask> allPlanTasks = planTaskRepo.findAll();
+        if(allPlanTasks == null){
+            return null;
+        }
+        List<UserIdAndNameDto> mentorDetails = new ArrayList<>();
+        Set<String> uniqueMentorIds = new HashSet<>();
+        for (PlanTask planTask : allPlanTasks) {
+            if(planTask != null) {
+                if(planTask.getMentorIds() != null && planTask.getMentorDetails() != null) {
+                    for (UserIdAndNameDto mentorDetail : planTask.getMentorDetails()) {
+                        // Check if the mentor ID has not been encountered before
+                        if (!uniqueMentorIds.contains(mentorDetail.get_id())) {
+                            mentorDetails.add(mentorDetail); // Add mentor details to the list
+                            uniqueMentorIds.add(mentorDetail.get_id()); // Add mentor ID to the HashSet
+                        }
+                    }
+                }
+            }
+        }
+        List<UserIdAndNameDto> searchFilterMentorDetails = new ArrayList<>();
+        if (!StringUtils.isEmpty(searchString)) {
+            for (UserIdAndNameDto mentorData : mentorDetails) {
+                String mentorNameLowerCase = mentorData.getName().toLowerCase();
+                String searchStringLowerCase = searchString.toLowerCase();
+                if (mentorNameLowerCase.contains(searchStringLowerCase)) {
+                    searchFilterMentorDetails.add(mentorData);
+                }
+            }
+        } else {
+            searchFilterMentorDetails = mentorDetails;
+        }
 
+        Collections.sort(searchFilterMentorDetails, new Comparator<UserIdAndNameDto>() {
+            @Override
+            public int compare(UserIdAndNameDto mentor1, UserIdAndNameDto mentor2) {
+                if (sortKey.equals("name")) {
+                    return sortDirection == 1 ? mentor1.getName().compareTo(mentor2.getName()) : mentor2.getName().compareTo(mentor1.getName());
+                }
+                return 0;
+            }
+        });
+
+        // Apply pagination
+        List<UserIdAndNameDto> paginatedMentors = Pagenation.paginateWithoutPageIndexConversion(searchFilterMentorDetails, pageNumber, pageSize);
+        return new ApiResponseWithCount(searchFilterMentorDetails.size(), HttpStatus.OK.value(), "Mentor Fetched Successfully", paginatedMentors);
+    }
+    public ApiResponseWithCount getMentorOfTrainee(Integer pageNumber, Integer pageSize, Integer sortDirection, String sortKey, String searchString, String userId) {
+        List<UserIdAndNameDto> mentorDetails = getMentorOfTrainee(userId);
+        List<UserIdAndNameDto> searchFilterMentorDetails = new ArrayList<>();
+        if (!StringUtils.isEmpty(searchString)) {
+            for (UserIdAndNameDto mentorData : mentorDetails) {
+                String mentorNameLowerCase = mentorData.getName().toLowerCase();
+                String searchStringLowerCase = searchString.toLowerCase();
+                if (mentorNameLowerCase.contains(searchStringLowerCase)) {
+                    searchFilterMentorDetails.add(mentorData);
+                }
+            }
+        }else {
+            searchFilterMentorDetails = mentorDetails;
+        }
+        Collections.sort(searchFilterMentorDetails, new Comparator<UserIdAndNameDto>() {
+            @Override
+            public int compare(UserIdAndNameDto mentor1, UserIdAndNameDto mentor2) {
+                if (sortKey.equals("name")) {
+                    return sortDirection == 1 ? mentor1.getName().compareTo(mentor2.getName()) : mentor2.getName().compareTo(mentor1.getName());
+                }
+                return 0;
+            }
+        });
+
+        // Apply pagination
+        List<UserIdAndNameDto> paginatedMentors = Pagenation.paginateWithoutPageIndexConversion(searchFilterMentorDetails, pageNumber, pageSize);
+        return new ApiResponseWithCount(searchFilterMentorDetails.size(), HttpStatus.OK.value(), "Mentor Fetched Successfully", paginatedMentors);
+    }
 }

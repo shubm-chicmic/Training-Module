@@ -48,6 +48,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String servletPath = request.getServletPath();
         log.info("visited url = " + servletPath);
+        String ipAddress = request.getRemoteAddr();
+        log.info("Client IP Address: " + ipAddress);
 
         if (servletPath.contains("/v1/training")||servletPath.contains("/v2/training")) {
             String authorizationHeader = request.getHeader("Authorization");
