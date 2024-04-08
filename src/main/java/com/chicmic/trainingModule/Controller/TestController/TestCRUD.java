@@ -26,7 +26,6 @@ import java.util.*;
 @RestController
 @RequestMapping("/v1/training/test")
 @AllArgsConstructor
-@PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM')")
 public class TestCRUD {
     private final TestService testService;
     private final PlanTaskRepo planTaskRepo;

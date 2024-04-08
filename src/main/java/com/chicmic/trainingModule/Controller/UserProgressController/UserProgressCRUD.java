@@ -97,8 +97,8 @@ public class UserProgressCRUD {
                     }
 
                     //if feedbackExist donot uncheck it
-                    Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTrainee(
-                            userProgress.getTraineeId(),
+                    Boolean isFeedbackExist = feedbackServiceV2.feedbackExistOnParticularPhaseOfTraineeInPlan(
+                            userProgress.getTraineeId(), userProgress.getPlanId(),
                             planTask.getPlan(),
                             milestonesIds,
                             String.valueOf(userProgressDto.getProgressType())

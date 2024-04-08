@@ -13,6 +13,7 @@ import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.Service.AssignTaskService.TaskResponseMapper;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PhaseService;
+import com.chicmic.trainingModule.Service.PlanServices.MentorService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
@@ -51,6 +52,7 @@ public class AssignTaskCRUD {
     private final AssignPlanResponseMapper assignPlanResponseMapper;
     private final TaskResponseMapper taskResponseMapper;
     private final UserProgressService userProgressService;
+    private final MentorService mentorService;
 
     //    private final TraineePlanService trainePlanService;
     @PostMapping
@@ -59,7 +61,18 @@ public class AssignTaskCRUD {
 //        PlanRequestDto planRequestDto = PlanRequestDto.builder().trainees(new HashSet<>( assignTaskDto.getUsers())).planId(assignTaskDto.getPlanIds().get(0))
 //                .reviewers(assignTaskDto.getApprover()).build();
 //        trainePlanService.assignMultiplePlansToTrainees(planRequestDto, principal.getName());
-
+        Boolean isIndividualRole;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
+        Boolean isTraineeRole;
+        isTraineeRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("TR"));
+        if(isTraineeRole || (isIndividualRole && !mentorService.isUserIsMentorInPlanTask(principal.getName()))){
+            throw new ApiException(HttpStatus.FORBIDDEN, "You are not authorized to create this plan");
+        }
         System.out.println("assignTaskDto = " + assignTaskDto);
         Boolean error = false;
         for (String userId : assignTaskDto.getUsers()) {
@@ -94,6 +107,18 @@ public class AssignTaskCRUD {
     @PutMapping
     public ApiResponse updateAssignTask(@RequestParam String userId, @RequestBody AssignedPlanUpdateDto assignTaskDto, HttpServletResponse response, Principal principal) {
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userId);
+        Boolean isIndividualRole;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        isIndividualRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("IND"));
+        Boolean isTraineeRole;
+        isTraineeRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("TR"));
+        if(isTraineeRole || (isIndividualRole && !mentorService.isUserIsMentorInPlanTask(principal.getName()))){
+            throw new ApiException(HttpStatus.FORBIDDEN, "You are not authorized to create this plan");
+        }
         if (assignedPlan != null) {
             List<Plan> plans = new ArrayList<>();
             for (String planId : assignTaskDto.getPlan()) {
