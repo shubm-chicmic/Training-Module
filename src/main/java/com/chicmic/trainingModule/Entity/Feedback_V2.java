@@ -22,6 +22,8 @@ public class Feedback_V2 {
     @Id
     private String _id;
     private String traineeId;
+    private String mentor;
+    private String session;
     private String type;
     private Double overallRating;
     private Rating details;

@@ -49,6 +49,22 @@ public class MentorService {
 
         return false;
     }
+    public Boolean isUserAMentorOfTrainee(String userId, String traineeId) {
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+        List<Plan> plans = assignedPlan.getPlans();
+        for (Plan plan : plans) {
+            for (Phase<PlanTask> phase : plan.getPhases()) {
+                for (PlanTask planTask : phase.getTasks()) {
+                    if(planTask != null) {
+                        if(planTask.getMentorIds() != null && planTask.getMentorIds().contains(userId)){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
     public List<Plan> getPlanOfMentor(String mentorId) {
         List<Plan> allPlans = planRepo.findAll();
         return allPlans.stream()
