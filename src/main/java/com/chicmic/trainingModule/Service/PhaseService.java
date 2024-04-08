@@ -252,10 +252,12 @@ public class PhaseService {
 
                 }
                 Integer totalTask = 0;
+                Integer totalEstimatedtime = 0;
                 if (planTask.getMilestones() != null) {
                     for (Object milestone : planTask.getMilestones()) {
                         Phase<Task> coursePhase = (Phase<Task>) getPhaseById((String) milestone);
                         totalTask += coursePhase.getTotalTasks();
+                        totalEstimatedtime += coursePhase.getEstimatedTimeInSeconds();
                     }
                 }
                 newPlanTask.setPlans(plan);
@@ -267,6 +269,9 @@ public class PhaseService {
                 newPlanTask.setDate(planTask.getDate());
                 newPlanTask.setEstimatedTime(planTask.getEstimatedTime());
                 newPlanTask.setPhase(phase);
+                if (planTask.getPlanType() == PlanType.COURSE || planTask.getPlanType() == PlanType.TEST) {
+                    newPlanTask.setEstimatedTimeInSeconds(totalEstimatedtime);
+                }
                 createdPlanTasks.add(planTaskRepo.save(newPlanTask));
     //            String id = (task.get_id() == null || task.get_id().isEmpty()) ? String.valueOf(new ObjectId()) : task.get_id();
     //            task.set_id(id);
