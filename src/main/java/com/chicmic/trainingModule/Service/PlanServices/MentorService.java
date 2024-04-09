@@ -188,6 +188,10 @@ public class MentorService {
 
         // Apply pagination
         List<UserIdAndNameDto> paginatedMentors = Pagenation.paginateWithoutPageIndexConversion(searchFilterMentorDetails, pageNumber, pageSize);
+        for (UserIdAndNameDto user : paginatedMentors) {
+            Double rating = mentorFeedbackService.calculateOverallRatingForMentor(user.get_id());
+            user.setOverallRating(rating);
+        }
         return new ApiResponseWithCount(searchFilterMentorDetails.size(), HttpStatus.OK.value(), "Mentor Fetched Successfully", paginatedMentors);
     }
     public ApiResponseWithCount getMentorOfTrainee(Integer pageNumber, Integer pageSize, Integer sortDirection, String sortKey, String searchString, String userId) {
