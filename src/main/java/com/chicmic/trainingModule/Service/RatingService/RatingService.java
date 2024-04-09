@@ -25,14 +25,14 @@ public class RatingService {
         if(assignedPlan == null || traineeId == null) return 0.0;
         List<Plan> planList = assignedPlan.getPlans();
         double courseRating = 0.0f;
-        Integer totalCourse = 0;
+        int totalCourse = 0;
         for (Plan plan : planList) {
             for (Phase<PlanTask> planPhase : plan.getPhases()) {
                 for (PlanTask planTask : planPhase.getTasks()) {
                     if(planTask != null){
-                        Integer consumedTime = 0;
-                        Integer completedTasks = 0;
-                        Integer totalTasks = 0;
+                        int consumedTime = 0;
+                        int completedTasks = 0;
+                        int totalTasks = 0;
                         if(planTask.getPlanType() == PlanType.COURSE){
                             for (Object milestone : planTask.getMilestones()) {
                                 Phase<Task> phase = (Phase<Task>) phaseService.getPhaseById((String) milestone);
@@ -55,7 +55,7 @@ public class RatingService {
                             if((consumedTime == 0) || (completedTasks != totalTasks)) {
                                 continue;
                             }
-                            Integer estimatedTime = planTask.getEstimatedTimeInSeconds();
+                            int estimatedTime = planTask.getEstimatedTimeInSeconds();
                             if(consumedTime < estimatedTime) {
                                 courseRating += 5;
                             }
@@ -84,7 +84,7 @@ public class RatingService {
                 }
             }
         }
-        if(totalCourse == 0) {
+        if(totalCourse == 0 || courseRating == 0) {
             return 0;
         }
         double finalRating = courseRating / totalCourse;
