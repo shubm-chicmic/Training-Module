@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +29,19 @@ public class MentorFeedbackService {
     private Feedback_V2 saveFeedback(Feedback_V2 feedback) {
         return feedbackRepo.save(feedback);
     }
+    public List<Feedback_V2> getCurrentMonthFeedback(String mentorId, String createdBy) {
+        // Calculate start and end dates of the current month
+        LocalDate now = LocalDate.now();
+        LocalDate firstDayOfMonth = now.withDayOfMonth(1);
+        LocalDate lastDayOfMonth = now.withDayOfMonth(now.lengthOfMonth());
+
+        // Convert LocalDate to Date
+        Date startDate = Date.from(firstDayOfMonth.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date endDate = Date.from(lastDayOfMonth.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        // Query the repository for feedback within the current month
+        return feedbackRepo.findByMentorAndTypeAndCreatedByAndCreatedAtBetween(mentorId, FeedbackType.MENTOR_, createdBy, startDate, endDate);
+    }
     public boolean checkValidRequest(MentorFeedbackRequestDto requestDto, String createdBy) {
         TrainingModuleApplication.searchUserById(createdBy);
         TrainingModuleApplication.searchUserById(requestDto.getMentor());
@@ -39,10 +53,12 @@ public class MentorFeedbackService {
         if(!mentorService.isUserAMentorOfTrainee(mentorId, traineeId)){
             throw new ApiException(HttpStatus.BAD_REQUEST, "The specified user is not a mentor of the Rater.");
         }
-        List<Feedback_V2> feedbackGiven = feedbackRepo.findByMentorAndTypeAndCreatedBy(mentorId, FeedbackType.MENTOR_, traineeId);
-        if(feedbackGiven != null && feedbackGiven.size() > 0) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "You Already Give the Feedback to this user");
+//        List<Feedback_V2> feedbackGiven = feedbackRepo.findByMentorAndTypeAndCreatedBy(mentorId, FeedbackType.MENTOR_, traineeId);
+        List<Feedback_V2> feedbackGiven = getCurrentMonthFeedback(mentorId, traineeId);
+        if (feedbackGiven != null && !feedbackGiven.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You have already provided feedback to this user for the current month.");
         }
+
         return true;
     }
 
