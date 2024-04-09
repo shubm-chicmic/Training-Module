@@ -1,6 +1,5 @@
 package com.chicmic.trainingModule.Service.RatingService;
 
-import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.Entity.Constants.PlanType;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
@@ -70,7 +69,7 @@ public class RatingService {
 //
 //                                totalDeductedRating = totalDeductedRating >= 7 ? 7 : totalDeductedRating;
 
-                                courseRating += 4 - (4 * percentageIncrease);
+                                courseRating += Math.max(1, (4 - (4 * percentageIncrease)));
                             }
                             totalCourse += 1;
                             System.out.println("\u001B[45m");
