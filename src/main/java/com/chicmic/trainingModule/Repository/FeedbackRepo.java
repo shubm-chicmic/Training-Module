@@ -12,4 +12,6 @@ import java.util.List;
 public interface FeedbackRepo extends MongoRepository<Feedback_V2, String> {
     List<Feedback_V2> findByMentorAndTypeAndCreatedBy(String mentor, String type, String createdBy);
     List<Feedback_V2> findByMentorAndTypeAndCreatedByAndCreatedAtBetween(String mentor, String type, String createdBy, Date startOfMonth, Date endOfMonth);
+
+    List<Feedback_V2> findByMentorAndType(String mentor, String type);
 }

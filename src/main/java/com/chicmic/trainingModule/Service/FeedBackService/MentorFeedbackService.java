@@ -113,5 +113,25 @@ public class MentorFeedbackService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Feedback is invalid!");
         }
     }
+    public Double calculateOverallRatingForMentor(String mentorId) {
+        // Retrieve all feedbacks for the mentor from the repository
+        List<Feedback_V2> feedbackList = feedbackRepo.findByMentorAndType(mentorId, FeedbackType.MENTOR_);
 
+        // Calculate overall rating
+        if (feedbackList != null && !feedbackList.isEmpty()) {
+            double totalRating = 0.0;
+            int count = 0;
+            for (Feedback_V2 feedback : feedbackList) {
+                if (feedback.getOverallRating() != null) {
+                    totalRating += feedback.getOverallRating();
+                    count++;
+                }
+            }
+            if (count > 0) {
+                return totalRating / count;
+            }
+        }
+        // Return null if no feedback or no ratings available
+        return null;
+    }
 }

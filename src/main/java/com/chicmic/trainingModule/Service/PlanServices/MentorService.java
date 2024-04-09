@@ -10,6 +10,7 @@ import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.PlanRepo;
 import com.chicmic.trainingModule.Repository.PlanTaskRepo;
 import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.FeedBackService.MentorFeedbackService;
 import com.chicmic.trainingModule.Util.Pagenation;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class MentorService {
     private final PlanRepo planRepo;
     private final PlanTaskRepo planTaskRepo;
     private final AssignTaskService assignTaskService;
+    private final MentorFeedbackService mentorFeedbackService;
     private final MongoTemplate mongoTemplate;
     public Boolean isUserIsMentorInPlanTask(String userId) {
         List<PlanTask> allPlanTasks = planTaskRepo.findAll();
@@ -214,6 +216,10 @@ public class MentorService {
 
         // Apply pagination
         List<UserIdAndNameDto> paginatedMentors = Pagenation.paginateWithoutPageIndexConversion(searchFilterMentorDetails, pageNumber, pageSize);
+        for (UserIdAndNameDto user : paginatedMentors) {
+            Double rating = mentorFeedbackService.calculateOverallRatingForMentor(user.get_id());
+            user.setOverallRating(rating);
+        }
         return new ApiResponseWithCount(searchFilterMentorDetails.size(), HttpStatus.OK.value(), "Mentor Fetched Successfully", paginatedMentors);
     }
 }
