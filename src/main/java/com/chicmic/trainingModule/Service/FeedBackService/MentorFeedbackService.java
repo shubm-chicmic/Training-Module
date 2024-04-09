@@ -40,7 +40,7 @@ public class MentorFeedbackService {
         Date endDate = Date.from(lastDayOfMonth.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         // Query the repository for feedback within the current month
-        return feedbackRepo.findByMentorAndTypeAndCreatedByAndCreatedAtBetween(mentorId, FeedbackType.MENTOR_, createdBy, startDate, endDate);
+        return feedbackRepo.findByMentorAndTypeAndCreatedByAndCreatedAtBetweenAndIsDeletedFalse(mentorId, FeedbackType.MENTOR_, createdBy, startDate, endDate);
     }
     public boolean checkValidRequest(MentorFeedbackRequestDto requestDto, String createdBy) {
         TrainingModuleApplication.searchUserById(createdBy);
@@ -115,7 +115,7 @@ public class MentorFeedbackService {
     }
     public Double calculateOverallRatingForMentor(String mentorId) {
         // Retrieve all feedbacks for the mentor from the repository
-        List<Feedback_V2> feedbackList = feedbackRepo.findByMentorAndType(mentorId, FeedbackType.MENTOR_);
+        List<Feedback_V2> feedbackList = feedbackRepo.findByMentorAndTypeAndIsDeletedFalse(mentorId, FeedbackType.MENTOR_);
 
         // Calculate overall rating
         if (feedbackList != null && !feedbackList.isEmpty()) {
