@@ -237,6 +237,14 @@ public class TraineePlanService_V2 {
             double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
             traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating") + courseRating,(int)document.get("count") + (courseRating == 0 ? 0 : 1)));
         }
+        for (Document document : traineePlanResponseList){
+            String _id = (String) document.get("_id");
+            float rating = (float) document.get("rating");
+            if(rating == 0) {
+                double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
+                document.put("rating", courseRating);
+            }
+        }
         return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(cnt));
 //        return traineePlanResponseList;
     }
