@@ -15,13 +15,10 @@ import com.chicmic.trainingModule.Service.RatingService.RatingService;
 import com.chicmic.trainingModule.Service.TraineeService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.DateTimeUtil;
-import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -267,14 +264,14 @@ public class TraineePlanService_V2 {
         AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(userIdAndStatusDto.getTraineeId());
         if(assignedPlan != null) {
             if((assignedPlan.getPlans() == null || assignedPlan.getPlans().size() == 0) && userIdAndStatusDto.getStatus() == TrainingStatus.ONGOING){
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan Not Found , Status cannot be Updated to ONGOING");
+                throw new ApiException(HttpStatus.BAD_REQUEST, "No Plan found for ONGOING status update.");
             }
             assignedPlan.setTrainingStatus(userIdAndStatusDto.getStatus());
             assignedPlan.setUpdatedAt(LocalDateTime.now());
             assignTaskService.save(assignedPlan);
         }else {
             if(userIdAndStatusDto.getStatus() == TrainingStatus.ONGOING){
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Plan Not Found , Status cannot be Updated to ONGOING");
+                throw new ApiException(HttpStatus.BAD_REQUEST, "No Plan found for ONGOING status update.");
             }
             assignedPlan = AssignedPlan.builder()
                     .plans(new ArrayList<>())
