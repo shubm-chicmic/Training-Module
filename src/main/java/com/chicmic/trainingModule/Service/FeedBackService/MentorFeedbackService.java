@@ -1,12 +1,11 @@
 package com.chicmic.trainingModule.Service.FeedBackService;
 
 import com.chicmic.trainingModule.Dto.FeedbackDto.MentorFeedbackRequestDto;
-import com.chicmic.trainingModule.Dto.rating.Rating;
 import com.chicmic.trainingModule.Dto.rating.Rating_MENTOR;
-import com.chicmic.trainingModule.Entity.Feedback_V2;
+import com.chicmic.trainingModule.Entity.*;
 import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.FeedbackRepo;
-import com.chicmic.trainingModule.Service.PlanServices.MentorService;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import com.chicmic.trainingModule.Util.TrimNullValidator.FeedbackType;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +17,29 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
-import static com.chicmic.trainingModule.Dto.rating.Rating.getRating;
 import static com.chicmic.trainingModule.Service.FeedBackService.FeedbackService.compute_rating;
 
 @Service
 @RequiredArgsConstructor
 public class MentorFeedbackService {
     private final FeedbackRepo feedbackRepo;
-    private final MentorService mentorService;
+    private final AssignTaskService assignTaskService;
+    public Boolean isUserAMentorOfTrainee(String userId, String traineeId) {
+        AssignedPlan assignedPlan = assignTaskService.getAllAssignTasksByTraineeId(traineeId);
+        List<Plan> plans = assignedPlan.getPlans();
+        for (Plan plan : plans) {
+            for (Phase<PlanTask> phase : plan.getPhases()) {
+                for (PlanTask planTask : phase.getTasks()) {
+                    if(planTask != null) {
+                        if(planTask.getMentorIds() != null && planTask.getMentorIds().contains(userId)){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
     private Feedback_V2 saveFeedback(Feedback_V2 feedback) {
         return feedbackRepo.save(feedback);
     }
@@ -50,7 +64,7 @@ public class MentorFeedbackService {
         }
         String mentorId = requestDto.getMentor();
         String traineeId = createdBy;
-        if(!mentorService.isUserAMentorOfTrainee(mentorId, traineeId)){
+        if(!isUserAMentorOfTrainee(mentorId, traineeId)){
             throw new ApiException(HttpStatus.BAD_REQUEST, "The specified user is not a mentor of the Rater.");
         }
 //        List<Feedback_V2> feedbackGiven = feedbackRepo.findByMentorAndTypeAndCreatedBy(mentorId, FeedbackType.MENTOR_, traineeId);
