@@ -239,11 +239,21 @@ public class TraineePlanService_V2 {
         }
         for (Document document : traineePlanResponseList){
             String _id = (String) document.get("_id");
-            float rating = (float) document.get("rating");
-            if(rating == 0) {
-                double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
-                document.put("rating", courseRating);
+            Object ratingObj = document.get("rating");
+            if (ratingObj instanceof Double) {
+                double rating = (double) ratingObj;
+                if (rating == 0) {
+                    double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
+                    document.put("rating", courseRating);
+                }
+            } else if (ratingObj instanceof Float) {
+                float rating = (float) ratingObj;
+                if (rating == 0) {
+                    double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
+                    document.put("rating", (float) courseRating);
+                }
             }
+
         }
         return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(cnt));
 //        return traineePlanResponseList;
