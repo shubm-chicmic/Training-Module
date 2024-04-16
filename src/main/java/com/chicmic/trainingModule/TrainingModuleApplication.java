@@ -97,7 +97,7 @@ public class TrainingModuleApplication implements CommandLineRunner {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode responseNode = mapper.readTree(apiResponse);
         JsonNode dataArray = responseNode.get("data");
-
+        dataArray = dataArray.get("data");
         for (JsonNode node : dataArray) {
             String userId = node.get("_id").asText();
             String userName = node.get("name").asText();
