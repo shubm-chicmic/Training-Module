@@ -235,26 +235,28 @@ public class TraineePlanService_V2 {
             String _id = (String) document.get("_id");
             int index = userSummary.get(_id);
             double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
-            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating") + courseRating,(int)document.get("count") + (courseRating == 0 ? 0 : 1)));
-        }
-        for (Document document : traineePlanResponseList){
-            String _id = (String) document.get("_id");
-            Object ratingObj = document.get("rating");
-            if (ratingObj instanceof Double) {
-                double rating = (double) ratingObj;
-                if (rating == 0) {
-                    double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
-                    document.put("rating", courseRating);
-                }
-            } else if (ratingObj instanceof Float) {
-                float rating = (float) ratingObj;
-                if (rating == 0) {
-                    double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
-                    document.put("rating", (float) courseRating);
-                }
-            }
+//            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating") + courseRating,(int)document.get("count") + (courseRating == 0 ? 0 : 1)));
+            traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count") ));
 
         }
+//        for (Document document : traineePlanResponseList){
+//            String _id = (String) document.get("_id");
+//            Object ratingObj = document.get("rating");
+//            if (ratingObj instanceof Double) {
+//                double rating = (double) ratingObj;
+//                if (rating == 0) {
+//                    double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
+//                    document.put("rating", courseRating);
+//                }
+//            } else if (ratingObj instanceof Float) {
+//                float rating = (float) ratingObj;
+//                if (rating == 0) {
+//                    double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(_id);
+//                    document.put("rating", (float) courseRating);
+//                }
+//            }
+//
+//        }
         return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(cnt));
 //        return traineePlanResponseList;
     }

@@ -846,8 +846,9 @@ public class FeedbackService {
 //        double attendanceRating = attendanceService.getAttendanceRating(traineeId, authenticationToken);
 //        ratingReponseDto.setAttendance(attendanceRating);
         double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
-        ratingReponseDto.setOverall(computeOverallRatingOfTraineeWithCourseRating(traineeId, courseRating));
-        ratingReponseDto.setCourseRating(courseRating);
+//        ratingReponseDto.setOverall(computeOverallRatingOfTraineeWithCourseRating(traineeId, courseRating));
+        ratingReponseDto.setOverall(computeOverallRatingOfTrainee(traineeId));
+//        ratingReponseDto.setCourseRating(courseRating);
         ratingReponseDto.setComment(getFeedbackMessageBasedOnOverallRating(ratingReponseDto.getOverall()));
         return ratingReponseDto;
     }
@@ -1045,11 +1046,13 @@ public class FeedbackService {
         );
         AggregationResults<Document> aggregationResults = mongoTemplate.aggregate(aggregation, "feedback_V2", Document.class);
         List<Document> document = aggregationResults.getMappedResults();
-        double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
-        if (document.isEmpty()) return courseRating;
+//        double courseRating = ratingService.courseRatingForUserWithOverTimeDeduction(traineeId);
+        if (document.isEmpty()) return 0.0;
         int count = (int) document.get(0).get("count");
         double totalRating = (double) document.get(0).get("overallRating");
-        return compute_rating(totalRating + courseRating,count + (courseRating == 0 ? 0 : 1));
+//        return compute_rating(totalRating + courseRating,count + (courseRating == 0 ? 0 : 1));
+        return compute_rating(totalRating,count);
+
     }
     public Double computeOverallPlanRatingOfTrainee(String traineeId) {
         Aggregation aggregation = Aggregation.newAggregation(
