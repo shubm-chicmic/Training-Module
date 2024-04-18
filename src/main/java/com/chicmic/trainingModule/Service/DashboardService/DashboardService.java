@@ -168,7 +168,7 @@ public class DashboardService {
                 if (c.getPlanId().equals((String) d.get("planId")) && Objects.equals(c.getName(), (String) d.get("courseId")) ){
                     int completed = (d.get("count")==null)?0:(Integer) d.get("count");
                     if(completed > total) completed = total;
-                    if (total!=0) c.setProgress(completed * 100 / total);
+                    if (total!=0)  c.setProgress(Math.round(completed * 100.0f / total));
                 }
             });
         });
