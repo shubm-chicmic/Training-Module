@@ -1,5 +1,7 @@
 package com.chicmic.trainingModule.Filters;
 
+
+import com.chicmic.trainingModule.Config.Security.CustomPermissionEvaluator;
 import com.chicmic.trainingModule.Service.UserServiceImpl;
 import com.chicmic.trainingModule.Util.JwtUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -86,8 +88,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     System.out.println("Unexpected data type or null value for roleData");
                 }
 
-//                Map<String, Boolean> permissions = (Map<String, Boolean>) userData.get("permissions");
-//                CustomPermissionEvaluator.permissions = permissions;
+                Map<String, Boolean> permissions = (Map<String, Boolean>) userData.get("permissions");
+                CustomPermissionEvaluator.permissions = permissions;
                 Boolean isValidToken = true;//validateToken(authorizationHeader);
 
                 if (isValidToken) {
