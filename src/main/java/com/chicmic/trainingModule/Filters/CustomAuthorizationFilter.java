@@ -1,7 +1,5 @@
 package com.chicmic.trainingModule.Filters;
 
-
-import com.chicmic.trainingModule.Config.Security.CustomPermissionEvaluator;
 import com.chicmic.trainingModule.Service.UserServiceImpl;
 import com.chicmic.trainingModule.Util.JwtUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -57,19 +55,39 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 ObjectMapper objectMapper = new ObjectMapper();
                 Map<String, Object> userMetadataMap = objectMapper.readValue(userMetadataHeader, new TypeReference<Map<String, Object>>() {});
                 Map<String, Object> userMetaData = (Map<String, Object>) userMetadataMap.get("user");
-                Map<String, Object> userData = (Map<String, Object>) userMetaData.get("data");
+                Map<String, Object> userData = userMetaData;
                 String userId = (String) userData.get("_id");
                 System.out.println("\u001B[33m userId = " + userId+ "\u001B[0m");
                 String userRole = null;
-                List<Map<String, Object>> userRoleDataList = (List<Map<String, Object>>) userData.get("roleData");
-                if (userRoleDataList != null && !userRoleDataList.isEmpty()) {
-                    for (Map<String, Object> userRoleData : userRoleDataList) {
-                        userRole = (String) userRoleData.get("role");
-                        System.out.println("\u001B[33m User Role = " + userRole + "\u001B[0m");
+                Object roleDataObject = userData.get("roleData");
+
+                if (roleDataObject instanceof List) {
+                    List<Map<String, Object>> userRoleDataList = (List<Map<String, Object>>) roleDataObject;
+                    // Use your existing logic for handling a list of role data
+                    if (userRoleDataList != null && !userRoleDataList.isEmpty()) {
+                        for (Map<String, Object> userRoleData : userRoleDataList) {
+                            userRole = (String) userRoleData.get("role");
+                            System.out.println("\u001B[33m User Role = " + userRole + "\u001B[0m");
+                        }
                     }
+                } else if (roleDataObject instanceof Map) {
+                    Map<String, Object> userRoleDataMap = (Map<String, Object>) roleDataObject;
+                    // Use the current logic for handling a map of role data
+                    if (userRoleDataMap != null && !userRoleDataMap.isEmpty()) {
+                        // Assuming the role is stored with the key "role" in the userRoleDataMap
+                        Object roleObject = userRoleDataMap.get("role");
+                        if (roleObject instanceof String) {
+                            userRole = (String) roleObject;
+                            System.out.println("\u001B[33m User Role = " + userRole + "\u001B[0m");
+                        }
+                    }
+                } else {
+                    // Handle unexpected data type or null value
+                    System.out.println("Unexpected data type or null value for roleData");
                 }
-                Map<String, Boolean> permissions = (Map<String, Boolean>) userData.get("permissions");
-                CustomPermissionEvaluator.permissions = permissions;
+
+//                Map<String, Boolean> permissions = (Map<String, Boolean>) userData.get("permissions");
+//                CustomPermissionEvaluator.permissions = permissions;
                 Boolean isValidToken = true;//validateToken(authorizationHeader);
 
                 if (isValidToken) {
