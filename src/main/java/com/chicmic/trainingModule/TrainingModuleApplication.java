@@ -116,11 +116,12 @@ public class TrainingModuleApplication implements CommandLineRunner {
         JsonNode responseNode = null;
         try {
             responseNode = mapper.readTree(apiResponse);
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        JsonNode dataArray = responseNode.get("data").get("data");
-
+        JsonNode dataArray = responseNode.get("data");
+        dataArray = dataArray.get("data");
         HashMap<String, UserDto> idTraineeMap = new HashMap<>();
         for (JsonNode node : dataArray) {
 //			List<String> teams = new ArrayList<>();
