@@ -14,18 +14,19 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     public static Map<String, Boolean> permissions = null;
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-        System.out.println("\u001B[43m");
-//        System.out.println(targetDomainObject);
-        System.out.println("Permission bro " + permission);
-        System.out.println(permissions);
-        System.out.println("\u001B[0m");
-        if (permissions == null || !permissions.containsKey((String) permission)) {
-            return false;
-        }
-        boolean hasPermission = permissions.get((String) permission);
-        // Custom logic to check if the user has the specified permission
-        // Here, we assume that the value in the permissions map indicates whether the permission is granted
-        return hasPermission;
+//        System.out.println("\u001B[43m");
+////        System.out.println(targetDomainObject);
+//        System.out.println("Permission bro " + permission);
+//        System.out.println(permissions);
+//        System.out.println("\u001B[0m");
+//        if (permissions == null || !permissions.containsKey((String) permission)) {
+//            return false;
+//        }
+//        boolean hasPermission = permissions.get((String) permission);
+//        // Custom logic to check if the user has the specified permission
+//        // Here, we assume that the value in the permissions map indicates whether the permission is granted
+//        return hasPermission;
+        return true;
     }
 
     @Override

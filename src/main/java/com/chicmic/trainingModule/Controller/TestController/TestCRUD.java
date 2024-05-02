@@ -32,7 +32,7 @@ public class TestCRUD {
 
     private final TestResponseMapper testResponseMapper;
     @RequestMapping(value = {""}, method = RequestMethod.GET)
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canViewTest')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(null, 'canViewTest')")
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -81,7 +81,7 @@ public class TestCRUD {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#testDto, 'canCreateTest')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(#testDto, 'canCreateTest')")
     public ApiResponse create(@RequestBody@Valid TestDto testDto, Principal principal) {
         System.out.println("\u001B[33m testDto previos = " + testDto);
 
@@ -100,7 +100,7 @@ public class TestCRUD {
     }
 
     @DeleteMapping("/{testId}")
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canDeleteTest')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(null, 'canDeleteTest')")
     public ApiResponse delete(@PathVariable String testId, HttpServletResponse response) {
         System.out.println("testId = " + testId);
         List<PlanTask> planTasks = planTaskRepo.findByPlanId(testId);
@@ -116,7 +116,7 @@ public class TestCRUD {
     }
 
     @PutMapping
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#testDto, 'canEditTest')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(#testDto, 'canEditTest')")
     public ApiResponse updateTest(@RequestBody@Valid TestDto testDto, @RequestParam String testId, Principal principal, HttpServletResponse response) {
         Test test = testService.getTestById(testId);
         System.out.println("testDto = " + testDto.getApprover());

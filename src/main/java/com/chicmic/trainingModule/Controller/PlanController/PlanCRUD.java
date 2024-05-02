@@ -41,7 +41,7 @@ public class PlanCRUD {
 //       return planService.getPlanCourseByPlanIds(plansIds);
 //    }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canViewPlan')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(null, 'canViewPlan')")
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -92,7 +92,7 @@ public class PlanCRUD {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#planDto, 'canCreatePlan')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(#planDto, 'canCreatePlan')")
     public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal, HttpServletResponse response) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
@@ -101,7 +101,7 @@ public class PlanCRUD {
     }
 
     @DeleteMapping("/{planId}")
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(null, 'canDeletePlan')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(null, 'canDeletePlan')")
     public ApiResponse delete(@PathVariable String planId, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
         if(plan != null) {
@@ -124,7 +124,7 @@ public class PlanCRUD {
     }
 
     @PutMapping
-    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') or hasPermission(#planDto, 'canEditPlan')")
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(#planDto, 'canEditPlan')")
     public ApiResponse updatePlan(@RequestBody@Valid PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
         if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {
