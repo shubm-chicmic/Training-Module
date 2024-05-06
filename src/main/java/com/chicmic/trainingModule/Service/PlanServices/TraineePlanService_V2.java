@@ -131,9 +131,9 @@ public class TraineePlanService_V2 {
                                 new Document("name", new Document("$regex", namePattern)),
                                 new Document("team", new Document("$regex", namePattern)) // Search by 'team' field, without case-insensitive regex
                         ))),
-                        new Document("$sort", new Document(sortKey, sortDirection)),
-                        new Document("$skip", Integer.max(skipValue, 0)), // Apply skip to paginate
-                        new Document("$limit", pageSize)
+                        new Document("$sort", new Document(sortKey, sortDirection))
+//                        new Document("$skip", Integer.max(skipValue, 0)), // Apply skip to paginate
+//                        new Document("$limit", pageSize)
                 ))
                         .append("total",Arrays.asList(
                                 new Document("$match", new Document("$or", Arrays.asList(
@@ -239,6 +239,34 @@ public class TraineePlanService_V2 {
             traineePlanResponseList.get(index).put("rating",compute_rating((Double)document.get("overallRating"),(int)document.get("count") ));
 
         }
+        // Check if sortKey is "rating"
+        // Check if sortKey is "rating"
+        if (sortKey.equals("rating")) {
+            // Apply Sorting based on Rating
+            traineePlanResponseList.sort((tr1, tr2) -> {
+                // Get the rating values
+                Number rating1 = (Number) tr1.get("rating");
+                Number rating2 = (Number) tr2.get("rating");
+
+                // Compare the rating values
+                int compareResult;
+                if (rating1 instanceof Double && rating2 instanceof Double) {
+                    compareResult = Double.compare(rating1.doubleValue(), rating2.doubleValue());
+                } else if (rating1 instanceof Float && rating2 instanceof Float) {
+                    compareResult = Float.compare(rating1.floatValue(), rating2.floatValue());
+                } else {
+                    compareResult = Double.compare(rating1.doubleValue(), rating2.doubleValue());
+                }
+
+                // Adjust for sorting direction
+                if (sortDirection == -1) {
+                    compareResult *= -1; // Reverse the order for descending sorting
+                }
+                return compareResult;
+            });
+        }
+
+
 //        for (Document document : traineePlanResponseList){
 //            String _id = (String) document.get("_id");
 //            Object ratingObj = document.get("rating");
@@ -257,7 +285,11 @@ public class TraineePlanService_V2 {
 //            }
 //
 //        }
-        return new ApiResponse(200,"Plan fetched successfully to user",traineePlanResponseList, Long.valueOf(cnt));
+        int startIndex = Math.max(skipValue, 0);
+        int endIndex = Math.min(skipValue + pageSize, traineePlanResponseList.size());
+        List<Document> paginatedList = traineePlanResponseList.subList(startIndex, endIndex);
+
+        return new ApiResponse(200,"Plan fetched successfully to user",paginatedList, Long.valueOf(cnt));
 //        return traineePlanResponseList;
     }
 
