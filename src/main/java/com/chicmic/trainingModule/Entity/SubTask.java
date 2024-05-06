@@ -1,7 +1,12 @@
 package com.chicmic.trainingModule.Entity;
 
+import com.chicmic.trainingModule.Util.TrimNullValidator.Trim;
+import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -18,14 +23,23 @@ public class SubTask {
     @Id
     private String _id;
     private Integer entityType;
+    @JsonProperty(value = "subTask", required = true)
+    @Trim
     private String subTask;
     private Integer estimatedTime;
-    private String link;
+    @Trim
+    private String link = "";
+    @Trim
     private String reference;
     @DBRef
     @JsonIgnore
     private Task task;
+    @DBRef
+    @JsonIgnore
+    private Phase<Task> phase;
+    private Boolean isDeleted = false;
     public void setEstimatedTime(String estimatedTime) {
+        estimatedTime = estimatedTime.trim();
         int hours = 0;
         int minutes = 0;
         Integer formattedTime;
@@ -60,7 +74,6 @@ public class SubTask {
                 ", estimatedTime=" + estimatedTime +
                 ", link='" + link + '\'' +
                 ", reference='" + reference + '\'' +
-                ", task=" + task +
                 '}';
     }
 }

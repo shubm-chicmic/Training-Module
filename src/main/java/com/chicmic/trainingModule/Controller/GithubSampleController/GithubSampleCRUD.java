@@ -35,12 +35,15 @@ public class GithubSampleCRUD {
             HttpServletResponse response,
             Principal principal
     ) throws JsonProcessingException {
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         if(githubSampleId == null || githubSampleId.isEmpty()) {
             pageNumber /= pageSize;
             if (pageNumber < 0 || pageSize < 1)
-                return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
+                return new ApiResponseWithCount(0, HttpStatus.BAD_REQUEST.value(), "invalid pageNumber or pageSize", null, response);
             List<GithubSample> githubSampleList = githubSampleService.getAllGithubSamples(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            Long count = githubSampleService.countNonDeletedGithubSamples(searchString);
+            Long count = githubSampleService.countNonDeletedGithubSamples(searchString, principal.getName());
 
             List<GithubSampleResponseDto> githubSampleResponseDtoList = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSampleList);
 //            Collections.reverse(githubSampleResponseDtoList);
@@ -49,7 +52,7 @@ public class GithubSampleCRUD {
             System.out.println("i m called");
             GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
             if(githubSample == null){
-                return new ApiResponseWithCount(0,HttpStatus.NOT_FOUND.value(), "GithubSample not found", null, response);
+                return new ApiResponseWithCount(0,HttpStatus.BAD_REQUEST.value(), "GithubSample not found", null, response);
             }
             GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSample);
             return new ApiResponseWithCount(1,HttpStatus.OK.value(), "GithubSample retrieved successfully", githubSampleResponseDto, response);
@@ -78,19 +81,19 @@ public class GithubSampleCRUD {
     @PutMapping
     public ApiResponse updateGithubSample(@RequestBody GithubSampleDto githubSampleDto, @RequestParam String githubSampleId, Principal principal, HttpServletResponse response) {
         GithubSample githubSample = githubSampleService.getGithubSampleById(githubSampleId);
-        if (githubSample != null) {
+        if (githubSample != null) {//give edit access to creators,approvers!!
             if (githubSampleDto.getApproved()) {
                 Set<String> approver = githubSample.getApprover();
                 if (approver.contains(principal.getName())) {
                     githubSample = githubSampleService.approve(githubSample, principal.getName());
                 } else {
-                    return new ApiResponse(HttpStatus.FORBIDDEN.value(), "You are not authorized to approve this GithubSample", null, response);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "You are not authorized to approve this GithubSample", null, response);
                 }
             }
             GithubSampleResponseDto githubSampleResponseDto = githubSampleResponseMapper.mapGithubSampleToResponseDto(githubSampleService.updateGithubSample(githubSampleDto, githubSampleId));
-            return new ApiResponse(HttpStatus.CREATED.value(), "GithubSample updated successfully", githubSampleResponseDto, response);
+            return new ApiResponse(HttpStatus.OK.value(), "GithubSample updated successfully", githubSampleResponseDto, response);
         } else {
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "GithubSample not found", null, response);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "GithubSample not found", null, response);
         }
     }
 }

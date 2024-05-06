@@ -18,7 +18,7 @@ public class TestResponseDto {
     private String testName;
     private String estimatedTime;
     private int noOfMilestones;
-//    private int noOfTopics;
+    private int noOfTopics;
     private List<UserIdAndNameDto> teams;
     private List<Phase<Task>> milestones;
     private List<UserIdAndNameDto> approver;

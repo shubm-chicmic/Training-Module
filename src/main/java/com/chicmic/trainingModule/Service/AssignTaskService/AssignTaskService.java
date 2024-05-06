@@ -2,8 +2,14 @@ package com.chicmic.trainingModule.Service.AssignTaskService;
 
 
 import com.chicmic.trainingModule.Dto.AssignTaskDto.AssignTaskDto;
+import com.chicmic.trainingModule.Dto.AssignTaskDto.PlanDto;
+import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Entity.AssignedPlan;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
+import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.Plan;
+import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.ExceptionHandling.ApiException;
 import com.chicmic.trainingModule.Repository.AssignTaskRepo;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
@@ -16,12 +22,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -34,7 +42,20 @@ public class AssignTaskService {
     private final CourseService courseService;
     private final TestService testService;
     private final MongoTemplate mongoTemplate;
+
     //TODO UPDATED AT TIME UPDATE AT UPDATE METHOD PENDING
+    public AssignedPlan save(AssignedPlan assignPlan) {
+        return assignTaskRepo.save(assignPlan);
+    }
+    public AssignedPlan saveAssignTask(AssignedPlan assignedPlan){
+        if(assignedPlan == null)return null;
+        if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0){
+            assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        }
+
+        return assignTaskRepo.save(assignedPlan);
+    }
     public AssignedPlan createAssignTask(AssignTaskDto assignTaskDto, String userId, Principal principal) {
         AssignedPlan assignTask = getAllAssignTasksByTraineeId(userId);
         if(assignTask != null) {
@@ -45,6 +66,7 @@ public class AssignTaskService {
                     plans.add(plan);
                 }
             }
+            assignTask.setTrainingStatus(TrainingStatus.ONGOING);
             assignTask.setPlans(plans);
             return assignTaskRepo.save(assignTask);
         }
@@ -56,7 +78,7 @@ public class AssignTaskService {
                 .updatedAt(LocalDateTime.now())
                 .plans(plans)
                 .userId(userId)
-                .reviewers(assignTaskDto.getReviewers())
+                .trainingStatus(TrainingStatus.ONGOING)
                 .date(assignTaskDto.getDate())
                 .build();
         return assignTaskRepo.save(assignTask);
@@ -213,9 +235,37 @@ public class AssignTaskService {
             return mongoTemplate.findOne(query, AssignedPlan.class);
         }
 
+    public List<AssignedPlan> getAssignedPlansByPlan(Plan plan) {
+        List<AssignedPlan> allAssignedPlans = assignTaskRepo.findAll();
 
+        return allAssignedPlans.stream()
+                .filter(assignedPlan -> assignedPlan != null &&
+                        assignedPlan.getPlans() != null &&
+                        assignedPlan.getPlans().stream()
+                                .anyMatch(p -> p != null && p.get_id().equals(plan.get_id()) && !p.getDeleted()))
+                .collect(Collectors.toList());
+    }
     public AssignedPlan updateAssignTask(AssignedPlan assignedPlan) {
+        if(assignedPlan == null)return null;
+        if(assignedPlan.getPlans() == null)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
+        else if (assignedPlan.getPlans() != null && assignedPlan.getPlans().size() == 0)assignedPlan.setTrainingStatus(TrainingStatus.PENDING);
         return assignTaskRepo.save(assignedPlan);
+    }
+
+    public boolean isUserMentorOfTrainee(String traineeId, String userId) {
+        AssignedPlan assignedPlan = getAllAssignTasksByTraineeId(traineeId);
+        if(assignedPlan == null)return false;
+        List<Plan> plans = assignedPlan.getPlans();
+        for (Plan plan : plans){
+            for (Phase<PlanTask> phase : plan.getPhases()){
+                for (PlanTask planTask : phase.getTasks()){
+                    if(planTask.getMentorIds().contains(userId)){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
 

@@ -2,6 +2,7 @@ package com.chicmic.trainingModule.Dto.PlanDto;
 
 import com.chicmic.trainingModule.Entity.Phase;
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Util.TrimNullValidator.TrimAll;
 import lombok.*;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@TrimAll
 public class PlanDto {
     private String planName;
     private String description;

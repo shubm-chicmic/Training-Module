@@ -4,16 +4,24 @@ import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponse;
 import com.chicmic.trainingModule.Dto.ApiResponse.ApiResponseWithCount;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanDto;
 import com.chicmic.trainingModule.Dto.PlanDto.PlanResponseDto;
+import com.chicmic.trainingModule.Entity.AssignedPlan;
 import com.chicmic.trainingModule.Entity.Plan;
 
 import com.chicmic.trainingModule.Entity.PlanTask;
+import com.chicmic.trainingModule.Service.AssignTaskService.AssignTaskService;
+import com.chicmic.trainingModule.Service.PlanServices.MentorService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanResponseMapper;
 import com.chicmic.trainingModule.Service.PlanServices.PlanService;
 import com.chicmic.trainingModule.Service.PlanServices.PlanTaskService;
 import com.chicmic.trainingModule.Util.CustomObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -25,12 +33,15 @@ import java.util.*;
 public class PlanCRUD {
     private final PlanService planService;
     private final PlanTaskService planTaskService;
+    private final AssignTaskService assignTaskService;
     private final PlanResponseMapper planResponseMapper;
+    private final MentorService mentorService;
 //    @GetMapping("/getting")
 //    public HashMap<String, List<UserIdAndNameDto>> getUserIdAndNameDto( @RequestParam(value = "plans") List<String> plansIds) {
 //       return planService.getPlanCourseByPlanIds(plansIds);
 //    }
     @RequestMapping(value = {""}, method = RequestMethod.GET)
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(null, 'canViewPlan')")
     public ApiResponseWithCount getAll(
             @RequestParam(value = "index", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(value = "limit", defaultValue = "10", required = false) Integer pageSize,
@@ -43,11 +54,18 @@ public class PlanCRUD {
             HttpServletResponse response,
             Principal principal
     ) {
+        Boolean isCurrentUserIsMentor = mentorService.isUserIsMentorInPlanTask(principal.getName());
+        System.out.println("\u001B[45m Mentor = " + mentorService.getPlanOfMentor(principal.getName()) + "\u001B[0m");
+        if(sortKey != null && sortKey.equals("createdAt")){
+            sortDirection = -1;
+        }
         System.out.println("dropdown key = " + isDropdown);
         if (isDropdown) {
+            sortKey = "planName";
+            sortDirection = 1;
             List<Plan> planList = planService.getAllPlans(searchString, sortDirection, sortKey);
             System.out.println(planList);
-            Long count = planService.countNonDeletedPlans(searchString);
+            Long count = planService.countNonDeletedPlans(searchString, principal.getName());
             List<PlanResponseDto> planResponseDtoList = planResponseMapper.mapPlanToResponseDto(planList, isPhaseRequired);
 //            Collections.reverse(planResponseDtoList);
             return new ApiResponseWithCount(count, HttpStatus.OK.value(), planResponseDtoList.size() + " Plans retrieved", planResponseDtoList, response);
@@ -58,7 +76,7 @@ public class PlanCRUD {
             if (pageNumber < 0 || pageSize < 1)
                 return new ApiResponseWithCount(0, HttpStatus.NO_CONTENT.value(), "invalid pageNumber or pageSize", null, response);
             List<Plan> planList = planService.getAllPlans(pageNumber, pageSize, searchString, sortDirection, sortKey, principal.getName());
-            Long count = planService.countNonDeletedPlans(searchString);
+            Long count = planService.countNonDeletedPlans(searchString, principal.getName());
 
             List<PlanResponseDto> planResponseDtoList = planResponseMapper.mapPlanToResponseDto(planList, isPhaseRequired);
 //            Collections.reverse(planResponseDtoList);
@@ -74,27 +92,40 @@ public class PlanCRUD {
     }
 
     @PostMapping
-    public ApiResponse create(@RequestBody PlanDto planDto, Principal principal) {
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(#planDto, 'canCreatePlan')")
+    public ApiResponse create(@RequestBody@Valid PlanDto planDto, Principal principal, HttpServletResponse response) {
         System.out.println("\u001B[33m planDto previos = " + planDto);
         System.out.println("\u001B[33m planDto = ");
-
         Plan plan = planService.createPlan(planDto, principal);
-
         return new ApiResponse(HttpStatus.CREATED.value(), "Plan created successfully", plan);
     }
 
     @DeleteMapping("/{planId}")
-    public ApiResponse delete(@PathVariable String planId) {
-        System.out.println("planId = " + planId);
-        Boolean deleted = planService.deletePlanById(planId);
-        if (deleted) {
-            return new ApiResponse(HttpStatus.OK.value(), "Plan deleted successfully", null);
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(null, 'canDeletePlan')")
+    public ApiResponse delete(@PathVariable String planId, HttpServletResponse response) {
+        Plan plan = planService.getPlanById(planId);
+        if(plan != null) {
+            System.out.println("planId = " + planId);
+            List<AssignedPlan> assignedPlans = assignTaskService.getAssignedPlansByPlan(plan);
+            System.out.println("assigned Plan size = " + assignedPlans.size());
+            if (assignedPlans.size() > 0){
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "This plan is already assigned to a User", null, response);
+            }
+            Boolean deleted = planService.deletePlanById(planId);
+            if (deleted) {
+                return new ApiResponse(HttpStatus.OK.value(), "Plan deleted successfully", null, response);
+            }else {
+                return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not deleted", null, response);
+
+            }
         }
-        return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Plan not found", null);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Plan not found", null, response);
+
     }
 
     @PutMapping
-    public ApiResponse updatePlan(@RequestBody PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
+    @PreAuthorize("hasAnyAuthority('TL', 'PA', 'PM') and hasPermission(#planDto, 'canEditPlan')")
+    public ApiResponse updatePlan(@RequestBody@Valid PlanDto planDto, @RequestParam String planId, Principal principal, HttpServletResponse response) {
         Plan plan = planService.getPlanById(planId);
         if (planDto.getApprover() != null && planDto.getApprover().size() == 0) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Reviewers cannot be empty", null, response);

@@ -18,6 +18,9 @@ public class ApiResponse {
     private Object data;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long count;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Double overallRating;
+
     public ApiResponse(int status, String message, Object data){
         this.status = status;
         this.message = message;
@@ -28,6 +31,13 @@ public class ApiResponse {
         this.message = message;
         this.data = data;
         response.setStatus(status);
+    }
+
+    public ApiResponse(int status, String message, Object data, Long count) {
+        this.status = status;
+        this.message = message;
+        this.data = data;
+        this.count = count;
     }
 }
 

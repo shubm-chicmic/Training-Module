@@ -8,12 +8,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Rating_COURSE implements Rating{
-    private String taskId;
-    private Float theoreticalRating;
-    private Float technicalRating;
-    private Float communicationRating;
-    public Float computeOverallRating(){
-        float total = theoreticalRating + technicalRating + communicationRating;
+    private String courseId;
+    private Double theoreticalRating;
+    private Double technicalRating;
+    private Double communicationRating;
+    public Double computeOverallRating(){
+        double total = theoreticalRating + technicalRating + communicationRating;
         return total/3;
     }
 }

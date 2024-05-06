@@ -1,6 +1,7 @@
 package com.chicmic.trainingModule.Entity;
 
 import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
+import com.chicmic.trainingModule.Entity.Constants.TrainingStatus;
 import com.chicmic.trainingModule.Util.ConversionUtility;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -24,20 +26,22 @@ public class AssignedPlan {
     private String _id;
     private String userId;
     private LocalDateTime date;
+    private Integer estimatedTime;
+    private Integer consumedTime;
     @DBRef
     private List<Plan> plans;
-    private Set<String> reviewers = new HashSet<>();
-    private Set<String> approvedBy = new HashSet<>();
+//    private Set<String> reviewers = new HashSet<>();
     private String createdBy;
     private Boolean deleted = false;
     private Boolean approved = false;
+    private Integer trainingStatus = TrainingStatus.ONGOING;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    public List<UserIdAndNameDto> getReviewerDetails() {
-        return ConversionUtility.convertToUserIdAndName(this.reviewers);
+    public List<Plan> getPlans() {
+        if(this.plans == null)return null;
+        return plans.stream()
+                .filter(plan -> !plan.getDeleted())
+                .collect(Collectors.toList());
     }
 
-    public List<UserIdAndNameDto> getApprovedByDetails() {
-        return ConversionUtility.convertToUserIdAndName(this.approvedBy);
-    }
 }

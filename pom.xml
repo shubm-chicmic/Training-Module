@@ -104,33 +104,48 @@
 			<artifactId>gson</artifactId>
 			<version>2.10.1</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>4.5.14</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20230227</version> <!-- Replace with the latest version -->
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-shade-plugin</artifactId>
-							<version>3.2.4</version> <!-- Use the latest version -->
-							<executions>
-								<execution>
-									<phase>package</phase>
-									<goals>
-										<goal>shade</goal>
-									</goals>
-									<configuration>
-										<shadedArtifactAttached>true</shadedArtifactAttached>
-										<transformers>
-											<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-												<mainClass>com.chicmic.trainingModule.TrainingModuleApplication</mainClass>
-											</transformer>
-										</transformers>
-									</configuration>
-								</execution>
-							</executions>
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-shade-plugin</artifactId>-->
+<!--				<version>3.5.1</version>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<phase>package</phase>-->
+<!--						<goals>-->
+<!--							<goal>shade</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<shadedArtifactAttached>true</shadedArtifactAttached>-->
+<!--							<transformers>-->
+<!--								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+<!--									&lt;!&ndash; Add any necessary attributes here &ndash;&gt;-->
+<!--									<mainClass>com.chicmic.trainingModule.TrainingModuleApplication</mainClass>-->
+<!--								</transformer>-->
+<!--							</transformers>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
 
-						</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -141,6 +156,7 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<mainClass>com.chicmic.trainingModule.TrainingModuleApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

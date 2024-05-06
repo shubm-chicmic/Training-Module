@@ -9,6 +9,6 @@ import java.util.Date;
 public class FeedbackResponseDto {
     private String name;
     private String date;
-    private Float rating;
+    private Double rating;
     private String feedback;
 }

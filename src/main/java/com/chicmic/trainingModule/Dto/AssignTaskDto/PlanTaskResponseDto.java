@@ -6,6 +6,8 @@ import lombok.*;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -15,14 +17,17 @@ import java.util.List;
 @Builder
 public class PlanTaskResponseDto {
     private String _id;
+    private String phaseName;
     private Integer planType;
     private UserIdAndNameDto plan;
-    private Integer completedTask;
+    private Integer completedTasks;
     private Integer totalTasks;
     private List<UserIdAndNameDto> phases;
     private List<UserIdAndNameDto> mentor;
     private String estimatedTime;
     private String consumedTime;
+    private Instant date;
     private Boolean isCompleted;
-    private float rating;
+    private String feedbackId;
+    private double rating;
 }

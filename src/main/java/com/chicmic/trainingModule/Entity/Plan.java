@@ -6,6 +6,7 @@ import com.chicmic.trainingModule.annotation.CascadeSave;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -23,6 +25,7 @@ import java.util.Set;
 public class Plan {
     @Id
     private String _id;
+    @Indexed(unique = true, partialFilter = "{ 'deleted': false }")
     private String planName;
     private String description;
     private Integer estimatedTime;
@@ -37,6 +40,35 @@ public class Plan {
     private Boolean approved = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public List<Phase<PlanTask>> getPhases() {
+        if (phases == null) {
+            return null;
+        }
+        return phases.stream()
+                .filter(phase -> !phase.getIsDeleted())
+                .collect(Collectors.toList());
+    }
+    public List<Phase<PlanTask>> getPhasesWithoutTasks() {
+        if (phases == null) {
+            return null;
+        }
+        return phases.stream()
+                .filter(phase -> !phase.getIsDeleted())
+                .map(phase -> {
+                    // Create a new Phase with tasks set to null
+                    Phase<PlanTask> phaseWithoutTasks = new Phase<>();
+                    phaseWithoutTasks.set_id(phase.get_id());
+                    phaseWithoutTasks.setName(phase.getName());
+                    phaseWithoutTasks.setTasks(null);
+                    phaseWithoutTasks.setTotalTasks(phase.getTotalTasks());
+                    phaseWithoutTasks.setEstimatedTimeInSeconds(phase.getEstimatedTimeInSeconds());
+                    phaseWithoutTasks.setIsDeleted(phase.getIsDeleted());
+                    // Set other properties as needed
+
+                    return phaseWithoutTasks;
+                })
+                .collect(Collectors.toList());
+    }
     public void setPhases(List<Phase<PlanTask>> phases) {
         this.phases = phases;
         updateTotalTasks();
@@ -58,6 +90,9 @@ public class Plan {
     }
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
+    }
+    public void setEstimatedTimeInSeconds(Integer estimatedTime) {
+        this.estimatedTime = estimatedTime;
     }
     public void setEstimatedTime(String estimatedTime) {
         int hours = 0;
@@ -89,5 +124,24 @@ public class Plan {
 
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
+
+    @Override
+    public String toString() {
+        return "Plan{" +
+                "_id='" + _id + '\'' +
+                ", planName='" + planName + '\'' +
+                ", description='" + description + '\'' +
+                ", estimatedTime=" + estimatedTime +
+                ", totalTasks=" + totalTasks +
+                ", phases=" + phases +
+                ", approver=" + approver +
+                ", approvedBy=" + approvedBy +
+                ", createdBy='" + createdBy + '\'' +
+                ", deleted=" + deleted +
+                ", approved=" + approved +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }

@@ -3,6 +3,8 @@ package com.chicmic.trainingModule.Util;
 import com.chicmic.trainingModule.Dto.UserDto;
 import com.chicmic.trainingModule.TrainingModuleApplication;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.*;
@@ -37,9 +39,11 @@ public class FeedbackUtil {
     }
     public static boolean checkRole(String roleName){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getAuthorities().contains(roleName);
+        GrantedAuthority authority = new SimpleGrantedAuthority(roleName);
+        return authentication.getAuthorities().contains(authority);
     }
-    public static String getFeedbackMessageBasedOnOverallRating(Float overallRating){
+
+    public static String getFeedbackMessageBasedOnOverallRating(double overallRating){
         if(overallRating==0) return "";
         else if(overallRating < 1 && overallRating > 0)
             return  "Considerable Work Required.";

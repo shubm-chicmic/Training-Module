@@ -7,6 +7,7 @@ import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Document
 @Getter
@@ -24,6 +26,7 @@ import java.util.Set;
 public class Course {
     @Id
     private String _id;
+    @Indexed(unique = true, partialFilter = "{ 'isDeleted': false }")
     private String name;
     private String figmaLink;
     private String guidelines;
@@ -40,6 +43,7 @@ public class Course {
     private Integer estimatedTime;
     private Integer completedTasks;
     private Integer totalTasks;
+
 //    public Course() {
 //        Phase.count = 0;
 //    }
@@ -49,6 +53,14 @@ public class Course {
 
     public List<UserIdAndNameDto> getApprovedByDetails() {
         return ConversionUtility.convertToUserIdAndName(this.approvedBy);
+    }
+    public List<Phase<Task>> getPhases() {
+        if (phases == null) {
+            return null;
+        }
+        return phases.stream()
+                .filter(phase -> !phase.getIsDeleted())
+                .collect(Collectors.toList());
     }
     public void setPhases(List<Phase<Task>> phases) {
         this.phases = phases;

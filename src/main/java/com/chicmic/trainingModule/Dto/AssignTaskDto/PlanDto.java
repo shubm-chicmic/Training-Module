@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -21,8 +22,9 @@ public class PlanDto {
     private Integer totalTasks;
     private Integer completedTasks;
     //    private String estimatedTime;
-    private Float rating;
+    private Double rating;
     private String feedbackId;
+    private Set<UserIdAndNameDto> mentors;
     private Boolean isCompleted = null;
     private List<MilestoneDto> milestones;
     private Boolean isDeleted = false;

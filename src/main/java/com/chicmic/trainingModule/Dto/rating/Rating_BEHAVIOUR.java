@@ -9,15 +9,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Rating_BEHAVIOUR implements Rating{
-    private Float teamSpiritRating;
-    private Float attitudeRating;
+    private Double teamSpiritRating;
+    private Double attitudeRating;
 
-    @Override
-    public String getTaskId() {
-        return null;
-    }
-    public Float computeOverallRating(){
-        Float total = teamSpiritRating + attitudeRating;
+//    @Override
+//    public String getTaskId() {
+//        return null;
+//    }
+    public Double computeOverallRating(){
+        double total = teamSpiritRating + attitudeRating;
         return total/2;
     }
 }

@@ -4,6 +4,7 @@ import com.chicmic.trainingModule.Dto.UserIdAndNameDto;
 import com.chicmic.trainingModule.Service.CourseServices.CourseService;
 import com.chicmic.trainingModule.Service.TestServices.TestService;
 import com.chicmic.trainingModule.Util.ConversionUtility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -11,6 +12,9 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 @Document
@@ -18,18 +22,34 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PlanTask {
     @Id
     private String _id;
     private Integer planType;
     @NotNull(message = "Plan Id cannot be empty")
     private String plan;
+    @Transient
+    private String planName;
     @NotNull(message = "Milestones cannot be Empty")
-    private List<Object> milestones;
+    private List<Object> milestones= new ArrayList<>();
 //    @Transient
 //    private List<UserIdAndNameDto> milestoneDetails;
     private List<String> mentor;
+    private Integer totalTasks;
+    private Instant date;
+//    public void setDatePlusHours(LocalDateTime date) {
+//        if(date != null)
+//        this.date = date.plusHours(5).plusMinutes(30);
+//    }
     private Integer estimatedTime;
+    private Boolean isDeleted = false;
+    @DBRef
+    @JsonIgnore
+    private Phase<PlanTask> phase;
+    @DBRef
+    @JsonIgnore
+    private Plan plans;
 //    public List<UserIdAndNameDto> getMilestones(){
 //        List<UserIdAndNameDto> milestonesDetails = new ArrayList<>();
 //        for (String milestone : milestones) {
@@ -43,8 +63,12 @@ public class PlanTask {
     public List<UserIdAndNameDto> getMentor() {
         return ConversionUtility.convertToUserIdAndName(this.mentor);
     }
+    public List<String> getMentorIds() {
+        return this.mentor;
+    }
 
     public void setEstimatedTime(String estimatedTime) {
+        estimatedTime = estimatedTime.trim();
         int hours = 0;
         int minutes = 0;
         Integer formattedTime;
@@ -66,8 +90,17 @@ public class PlanTask {
 
         return String.format("%02d:%02d", hours, minutes);
     }
+    public String getMilestonesEstimatedTime() {
+        int hours = estimatedTime / 3600;
+        int minutes = (estimatedTime % 3600) / 60;
+
+        return String.format("%02d:%02d", hours, minutes);
+    }
     public Integer getEstimatedTimeInSeconds() {
         return estimatedTime;
+    }
+    public void setEstimatedTimeInSeconds(Integer estimatedTimeInSeconds) {
+        this.estimatedTime = estimatedTimeInSeconds;
     }
 
     @Override
