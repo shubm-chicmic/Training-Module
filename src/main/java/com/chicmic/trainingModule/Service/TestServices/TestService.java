@@ -147,6 +147,9 @@ public class TestService {
         Test test = testRepo.findById(testId).orElse(null);
         if (test != null) {
             test.setDeleted(true);
+            for (Phase<Task> milestone: test.getMilestones()) {
+                 phaseService.deletePhase(milestone);
+            }
             testRepo.save(test);
             return true;
         } else {

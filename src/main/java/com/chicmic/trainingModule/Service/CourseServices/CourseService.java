@@ -243,6 +243,9 @@ public class CourseService {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course != null) {
             course.setIsDeleted(true);
+            for (Phase<Task> phase : course.getPhases()) {
+                 phaseService.deletePhase(phase);
+            }
             courseRepo.save(course);
             return true;
         } else {
